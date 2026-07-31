@@ -596,13 +596,7 @@ static void ggml_compute_forward_add_q_f32(
     ggml_to_float_t const dequantize_row_q = ggml_get_type_traits(type)->to_float;
     ggml_from_float_t const quantize_row_q = ggml_get_type_traits_cpu(dtype)->from_float;
 
-    // we don't support permuted src0 or src1
     GGML_ASSERT(nb00 == ggml_type_size(type));
-
-    // dst cannot be transposed or permuted
-    GGML_ASSERT(nb0 <= nb1);
-    GGML_ASSERT(nb1 <= nb2);
-    GGML_ASSERT(nb2 <= nb3);
 
     GGML_ASSERT(ggml_is_quantized(src0->type));
     GGML_ASSERT(src1->type == GGML_TYPE_F32);
