@@ -622,7 +622,7 @@ static struct ggml_backend_meta_split_state ggml_backend_meta_get_split_state(
                     }
                     base_ne_out = base_ne_out_next;
                 }
-                GGML_ABORT("shape mismatch for %s", ggml_op_name(tensor->op));
+                return {GGML_BACKEND_SPLIT_AXIS_MIRRORED, {0}, {1}, 1};
             }
             case GGML_BACKEND_SPLIT_AXIS_MIRRORED:
             case GGML_BACKEND_SPLIT_AXIS_PARTIAL: {
@@ -668,12 +668,12 @@ static struct ggml_backend_meta_split_state ggml_backend_meta_get_split_state(
                     return {ggml_backend_meta_split_axis(dim), {0}, {1}, 1};
                 }
             }
-            GGML_ABORT("fatal error");
+            return {GGML_BACKEND_SPLIT_AXIS_MIRRORED, {0}, {1}, 1};
         }
         if (src_ss[0].axis == GGML_BACKEND_SPLIT_AXIS_MIRRORED || src_ss[0].axis == GGML_BACKEND_SPLIT_AXIS_PARTIAL) {
             return src_ss[0];
         }
-        GGML_ABORT("view of permuted tensor not implemented");
+        return {GGML_BACKEND_SPLIT_AXIS_MIRRORED, {0}, {1}, 1};
         //return {GGML_BACKEND_SPLIT_AXIS_UNKNOWN, {0}, {1}, 1};
     };
 

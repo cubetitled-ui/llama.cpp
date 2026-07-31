@@ -3463,44 +3463,44 @@ void llama_context::opt_epoch(
 //
 
 llama_context_params llama_context_default_params() {
-    llama_context_params result = {
-        /*.n_ctx                       =*/ 512,
-        /*.n_batch                     =*/ 2048,
-        /*.n_ubatch                    =*/ 512,
-        /*.n_seq_max                   =*/ 1,
-        /*.n_rs_seq                    =*/ 0,
-        /*.n_outputs_max               =*/ 0,
-        /*.n_threads                   =*/ GGML_DEFAULT_N_THREADS, // TODO: better default
-        /*.n_threads_batch             =*/ GGML_DEFAULT_N_THREADS,
-        /*.ctx_type                    =*/ LLAMA_CONTEXT_TYPE_DEFAULT,
-        /*.rope_scaling_type           =*/ LLAMA_ROPE_SCALING_TYPE_UNSPECIFIED,
-        /*.pooling_type                =*/ LLAMA_POOLING_TYPE_UNSPECIFIED,
-        /*.attention_type              =*/ LLAMA_ATTENTION_TYPE_UNSPECIFIED,
-        /*.flash_attn_type             =*/ LLAMA_FLASH_ATTN_TYPE_AUTO,
-        /*.rope_freq_base              =*/ 0.0f,
-        /*.rope_freq_scale             =*/ 0.0f,
-        /*.yarn_ext_factor             =*/ -1.0f,
-        /*.yarn_attn_factor            =*/ -1.0f,
-        /*.yarn_beta_fast              =*/ -1.0f,
-        /*.yarn_beta_slow              =*/ -1.0f,
-        /*.yarn_orig_ctx               =*/ 0,
-        /*.defrag_thold                =*/ -1.0f,
-        /*.cb_eval                     =*/ nullptr,
-        /*.cb_eval_user_data           =*/ nullptr,
-        /*.type_k                      =*/ GGML_TYPE_F16,
-        /*.type_v                      =*/ GGML_TYPE_F16,
-        /*.abort_callback              =*/ nullptr,
-        /*.abort_callback_data         =*/ nullptr,
-        /*.embeddings                  =*/ false,
-        /*.offload_kqv                 =*/ true,
-        /*.no_perf                     =*/ true,
-        /*.op_offload                  =*/ true,
-        /*.swa_full                    =*/ true,
-        /*.kv_unified                  =*/ false,
-        /*.sampler                     =*/ nullptr,
-        /*.n_sampler                   =*/ 0,
-        /*.ctx_other                   =*/ nullptr,
-    };
+    llama_context_params result = {};
+    result.n_ctx                       = 512;
+    result.n_batch                     = 2048;
+    result.n_ubatch                    = 512;
+    result.n_seq_max                   = 1;
+    result.n_rs_seq                    = 0;
+    result.n_outputs_max               = 0;
+    result.n_threads                   = GGML_DEFAULT_N_THREADS; // TODO: better default
+    result.n_threads_batch             = GGML_DEFAULT_N_THREADS;
+    result.ctx_type                    = LLAMA_CONTEXT_TYPE_DEFAULT;
+    result.rope_scaling_type           = LLAMA_ROPE_SCALING_TYPE_UNSPECIFIED;
+    result.pooling_type                = LLAMA_POOLING_TYPE_UNSPECIFIED;
+    result.attention_type              = LLAMA_ATTENTION_TYPE_UNSPECIFIED;
+    result.flash_attn_type             = LLAMA_FLASH_ATTN_TYPE_AUTO;
+    result.fuse_gate_up                = false;
+    result.rope_freq_base              = 0.0f;
+    result.rope_freq_scale             = 0.0f;
+    result.yarn_ext_factor             = -1.0f;
+    result.yarn_attn_factor            = -1.0f;
+    result.yarn_beta_fast              = -1.0f;
+    result.yarn_beta_slow              = -1.0f;
+    result.yarn_orig_ctx               = 0;
+    result.defrag_thold                = -1.0f;
+    result.cb_eval                     = nullptr;
+    result.cb_eval_user_data           = nullptr;
+    result.type_k                      = GGML_TYPE_F16;
+    result.type_v                      = GGML_TYPE_F16;
+    result.abort_callback              = nullptr;
+    result.abort_callback_data         = nullptr;
+    result.embeddings                  = false;
+    result.offload_kqv                 = true;
+    result.no_perf                     = true;
+    result.op_offload                  = true;
+    result.swa_full                    = true;
+    result.kv_unified                  = false;
+    result.samplers                    = nullptr;
+    result.n_samplers                  = 0;
+    result.ctx_other                   = nullptr;
 
     return result;
 }

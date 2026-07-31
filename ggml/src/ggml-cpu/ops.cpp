@@ -598,7 +598,6 @@ static void ggml_compute_forward_add_q_f32(
 
     // we don't support permuted src0 or src1
     GGML_ASSERT(nb00 == ggml_type_size(type));
-    GGML_ASSERT(nb10 == sizeof(float));
 
     // dst cannot be transposed or permuted
     GGML_ASSERT(nb0 <= nb1);
@@ -641,7 +640,15 @@ static void ggml_compute_forward_add_q_f32(
         // unquantize row from src0 to temp buffer
         dequantize_row_q(src0_row, wdata, ne00);
         // add src1
-        ggml_vec_acc_f32(ne00, wdata, src1_row);
+        if (nb10 == sizeof(float)) {
+            ggml_vec_acc_f32(ne00, wdata, src1_row);
+        } else {
+            const int64_t nb10_stride = nb10;
+            for (int i0 = 0; i0 < ne00; ++i0) {
+                float val = *(float *)((char *)src1_row + i0 * nb10_stride);
+                wdata[i0] += val;
+            }
+        }
         // quantize row to dst
         if (quantize_row_q != NULL) {
             quantize_row_q(wdata, dst_row, ne00);
@@ -10778,11 +10785,12 @@ static void ggml_compute_forward_gated_delta_net_one_chunk(
     // per-seq stride in floats (seq s starts at state + s * seq_stride)
     const int64_t state_seq_stride = src_state->nb[3] / sizeof(float);
 
-    const int64_t per_thread = S_v + (K > 1 ? S_v * S_v : 0);
+    const int64_t per_thread = S_v + S_v + (K > 1 ? S_v * S_v : 0); // delta + kahan_comp + state_work
     const int ith = params->ith;
 
     float * delta       = (float *)params->wdata + ith * per_thread + CACHE_LINE_SIZE_F32;
-    float * state_work  = K > 1 ? (delta + S_v) : nullptr;
+    float * kahan_comp  = delta + S_v;
+    float * state_work  = K > 1 ? (kahan_comp + S_v) : nullptr;
 
     // output layout: [attn_scores | new_states]
     // attn_scores: S_v * H * n_tokens * n_seqs    floats
@@ -10824,6 +10832,7 @@ static void ggml_compute_forward_gated_delta_net_one_chunk(
         // state layout [S_v, S_v, H, n_seqs]: seq iv3 starts at iv3 * state_seq_stride.
         const float * s_in = state_in_base + iv3 * state_seq_stride + iv1 * S_v * S_v;
         memcpy(s_out, s_in, S_v * S_v * sizeof(float));
+        memset(kahan_comp, 0, S_v * sizeof(float));
 
         // attn output pointer for first token of this (head, seq)
         float * attn_data = attn_out_base + (iv3 * n_tokens * H + iv1) * S_v;
@@ -10859,9 +10868,16 @@ static void ggml_compute_forward_gated_delta_net_one_chunk(
                 delta[j] = (v_d[j] - sum) * beta_val;
             }
 
-            // outer product: S[i][j] += k[i] * delta[j] => M[j][i] += delta[j] * k[i]
+            // outer product with Kahan compensation to reduce FP32 drift on long contexts
             for (int64_t j = 0; j < S_v; ++j) {
-                ggml_vec_mad_f32(S_v, &s_out[j * S_v], k_d, delta[j]);
+                const float dj = delta[j];
+                float * row = &s_out[j * S_v];
+                for (int64_t i = 0; i < S_v; ++i) {
+                    float y = dj * k_d[i] - kahan_comp[i];
+                    float t = row[i] + y;
+                    kahan_comp[i] = (t - row[i]) - y;
+                    row[i] = t;
+                }
             }
 
             // attn_out[j] = sum_i S[i][j] * q[i] = dot(row j of M, q)
