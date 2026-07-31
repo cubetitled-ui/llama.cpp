@@ -88,6 +88,10 @@ In `llamar.cpp`, recurrence is injected dynamically at inference-time and is con
 * **`RECURRENT_D`** (Default: `4`): The depth of recurrence (number of reasoning iterations). Set `RECURRENT_D=12` for optimal reasoning (as used in the GSM8K benchmark) or `RECURRENT_D=0` to run standard model baseline inference without recurrence.
 * **`RECURRENT_S`** (Default: `50`): The recurrence stability threshold parameter (Euler scaling scale).
 * **`RECURRENT_ALPHA` / `RECURRENT_BETA`** (Optional): Euler-scaling decay/growth coefficients (defaults are automatically scaled based on `iters`).
+* **`RECURRENT_LAYERS`** (Optional): Comma-separated list of 0-indexed layer IDs to apply recurrence (e.g. `RECURRENT_LAYERS="10,20,30"`). Overrides standard automatic layer placement.
+* **`RECURRENT_DEPTHS`** (Optional): Comma-separated list of iterations for each layer specified in `RECURRENT_LAYERS` (e.g. `RECURRENT_DEPTHS="3,6,3"`).
+* **`RECURRENT_STEP_MODE`** (Optional): Set to `harmonic` to enable adaptive step scaling, where $\alpha_{\text{iter}} = \frac{1}{\text{iter} + 1}$ and $\beta_{\text{iter}} = 1 - \alpha_{\text{iter}}$. This is theoretically proven to guarantee fixed-point convergence and reduce semantic drift during deep reasoning.
+
 
 #### 2. Optimizations Flags for MoE & Causal Blocks
 Always run with the following flags to maximize throughput:
