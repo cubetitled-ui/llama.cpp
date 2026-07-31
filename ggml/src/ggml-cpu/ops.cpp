@@ -599,7 +599,8 @@ static void ggml_compute_forward_add_q_f32(
     GGML_ASSERT(nb00 == ggml_type_size(type));
 
     GGML_ASSERT(ggml_is_quantized(src0->type));
-    GGML_ASSERT(src1->type == GGML_TYPE_F32);
+
+    ggml_to_float_t const dequantize_row_src1 = (src1->type == GGML_TYPE_F32) ? NULL : ggml_get_type_traits(src1->type)->to_float;
 
     // rows per thread
     const int dr = (nr + nth - 1)/nth;
@@ -609,6 +610,7 @@ static void ggml_compute_forward_add_q_f32(
     const int ir1 = MIN(ir0 + dr, nr);
 
     float * wdata = (float *) params->wdata + (ne00 + CACHE_LINE_SIZE_F32) * ith;
+    float * wdata_src1 = (src1->type != GGML_TYPE_F32 && dequantize_row_src1 != NULL) ? (float *) alloca(ne00 * sizeof(float)) : NULL;
 
     for (int ir = ir0; ir < ir1; ++ir) {
         // src0 indices
@@ -626,7 +628,7 @@ static void ggml_compute_forward_add_q_f32(
         const int i1 = i01;
 
         void  * src0_row = (void *) ((char *) src0->data + (i01*nb01 + i02*nb02 + i03*nb03));
-        float * src1_row = (float *)((char *) src1->data + (i11*nb11 + i12*nb12 + i13*nb13));
+        void  * src1_row = (void *) ((char *) src1->data + (i11*nb11 + i12*nb12 + i13*nb13));
         void  * dst_row  = (void *) ((char *)  dst->data + ( i1*nb1  +  i2*nb2  +  i3*nb3));
 
         assert(ne00 % 32 == 0);
@@ -634,14 +636,19 @@ static void ggml_compute_forward_add_q_f32(
         // unquantize row from src0 to temp buffer
         dequantize_row_q(src0_row, wdata, ne00);
         // add src1
-        if (nb10 == sizeof(float)) {
-            ggml_vec_acc_f32(ne00, wdata, src1_row);
-        } else {
-            const int64_t nb10_stride = nb10;
-            for (int i0 = 0; i0 < ne00; ++i0) {
-                float val = *(float *)((char *)src1_row + i0 * nb10_stride);
-                wdata[i0] += val;
+        if (src1->type == GGML_TYPE_F32) {
+            if (nb10 == sizeof(float)) {
+                ggml_vec_acc_f32(ne00, wdata, (const float *)src1_row);
+            } else {
+                const int64_t nb10_stride = nb10;
+                for (int i0 = 0; i0 < ne00; ++i0) {
+                    float val = *(float *)((char *)src1_row + i0 * nb10_stride);
+                    wdata[i0] += val;
+                }
             }
+        } else if (wdata_src1 != NULL) {
+            dequantize_row_src1(src1_row, wdata_src1, ne00);
+            ggml_vec_acc_f32(ne00, wdata, wdata_src1);
         }
         // quantize row to dst
         if (quantize_row_q != NULL) {
