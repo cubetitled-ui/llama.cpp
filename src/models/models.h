@@ -2162,3 +2162,60 @@ struct llama_model_step35 : public llama_model_base {
 
     std::unique_ptr<llm_graph_context> build_arch_graph(const llm_graph_params & params) const override;
 };
+
+#include <vector>
+#include <string>
+#include <sstream>
+#include <cstdlib>
+
+static inline std::vector<int> get_recurrent_iters(int n_layer, int D, int S, int L2, int L3, int L4, int c2, int c3, int c4) {
+    std::vector<int> recurrent_iters(n_layer, 1);
+    if (D > 0) {
+        if (L2 >= 0 && L2 < n_layer) recurrent_iters[L2] = c2;
+        if (L3 >= 0 && L3 < n_layer) recurrent_iters[L3] = c3;
+        if (L4 >= 0 && L4 < n_layer) recurrent_iters[L4] = c4;
+    }
+
+    if (const char * env_layers = std::getenv("RECURRENT_LAYERS")) {
+        if (const char * env_depths = std::getenv("RECURRENT_DEPTHS")) {
+            std::string layers_str(env_layers);
+            std::string depths_str(env_depths);
+
+            std::vector<int> parsed_layers;
+            std::vector<int> parsed_depths;
+
+            std::stringstream ss_l(layers_str);
+            std::string token;
+            while (std::getline(ss_l, token, ',')) {
+                if (!token.empty()) {
+                    parsed_layers.push_back(std::atoi(token.c_str()));
+                }
+            }
+
+            std::stringstream ss_d(depths_str);
+            while (std::getline(ss_d, token, ',')) {
+                if (!token.empty()) {
+                    parsed_depths.push_back(std::atoi(token.c_str()));
+                }
+            }
+
+            for (size_t i = 0; i < parsed_layers.size() && i < parsed_depths.size(); ++i) {
+                int target_layer = parsed_layers[i];
+                if (target_layer >= 0 && target_layer < n_layer) {
+                    recurrent_iters[target_layer] = parsed_depths[i];
+                }
+            }
+        }
+    }
+    return recurrent_iters;
+}
+
+static inline float get_recurrent_alpha(int iter, int iters, float default_alpha) {
+    if (const char * env_mode = std::getenv("RECURRENT_STEP_MODE")) {
+        if (std::string(env_mode) == "harmonic") {
+            return 1.0f / (iter + 1);
+        }
+    }
+    return default_alpha;
+}
+

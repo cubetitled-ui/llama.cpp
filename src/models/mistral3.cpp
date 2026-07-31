@@ -96,6 +96,41 @@ llama_model_mistral3::graph::graph(const llama_model & model, const llm_graph_pa
     GGML_ASSERT(n_embd_head == hparams.n_embd_head_k());
     GGML_ASSERT(n_embd_head == n_rot);
 
+    int S = 50; // Устойчивость
+    int D = 4;  // Глубина рекуррентности
+
+    if (const char * env_s = std::getenv("RECURRENT_S")) {
+        S = std::atoi(env_s);
+    }
+    if (const char * env_d = std::getenv("RECURRENT_D")) {
+        D = std::atoi(env_d);
+    }
+
+    int k = n_layer / 4;
+    int r = n_layer % 4;
+
+    int size1 = k, size2 = k, size3 = k, size4 = k + r;
+    int start1 = 0, start2 = k, start3 = 2 * k, start4 = 3 * k;
+
+    int offset1 = (S * (size1 - 1)) / 100;
+    int offset2 = (S * (size2 - 1)) / 100;
+    int offset3 = (S * (size3 - 1)) / 100;
+    int offset4 = (S * (size4 - 1)) / 100;
+
+    int L2 = start2 + offset2;
+    int L3 = start3 + offset3;
+    int L4 = start4 + offset4;
+
+    int c2 = (D + 3) / 6;
+    int c3 = (D + 1) / 2;
+    int c4 = D - c2 - c3;
+
+    if (const char * env_c2 = std::getenv("RECURRENT_C2")) c2 = std::atoi(env_c2);
+    if (const char * env_c3 = std::getenv("RECURRENT_C3")) c3 = std::atoi(env_c3);
+    if (const char * env_c4 = std::getenv("RECURRENT_C4")) c4 = std::atoi(env_c4);
+
+    std::vector<int> recurrent_iters = get_recurrent_iters(n_layer, D, S, L2, L3, L4, c2, c3, c4);
+
     ggml_tensor * cur;
     ggml_tensor * inpL;
 
@@ -117,7 +152,10 @@ llama_model_mistral3::graph::graph(const llama_model & model, const llm_graph_pa
     ggml_tensor * inp_out_ids = build_inp_out_ids();
 
     for (int il = 0; il < n_layer; ++il) {
-        ggml_tensor * inpSA = inpL;
+        int iters = recurrent_iters[il];
+
+        for (int iter = 0; iter < iters; ++iter) {
+            ggml_tensor * inpSA = inpL;
 
         // norm
         cur = build_norm(inpL,
@@ -158,7 +196,7 @@ llama_model_mistral3::graph::graph(const llama_model & model, const llm_graph_pa
 
             cur = build_attn(inp_attn,
                     model.layers[il].wo, model.layers[il].wo_b, model.layers[il].wo_s,
-                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, kq_scale, il);
+                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, kq_scale, il, iter == 0);
             cb(cur, "attn_out", il);
         }
         if (il == n_layer - 1 && inp_out_ids) {
@@ -213,8 +251,26 @@ llama_model_mistral3::graph::graph(const llama_model & model, const llm_graph_pa
         cur = build_cvec(cur, il);
         cb(cur, "l_out", il);
 
-        // input for next layer
-        inpL = cur;
+            if (iters > 1) {
+                // Euler-scaling: h_{t+1} = alpha * cur + (1 - alpha) * inpSA
+                // where alpha = 1.0 / iters (or customizable via env)
+                float alpha = 1.0f / iters;
+                if (const char * env_a = std::getenv("RECURRENT_ALPHA")) {
+                    alpha = std::atof(env_a);
+                }
+                alpha = get_recurrent_alpha(iter, iters, alpha);
+                float beta = 1.0f - alpha;
+                if (const char * env_b = std::getenv("RECURRENT_BETA")) {
+                    beta = std::atof(env_b);
+                }
+                ggml_tensor * scaled_h = ggml_scale(ctx0, cur, alpha);
+                ggml_tensor * scaled_inp = ggml_scale(ctx0, inpSA, beta);
+                cur = ggml_add(ctx0, scaled_h, scaled_inp);
+            }
+
+            // input for next layer
+            inpL = cur;
+        }
     }
     cur = inpL;
 

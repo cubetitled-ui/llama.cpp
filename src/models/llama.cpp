@@ -130,6 +130,8 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
     if (const char * env_c3 = std::getenv("RECURRENT_C3")) c3 = std::atoi(env_c3);
     if (const char * env_c4 = std::getenv("RECURRENT_C4")) c4 = std::atoi(env_c4);
 
+    std::vector<int> recurrent_iters = get_recurrent_iters(n_layer, D, S, L2, L3, L4, c2, c3, c4);
+
     const int64_t n_embd_head = hparams.n_embd_head_v();
 
     GGML_ASSERT(n_embd_head == hparams.n_embd_head_k());
@@ -159,10 +161,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
     for (int il = 0; il < n_layer; ++il) {
         res->t_layer_inp[il] = inpL;
 
-        int iters = 1;
-        if (il == L2) iters = c2;
-        else if (il == L3) iters = c3;
-        else if (il == L4) iters = c4;
+        int iters = recurrent_iters[il];
 
         for (int iter = 0; iter < iters; ++iter) {
             ggml_tensor * inpSA = inpL;
@@ -273,6 +272,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
                 if (const char * env_a = std::getenv("RECURRENT_ALPHA")) {
                     alpha = std::atof(env_a);
                 }
+                alpha = get_recurrent_alpha(iter, iters, alpha);
                 float beta = 1.0f - alpha;
                 if (const char * env_b = std::getenv("RECURRENT_BETA")) {
                     beta = std::atof(env_b);
