@@ -125,6 +125,27 @@ RECURRENT_D=12 ./bin/llama-cli \
 
 ---
 
+### GIGA Auto-tuning Tool
+
+`llamar.cpp` includes a universal hardware-aware auto-tuning script located at `scripts/autotune.py`. This script automatically compiles multiple build targets (`standard`, `no-vnni`, `native-o3`), runs a parameter sweep grid (threads, GPU layers, Flash Attention) across all `.gguf` models in your directory, and identifies the absolute champions for token generation speed.
+
+#### Usage:
+```bash
+python3 scripts/autotune.py --models-dir ./models --ngl 16,24,28,32 --recurrent-d 12
+```
+
+#### Parameters:
+* **`--models-dir`** (Default: `./models`): Directory containing GGUF models or path to a specific model.
+* **`--threads`** (Optional): Comma-separated list of threads to test (e.g. `6,8,12`). Defaults to automatic hardware-aware detection of physical cores.
+* **`--ngl`** (Default: `16,24,32`): GPU offloaded layers to sweep.
+* **`--recurrent-d`** (Default: `12`): Recurrence depth for benchmark runs.
+* **`--builds`** (Default: `standard,no-vnni,native-o3`): CMake configurations to build and test.
+* **`--output`** (Default: `benchmark_report.md`): Output markdown filename.
+
+After sweeping, the script automatically copies the winning build configuration binaries to the default targets in `build/bin/` so you always run the fastest possible inference!
+
+---
+
 ### GSM8K Benchmark Results (N=500)
 Evaluating **DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M**:
 
