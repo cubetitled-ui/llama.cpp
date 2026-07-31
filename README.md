@@ -155,15 +155,21 @@ For large Mixture-of-Experts (MoE) models (like Qwen 3.5 35B MoE, DeepSeek MoE) 
 
 Combined, these features provide up to **+64% prefill speedup** (e.g. from ~1140 to ~1880 t/s on RTX 3060 for Qwen3.6-35B-A3B).
 
+> [!IMPORTANT]
+> When using `GGML_SCHED_PREFETCH_EXPERTS=1`, you must also disable CUDA graphs using `GGML_CUDA_DISABLE_GRAPHS=1` to prevent stream capture synchronization errors.
+
 #### How to Enable:
 These optimizations are optional and can be activated via environment variables:
 ```bash
-# Enable both pinned memory registration and asynchronous expert prefetching
-export GGML_CUDA_REGISTER_HOST=1
+# Enable expert prefetching and pinned memory registration
 export GGML_SCHED_PREFETCH_EXPERTS=1
+export GGML_CUDA_REGISTER_HOST=1
+
+# Disable CUDA graphs to support concurrent background prefetching
+export GGML_CUDA_DISABLE_GRAPHS=1
 
 # Run your model
-./bin/llama-cli -m models/qwen3.5-35b-moe.gguf -ngl 99 -fa on -cmoe 26
+./bin/llama-cli -m models/qwen3.5-35b-moe.gguf -ngl 28 -fa on -ncmoe 36
 ```
 
 ---
