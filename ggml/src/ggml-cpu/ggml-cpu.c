@@ -1511,6 +1511,18 @@ static void ggml_compute_forward_mul_mat_id_one_chunk(
                     ? (i11      + i12*ne11)*row_size
                     : (i11*nb11 + i12*nb12));
 
+                // prefetch next token's data to hide memory latency from scattered routing
+                if (ir1 + 1 < iir1 + blck_1 && ir1 + 1 < ir1_end) {
+                    struct mmid_row_mapping next_map = MMID_MATRIX_ROW(cur_a, ir1 + 1);
+                    const int64_t ni11 = next_map.i1 % ne11;
+                    const int64_t ni12 = next_map.i2;
+                    const char * next_col = (const char *) wdata +
+                        (src1_cont || src1->type != vec_dot_type
+                        ? (ni11 + ni12*ne11)*row_size
+                        : (ni11*nb11 + ni12*nb12));
+                    __builtin_prefetch(next_col, 0, 1);
+                }
+
                 float * dst_col = (float *) ((char *) dst->data + (i1*nb1 + i2*nb2));
 
                 for (int64_t ir0 = iir0; ir0 < iir0 + blck_0 && ir0 < ir0_end; ++ir0) {
@@ -1658,9 +1670,10 @@ static void ggml_compute_forward_mul_mat_id(
         const int64_t nr0 = ne01;
         const int64_t nr1 = cne1;
 
+
         int chunk_size = 16;
         if (nr0 == 1 || nr1 == 1) {
-            chunk_size = 256;
+            chunk_size = 64;
         }
 
         // disable for NUMA
@@ -1669,7 +1682,7 @@ static void ggml_compute_forward_mul_mat_id(
         int64_t nchunk0 = (nr0 + chunk_size - 1) / chunk_size;
         int64_t nchunk1 = (nr1 + chunk_size - 1) / chunk_size;
 
-        if (true || nchunk0 * nchunk1 < nth * 4 || disable_chunking) {
+        if (nchunk0 * nchunk1 < nth * 4 || disable_chunking) {
             nchunk0 = nr0 > nr1 ? nth : 1;
             nchunk1 = nr0 > nr1 ? 1 : nth;
         }
@@ -2985,7 +2998,7 @@ struct ggml_cplan ggml_graph_plan(
                     {
                         const int64_t S_v = node->src[2]->ne[0];
                         const int64_t K   = ggml_get_op_params_i32(node, 0);
-                        const int64_t per_thread = S_v + (K > 1 ? S_v * S_v : 0);
+                        const int64_t per_thread = S_v + S_v + (K > 1 ? S_v * S_v : 0); // delta + kahan_comp + state_work
                         cur = per_thread * sizeof(float) * n_tasks;
                     } break;
                 case GGML_OP_COUNT:
