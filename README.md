@@ -203,6 +203,39 @@ Evaluating **DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M**:
 
 *Using Euler step scaling and KV cache decoupling to prevent semantic drift across iterations.*
 
+### Reasoning Riddle Benchmark (Bonsai-27B-Q1_0, GPU RTX 3050 6GB)
+
+Trick questions and counterintuitive math problems, `--seed 42`, all configs share the same prompt so any difference is purely from the recurrence layout. Correct answer shown in the "Answer" column. "Loop" means the model never finished reasoning within the token budget (4096, or 8192 where noted) and produced no final answer.
+
+| # | Task | Answer | D=0 | 3/D=12 | 8/D=12 | 3/D=24 | 8/D=24 |
+|---|------|--------|-----|--------|--------|--------|--------|
+| 1 | 17 sheep, all but 9 run away | 9 | Yes | Yes | Yes | Yes | Yes |
+| 2 | 6 matchsticks -> 4 equilateral triangles | Tetrahedron | Yes | **No** | Yes | Yes | Yes |
+| 3 | Bat & ball ($1.10, bat $1.00 more) | $0.05 | Yes | Yes | Yes | Yes | Yes |
+| 4 | 5 machines / 5 minutes / 5 widgets, 100 -> 100 | 5 min | Yes | Yes | Yes | Yes | Yes |
+| 5 | Girl: brothers = sisters, brothers: half -> family size | 7 children | Yes | Yes | Yes | **Loop** | Yes |
+| 6 | Trains 150m@30 + 120m@40 passing | 27/7 s | Yes | **Loop** | **Loop** | Yes | Yes |
+| 7 | Digit 9 in 1..100 | 20 | Yes | Yes | Yes | Yes | Yes |
+| 8 | Shirt $80, -25%, -15%, +10% tax | $56.10 | Yes | Yes | Yes | Yes | Yes |
+| 9 | Lily doubles daily, full day 30, half day? | Day 29 | Yes | Yes | Yes | Yes | Yes |
+
+Generation speed (tokens/s) per config, averaged across all 9 tasks:
+
+| Config | Gen t/s |
+|--------|---------|
+| D=0 (baseline) | ~21.5 |
+| 3 layers, D=12 (default) | ~19.0 |
+| 8 layers, D=12 | ~19.1 |
+| 3 layers, D=24 | ~16.7 |
+| 8 layers, D=24 | ~17.7 |
+
+Observations:
+
+- Total recurrence depth `D` costs speed roughly linearly (D=12: ~19 t/s, D=24: ~17 t/s), while spreading the same `D` over more layers (3 vs 8) is nearly free.
+- The default 3/D=12 layout failed the tetrahedron puzzle and looped forever on the passing-trains problem, while 8/D=12 and D=0 both solved the tetrahedron and 8/D=12 solved the trains. More recurrent layers changes *which* weaknesses surface rather than strictly fixing them.
+- 3/D=24 looped on the sibling puzzle; 8/D=24 completed everything.
+- All configs pass trivial arithmetic (bat & ball, digit 9, percentages) regardless of recurrence.
+
 ---
 
 ![llama](https://raw.githubusercontent.com/ggml-org/llama.brand/refs/heads/master/cover/llama-cpp/cover-llama-cpp-dark.svg)

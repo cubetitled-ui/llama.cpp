@@ -182,6 +182,28 @@ Recurrence is injected for (all in `src/models/`):
 
 ---
 
+## 7.5 Empirical Comparison (Bonsai-27B-Q1_0)
+
+Trick-question benchmark, fixed seed, one prompt per config so differences come only from the recurrence layout.
+
+| # | Task (correct answer) | D=0 | 3/D=12 | 8/D=12 | 3/D=24 | 8/D=24 |
+|---|-----------------------|-----|--------|--------|--------|--------|
+| 1 | 17 sheep, all but 9 run away (9) | Yes | Yes | Yes | Yes | Yes |
+| 2 | 6 matchsticks -> 4 triangles (tetrahedron) | Yes | **No** | Yes | Yes | Yes |
+| 3 | Bat & ball $1.10, bat $1.00 more ($0.05) | Yes | Yes | Yes | Yes | Yes |
+| 4 | 5 machines -> 5 widgets in 5 min; 100->100 (5 min) | Yes | Yes | Yes | Yes | Yes |
+| 5 | Sibling puzzle (7 children) | Yes | Yes | Yes | **Loop** | Yes |
+| 6 | Passing trains 150+120 m (27/7 s) | Yes | **Loop** | **Loop** | Yes | Yes |
+| 7 | Digit 9 in 1..100 (20) | Yes | Yes | Yes | Yes | Yes |
+| 8 | Shirt $80 -25% -15% +10% tax ($56.10) | Yes | Yes | Yes | Yes | Yes |
+| 9 | Doubling lily, half on which day (day 29) | Yes | Yes | Yes | Yes | Yes |
+
+Speed: `D` is the main cost (~21.5 t/s at D=0, ~19 at D=12, ~17 at D=24). Spreading the same `D` across 8 layers vs 3 is nearly free. "Loop" = the model never produced a final answer within the token budget.
+
+Key takeaway: recurrence is not uniformly "more = better". The default 3/D=12 is actually the weakest config on this set (misses the tetrahedron, loops on the trains). 8/D=12 fixes both of those at zero speed cost. Higher `D` (24) adds reasoning length but costs ~2.5 t/s and can itself introduce loops (siblings at 3/D=24).
+
+---
+
 ## 8. Quickstart
 
 ```bash
