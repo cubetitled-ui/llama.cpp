@@ -89,6 +89,7 @@ In `llamar.cpp`, recurrence is injected dynamically at inference-time and is con
 #### 1. Recurrence Control Variables
 * **`RECURRENT_D`** (Default: `12`): The depth of recurrence (number of reasoning iterations). This is the default for all supported architectures. Set `RECURRENT_D=12` for optimal reasoning (as used in the GSM8K benchmark) or `RECURRENT_D=0` to run standard model baseline inference without recurrence.
 * **`RECURRENT_S`** (Default: `50`): The recurrence stability threshold parameter (Euler scaling scale).
+* **`RECURRENT_LAYERS_COUNT`** (Default: `3`): The number of layers that get recurrence. Set to any N to spread recurrence across N evenly-spaced layers instead of the classic 3 anchors (e.g. `RECURRENT_LAYERS_COUNT=8` uses 8 recurrent layers). The total depth `RECURRENT_D` is split across them.
 * **`RECURRENT_ALPHA` / `RECURRENT_BETA`** (Optional): Euler-scaling decay/growth coefficients (defaults are automatically scaled based on `iters`).
 * **`RECURRENT_LAYERS`** (Optional): Comma-separated list of 0-indexed layer IDs to apply recurrence (e.g. `RECURRENT_LAYERS="10,20,30"`). Overrides standard automatic layer placement.
 * **`RECURRENT_DEPTHS`** (Optional): Comma-separated list of iterations for each layer specified in `RECURRENT_LAYERS` (e.g. `RECURRENT_DEPTHS="3,6,3"`).

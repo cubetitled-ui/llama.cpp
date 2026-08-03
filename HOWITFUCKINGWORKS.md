@@ -94,6 +94,16 @@ So recurrence is applied at **three anchor layers** positioned one-third, half-w
 
 For `D = 12`: `c2 = 2`, `c3 = 6`, `c4 = 4` (2+6+4 = 12). `S` shifts the anchors; at `S = 0` the anchors sit at the zone starts, at `S = 100` at the zone ends.
 
+### Choosing how many layers recur (`RECURRENT_LAYERS_COUNT`)
+
+By default recurrence hits exactly **3** anchor layers. You can change that with `RECURRENT_LAYERS_COUNT`:
+
+```
+RECURRENT_LAYERS_COUNT=8 RECURRENT_D=12   # 8 recurrent layers, depth spread across them
+```
+
+When `N != 3`, the network is split into `N` evenly-spaced zones (one recurrent layer per zone, placed by `S` inside its zone) and the total depth `D` is distributed across the `N` layers (`D / N` each, first `D % N` get one extra). All other layers still run once.
+
 ### Hybrid models (qwen35 / qwen35moe)
 
 Recurrence only applies to **full-attention** layers. Native delta-net layers (`hparams.is_recr(il)`) already have recurrence built in, so they execute exactly once, even if the scheduler would have given them `iters > 1`. The Euler blend is likewise skipped for them.
@@ -114,6 +124,7 @@ RECURRENT_LAYERS="10,20,30" RECURRENT_DEPTHS="3,6,3"
 |--------------------|---------|---------|
 | `RECURRENT_D`      | `12`    | total recurrence depth; `0` disables recurrence entirely |
 | `RECURRENT_S`      | `50`    | anchor-layer placement (percent) |
+| `RECURRENT_LAYERS_COUNT` | `3` | how many layers get recurrence. `3` = classic anchors; any N spreads recurrence over N evenly-spaced layers (depth `D` split across them) |
 | `RECURRENT_C2/C3/C4` | auto  | per-anchor iteration counts (override the D split) |
 | `RECURRENT_ALPHA`  | `1/iters` | Euler blend coefficient for the layer output |
 | `RECURRENT_BETA`   | `1-alpha` | Euler blend coefficient for the input |

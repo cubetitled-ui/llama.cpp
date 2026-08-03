@@ -2193,12 +2193,52 @@ struct llama_model_step35 : public llama_model_base {
 #include <sstream>
 #include <cstdlib>
 
+// decide how many layers get recurrence:
+//   "3" (default) - use the classic L2/L3/L4 anchors (c2/c3/c4 split)
+//   any N        - split the network into N evenly-spaced zones, one recurrent layer per zone
+static inline int get_recurrent_layers_count() {
+    int N = 3;
+    if (const char * env_n = std::getenv("RECURRENT_LAYERS_COUNT")) {
+        N = std::atoi(env_n);
+        if (N < 1) {
+            N = 1;
+        }
+    }
+    return N;
+}
+
 static inline std::vector<int> get_recurrent_iters(int n_layer, int D, int S, int L2, int L3, int L4, int c2, int c3, int c4) {
     std::vector<int> recurrent_iters(n_layer, 1);
+
+    const int N = get_recurrent_layers_count();
+
     if (D > 0) {
-        if (L2 >= 0 && L2 < n_layer) recurrent_iters[L2] = c2;
-        if (L3 >= 0 && L3 < n_layer) recurrent_iters[L3] = c3;
-        if (L4 >= 0 && L4 < n_layer) recurrent_iters[L4] = c4;
+        if (N == 3) {
+            if (L2 >= 0 && L2 < n_layer) recurrent_iters[L2] = c2;
+            if (L3 >= 0 && L3 < n_layer) recurrent_iters[L3] = c3;
+            if (L4 >= 0 && L4 < n_layer) recurrent_iters[L4] = c4;
+        } else {
+            // split the network into N zones and distribute the total depth D across them
+            // guarantee at least 2 iterations per selected layer so every one actually recurs
+            int base = D / N;
+            int rem  = D % N;
+            if (base < 2) {
+                base = 2;
+                rem  = 0;
+            }
+
+            int pos = 0;
+            for (int i = 0; i < N; ++i) {
+                int size = (n_layer - pos) / (N - i);
+                int zone_start = pos;
+                pos += size;
+
+                int layer = zone_start + (S * (size - 1)) / 100;
+                if (layer >= 0 && layer < n_layer) {
+                    recurrent_iters[layer] = base + (i < rem ? 1 : 0);
+                }
+            }
+        }
     }
 
     if (const char * env_layers = std::getenv("RECURRENT_LAYERS")) {
