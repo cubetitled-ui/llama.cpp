@@ -1369,9 +1369,12 @@ static void ggml_backend_meta_buffer_set_tensor(ggml_backend_buffer_t buffer, gg
             }
         } break;
         default: {
-            for (size_t j = 0; j < n_bufs; j++) {
-                ggml_tensor * simple_tensor = ggml_backend_meta_buffer_simple_tensor(tensor, j);
-                ggml_backend_tensor_set(simple_tensor, data, offset, size);
+            std::vector<uint8_t> tmp(size);
+            const ggml_tensor * simple_tensor = ggml_backend_meta_buffer_simple_tensor(tensor, 0);
+            ggml_backend_tensor_get(simple_tensor, tmp.data(), offset, size);
+            for (size_t j = 1; j < n_bufs; j++) {
+                ggml_tensor * dst_tensor = ggml_backend_meta_buffer_simple_tensor(tensor, j);
+                ggml_backend_tensor_set(dst_tensor, tmp.data(), offset, size);
             }
         }
     }

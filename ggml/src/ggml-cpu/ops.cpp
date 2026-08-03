@@ -12,14 +12,6 @@
 #include <cfloat>
 #include <cmath>
 
-#if defined(_WIN32)
-#include <malloc.h>
-#elif !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(__OpenBSD__) && !defined(__DragonFly__)
-#include <alloca.h>
-#else
-#include <stdlib.h>
-#endif
-
 // ggml_compute_forward_dup
 
 static void ggml_compute_forward_dup_same_cont(
@@ -618,7 +610,7 @@ static void ggml_compute_forward_add_q_f32(
     const int ir1 = MIN(ir0 + dr, nr);
 
     float * wdata = (float *) params->wdata + (ne00 + CACHE_LINE_SIZE_F32) * ith;
-    float * wdata_src1 = (src1->type != GGML_TYPE_F32 && dequantize_row_src1 != NULL) ? (float *) alloca(ne00 * sizeof(float)) : NULL;
+    float * wdata_src1 = (src1->type != GGML_TYPE_F32 && dequantize_row_src1 != NULL) ? (float *) malloc(ne00 * sizeof(float)) : NULL;
 
     for (int ir = ir0; ir < ir1; ++ir) {
         // src0 indices
@@ -665,6 +657,8 @@ static void ggml_compute_forward_add_q_f32(
             memcpy(dst_row, wdata, ne0*nb0);
         }
     }
+
+    free(wdata_src1);
 }
 
 void ggml_compute_forward_add(
