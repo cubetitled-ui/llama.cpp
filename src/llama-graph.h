@@ -1127,6 +1127,8 @@ struct llm_graph_context {
 
     llm_graph_input_attn_k_dsa * build_attn_inp_k_dsa() const;
 
+    llm_graph_input_attn_kv_msa * build_attn_inp_kv_msa(bool msa_enabled) const;
+
     ggml_tensor * build_attn(
             llm_graph_input_attn_k_dsa * inp,
             ggml_tensor * wo,
