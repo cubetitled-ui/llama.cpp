@@ -89,7 +89,7 @@ In `llamar.cpp`, recurrence is injected dynamically at inference-time and is con
 #### 1. Recurrence Control Variables
 * **`RECURRENT_D`** (Default: `12`): The depth of recurrence (number of reasoning iterations). This is the default for all supported architectures. Set `RECURRENT_D=12` for optimal reasoning (as used in the GSM8K benchmark) or `RECURRENT_D=0` to run standard model baseline inference without recurrence.
 * **`RECURRENT_S`** (Default: `50`): The recurrence stability threshold parameter (Euler scaling scale).
-* **`RECURRENT_LAYERS_COUNT`** (Default: `3`): The number of layers that get recurrence. Set to any N to spread recurrence across N evenly-spaced layers instead of the classic 3 anchors (e.g. `RECURRENT_LAYERS_COUNT=8` uses 8 recurrent layers). The total depth `RECURRENT_D` is split across them.
+* **`RECURRENT_LAYERS_COUNT`** (Default: `auto`, `n_layer/8`): The number of layers that get recurrence. By default it is adaptive - one recurrent layer per 8 model layers (64-layer model -> 8, 24-layer model -> 3). Set to any N to force a specific count; N spreads recurrence across N evenly-spaced layers. `RECURRENT_LAYERS_COUNT=3` restores the classic 3-anchor schedule. The total depth `RECURRENT_D` is split across them.
 * **`RECURRENT_ALPHA` / `RECURRENT_BETA`** (Optional): Euler-scaling decay/growth coefficients (defaults are automatically scaled based on `iters`).
 * **`RECURRENT_LAYERS`** (Optional): Comma-separated list of 0-indexed layer IDs to apply recurrence (e.g. `RECURRENT_LAYERS="10,20,30"`). Overrides standard automatic layer placement.
 * **`RECURRENT_DEPTHS`** (Optional): Comma-separated list of iterations for each layer specified in `RECURRENT_LAYERS` (e.g. `RECURRENT_DEPTHS="3,6,3"`).
@@ -205,7 +205,9 @@ Evaluating **DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M**:
 
 ### Reasoning Riddle Benchmark (Bonsai-27B-Q1_0, GPU RTX 3050 6GB)
 
-Trick questions and counterintuitive math problems, `--seed 42`, all configs share the same prompt so any difference is purely from the recurrence layout. Correct answer shown in the "Answer" column. "Loop" means the model never finished reasoning within the token budget (4096, or 8192 where noted) and produced no final answer.
+Trick questions and counterintuitive math problems, `--seed 42`, all configs share the same prompt so any difference is purely from the recurrence layout. Correct answer shown in the "Answer" column. "Loop" means the model never finished reasoning within the 4096-token budget and produced no final answer.
+
+Easy/medium tasks:
 
 | # | Task | Answer | D=0 | 3/D=12 | 8/D=12 | 3/D=24 | 8/D=24 |
 |---|------|--------|-----|--------|--------|--------|--------|
@@ -219,12 +221,31 @@ Trick questions and counterintuitive math problems, `--seed 42`, all configs sha
 | 8 | Shirt $80, -25%, -15%, +10% tax | $56.10 | Yes | Yes | Yes | Yes | Yes |
 | 9 | Lily doubles daily, full day 30, half day? | Day 29 | Yes | Yes | Yes | Yes | Yes |
 
-Generation speed (tokens/s) per config, averaged across all 9 tasks:
+Hard tasks (multi-step math / planning):
+
+| # | Task | Answer | D=0 | 3/D=12 | 8/D=12 | 3/D=24 | 8/D=24 |
+|---|------|--------|-----|--------|--------|--------|--------|
+| 10 | Squares of any size on 8x8 chessboard | 204 | Yes | Yes | Yes | Yes | Yes |
+| 11 | Angle between hands at 3:15 | 7.5 deg | Yes | Yes | Yes | Yes | Yes |
+| 12 | P(both red) drawing 2 of 3/4/5 | 1/22 | Yes | Yes | Yes | Yes | Yes |
+| 13 | Freight 60 km/h, +1h passenger 90 km/h, catch-up time | 3 h | **Loop** | Yes | Yes | Yes | Yes |
+| 14 | Min weighings, 8 coins 1 heavier | 2 | Yes | Yes | Yes | Yes | Yes |
+| 15 | Sum of multiples of 6 in 1..200 | 3366 | Yes | Yes | Yes | Yes | Yes |
+
+Reasoning effort (bytes of generated output before the answer; larger = more flailing, D=0 often needs the double budget to finish):
+
+| Task | D=0 | 3/D=12 | 8/D=12 | 3/D=24 | 8/D=24 |
+|------|-----|--------|--------|--------|--------|
+| #13 catch-up train | 14 KB (cut off) | 8 KB | 8 KB | 6 KB | 6 KB |
+| #14 counterfeit coin | 13 KB | 8 KB | 8 KB | 9 KB | 9 KB |
+| #10 chessboard | 7 KB | 4 KB | 4 KB | 5 KB | 5 KB |
+
+Generation speed (tokens/s) per config, averaged across all tasks:
 
 | Config | Gen t/s |
 |--------|---------|
 | D=0 (baseline) | ~21.5 |
-| 3 layers, D=12 (default) | ~19.0 |
+| 3 layers, D=12 | ~19.0 |
 | 8 layers, D=12 | ~19.1 |
 | 3 layers, D=24 | ~16.7 |
 | 8 layers, D=24 | ~17.7 |
@@ -232,8 +253,9 @@ Generation speed (tokens/s) per config, averaged across all 9 tasks:
 Observations:
 
 - Total recurrence depth `D` costs speed roughly linearly (D=12: ~19 t/s, D=24: ~17 t/s), while spreading the same `D` over more layers (3 vs 8) is nearly free.
-- The default 3/D=12 layout failed the tetrahedron puzzle and looped forever on the passing-trains problem, while 8/D=12 and D=0 both solved the tetrahedron and 8/D=12 solved the trains. More recurrent layers changes *which* weaknesses surface rather than strictly fixing them.
+- The default 3/D=12 layout failed the tetrahedron puzzle and looped on the passing-trains problem, while 8/D=12 and D=0 both solved the tetrahedron and 8/D=12 solved the trains. More recurrent layers changes *which* weaknesses surface rather than strictly fixing them.
 - 3/D=24 looped on the sibling puzzle; 8/D=24 completed everything.
+- The clearest recurrence win is on the catch-up train problem (#13): D=0 could not finish within 4096 tokens while every recurrent config answered correctly. Even when D=0 eventually reaches the same answer, it consumes 2-3x more reasoning tokens to get there.
 - All configs pass trivial arithmetic (bat & ball, digit 9, percentages) regardless of recurrence.
 
 ---

@@ -96,10 +96,11 @@ For `D = 12`: `c2 = 2`, `c3 = 6`, `c4 = 4` (2+6+4 = 12). `S` shifts the anchors;
 
 ### Choosing how many layers recur (`RECURRENT_LAYERS_COUNT`)
 
-By default recurrence hits exactly **3** anchor layers. You can change that with `RECURRENT_LAYERS_COUNT`:
+By default the number of recurrent layers is **adaptive**: `n_layer / 8` (a 64-layer model gets 8 recurrent layers, a 24-layer model gets 3). You can pin it explicitly:
 
 ```
-RECURRENT_LAYERS_COUNT=8 RECURRENT_D=12   # 8 recurrent layers, depth spread across them
+RECURRENT_LAYERS_COUNT=8 RECURRENT_D=12   # force 8 recurrent layers
+RECURRENT_LAYERS_COUNT=3 RECURRENT_D=12   # classic 3-anchor L2/L3/L4 schedule
 ```
 
 When `N != 3`, the network is split into `N` evenly-spaced zones (one recurrent layer per zone, placed by `S` inside its zone) and the total depth `D` is distributed across the `N` layers (`D / N` each, first `D % N` get one extra). All other layers still run once.
@@ -124,7 +125,7 @@ RECURRENT_LAYERS="10,20,30" RECURRENT_DEPTHS="3,6,3"
 |--------------------|---------|---------|
 | `RECURRENT_D`      | `12`    | total recurrence depth; `0` disables recurrence entirely |
 | `RECURRENT_S`      | `50`    | anchor-layer placement (percent) |
-| `RECURRENT_LAYERS_COUNT` | `3` | how many layers get recurrence. `3` = classic anchors; any N spreads recurrence over N evenly-spaced layers (depth `D` split across them) |
+| `RECURRENT_LAYERS_COUNT` | auto (`n_layer/8`) | how many layers get recurrence. `auto` = one per 8 model layers; `3` = classic anchors; any N spreads recurrence over N evenly-spaced layers (depth `D` split across them) |
 | `RECURRENT_C2/C3/C4` | auto  | per-anchor iteration counts (override the D split) |
 | `RECURRENT_ALPHA`  | `1/iters` | Euler blend coefficient for the layer output |
 | `RECURRENT_BETA`   | `1-alpha` | Euler blend coefficient for the input |
@@ -184,7 +185,7 @@ Recurrence is injected for (all in `src/models/`):
 
 ## 7.5 Empirical Comparison (Bonsai-27B-Q1_0)
 
-Trick-question benchmark, fixed seed, one prompt per config so differences come only from the recurrence layout.
+Trick-question benchmark, fixed seed, one prompt per config so differences come only from the recurrence layout. Easy/medium tasks:
 
 | # | Task (correct answer) | D=0 | 3/D=12 | 8/D=12 | 3/D=24 | 8/D=24 |
 |---|-----------------------|-----|--------|--------|--------|--------|
@@ -198,9 +199,22 @@ Trick-question benchmark, fixed seed, one prompt per config so differences come 
 | 8 | Shirt $80 -25% -15% +10% tax ($56.10) | Yes | Yes | Yes | Yes | Yes |
 | 9 | Doubling lily, half on which day (day 29) | Yes | Yes | Yes | Yes | Yes |
 
-Speed: `D` is the main cost (~21.5 t/s at D=0, ~19 at D=12, ~17 at D=24). Spreading the same `D` across 8 layers vs 3 is nearly free. "Loop" = the model never produced a final answer within the token budget.
+Hard tasks (multi-step math / planning):
+
+| # | Task (correct answer) | D=0 | 3/D=12 | 8/D=12 | 3/D=24 | 8/D=24 |
+|---|-----------------------|-----|--------|--------|--------|--------|
+| 10 | Squares of any size on 8x8 chessboard (204) | Yes | Yes | Yes | Yes | Yes |
+| 11 | Angle between hands at 3:15 (7.5 deg) | Yes | Yes | Yes | Yes | Yes |
+| 12 | P(both red) drawing 2 of 3/4/5 (1/22) | Yes | Yes | Yes | Yes | Yes |
+| 13 | Freight 60 km/h, +1h passenger 90 km/h (3 h) | **Loop** | Yes | Yes | Yes | Yes |
+| 14 | Min weighings, 8 coins 1 heavier (2) | Yes | Yes | Yes | Yes | Yes |
+| 15 | Sum of multiples of 6 in 1..200 (3366) | Yes | Yes | Yes | Yes | Yes |
+
+Speed: `D` is the main cost (~21.5 t/s at D=0, ~19 at D=12, ~17 at D=24). Spreading the same `D` across 8 layers vs 3 is nearly free. "Loop" = the model never produced a final answer within the 4096-token budget.
 
 Key takeaway: recurrence is not uniformly "more = better". The default 3/D=12 is actually the weakest config on this set (misses the tetrahedron, loops on the trains). 8/D=12 fixes both of those at zero speed cost. Higher `D` (24) adds reasoning length but costs ~2.5 t/s and can itself introduce loops (siblings at 3/D=24).
+
+The clearest recurrence win: task #13 (catch-up train) - D=0 cannot finish within 4096 tokens while every recurrent config answers correctly, and even when given double the budget D=0 emits 2-3x more reasoning tokens to reach the same answer. Recurrence compresses the chain-of-thought.
 
 ---
 

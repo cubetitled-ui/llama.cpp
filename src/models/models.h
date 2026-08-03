@@ -2194,23 +2194,22 @@ struct llama_model_step35 : public llama_model_base {
 #include <cstdlib>
 
 // decide how many layers get recurrence:
-//   "3" (default) - use the classic L2/L3/L4 anchors (c2/c3/c4 split)
-//   any N        - split the network into N evenly-spaced zones, one recurrent layer per zone
-static inline int get_recurrent_layers_count() {
-    int N = 3;
+//   default - adaptive: 1 recurrent layer per 8 model layers (64-layer model -> 8 recurrent layers)
+//   RECURRENT_LAYERS_COUNT=N - explicit override (N=3 keeps the classic L2/L3/L4 anchors)
+//   the network is split into N evenly-spaced zones, one recurrent layer per zone
+static inline int get_recurrent_layers_count(int n_layer) {
     if (const char * env_n = std::getenv("RECURRENT_LAYERS_COUNT")) {
-        N = std::atoi(env_n);
-        if (N < 1) {
-            N = 1;
-        }
+        int N = std::atoi(env_n);
+        return N < 1 ? 1 : N;
     }
-    return N;
+    int N = n_layer / 8;
+    return N < 1 ? 1 : N;
 }
 
 static inline std::vector<int> get_recurrent_iters(int n_layer, int D, int S, int L2, int L3, int L4, int c2, int c3, int c4) {
     std::vector<int> recurrent_iters(n_layer, 1);
 
-    const int N = get_recurrent_layers_count();
+    const int N = get_recurrent_layers_count(n_layer);
 
     if (D > 0) {
         if (N == 3) {
