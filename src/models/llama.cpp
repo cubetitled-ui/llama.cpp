@@ -98,7 +98,7 @@ std::unique_ptr<llm_graph_context> llama_model_llama::build_arch_graph(const llm
 template <bool embed>
 llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_graph_params & params) : llm_graph_context(params) {
     int S = 50; // Устойчивость
-    int D = 4;  // Глубина рекуррентности
+    int D = 12; // Глубина рекуррентности
 
     if (const char * env_s = std::getenv("RECURRENT_S")) {
         S = std::atoi(env_s);
@@ -211,7 +211,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
                 } else {
                     cur = build_attn(inp_attn,
                             model.layers[il].wo, model.layers[il].wo_b, model.layers[il].wo_s,
-                            Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, kq_scale, il, iter == 0);
+                            Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, kq_scale, il, get_store_kv(iter, iters));
                 }
                 cb(cur, "attn_out", il);
             }

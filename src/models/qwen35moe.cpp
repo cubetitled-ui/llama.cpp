@@ -163,6 +163,41 @@ llama_model_qwen35moe::graph::graph(const llama_model & model, const llm_graph_p
 
     GGML_ASSERT(n_embd_head == hparams.n_embd_head_k());
 
+    int S = 50; // Устойчивость
+    int D = 12; // Глубина рекуррентности
+
+    if (const char * env_s = std::getenv("RECURRENT_S")) {
+        S = std::atoi(env_s);
+    }
+    if (const char * env_d = std::getenv("RECURRENT_D")) {
+        D = std::atoi(env_d);
+    }
+
+    int k = n_layer / 4;
+    int r = n_layer % 4;
+
+    int size1 = k, size2 = k, size3 = k, size4 = k + r;
+    int start1 = 0, start2 = k, start3 = 2 * k, start4 = 3 * k;
+
+    int offset1 = (S * (size1 - 1)) / 100;
+    int offset2 = (S * (size2 - 1)) / 100;
+    int offset3 = (S * (size3 - 1)) / 100;
+    int offset4 = (S * (size4 - 1)) / 100;
+
+    int L2 = start2 + offset2;
+    int L3 = start3 + offset3;
+    int L4 = start4 + offset4;
+
+    int c2 = (D + 3) / 6;
+    int c3 = (D + 1) / 2;
+    int c4 = D - c2 - c3;
+
+    if (const char * env_c2 = std::getenv("RECURRENT_C2")) c2 = std::atoi(env_c2);
+    if (const char * env_c3 = std::getenv("RECURRENT_C3")) c3 = std::atoi(env_c3);
+    if (const char * env_c4 = std::getenv("RECURRENT_C4")) c4 = std::atoi(env_c4);
+
+    std::vector<int> recurrent_iters = get_recurrent_iters(n_layer, D, S, L2, L3, L4, c2, c3, c4);
+
     int sections[4];
     std::copy(std::begin(hparams.rope_sections), std::begin(hparams.rope_sections) + 4, sections);
 
@@ -182,51 +217,70 @@ llama_model_qwen35moe::graph::graph(const llama_model & model, const llm_graph_p
     for (int il = 0; il < n_layer; ++il) {
         res->t_layer_inp[il] = inpL;
 
-        ggml_tensor * inpSA = inpL;
+        int iters = recurrent_iters[il];
 
-        cur = build_norm(inpL, model.layers[il].attn_norm, nullptr, LLM_NORM_RMS, il);
-        cb(cur, "attn_norm", il);
+        for (int iter = 0; iter < iters; ++iter) {
+            ggml_tensor * inpSA = inpL;
 
-        ggml_build_forward_expand(gf, cur);
+            cur = build_norm(inpL, model.layers[il].attn_norm, nullptr, LLM_NORM_RMS, il);
+            cb(cur, "attn_norm", il);
 
-        // Determine layer type and build appropriate attention mechanism
-        if (hparams.is_recr(il)) {
-            // Linear attention layer (gated delta net)
-            cur = build_layer_attn_linear(inp->get_recr(), cur, il);
-        } else {
-            // Full attention layer
-            cur = build_layer_attn(inp->get_attn(), cur, inp_pos, sections, il);
+            ggml_build_forward_expand(gf, cur);
+
+            // Determine layer type and build appropriate attention mechanism
+            if (hparams.is_recr(il)) {
+                // Linear attention layer (gated delta net) - natively recurrent, run once
+                cur = build_layer_attn_linear(inp->get_recr(), cur, il);
+            } else {
+                // Full attention layer - repeat for inference-time recurrence
+                cur = build_layer_attn(inp->get_attn(), cur, inp_pos, sections, il, get_store_kv(iter, iters));
+            }
+
+            if (il == n_layer - 1 && inp_out_ids && cparams.embeddings_nextn_masked) {
+                cur   = ggml_get_rows(ctx0, cur,   inp_out_ids);
+                inpSA = ggml_get_rows(ctx0, inpSA, inp_out_ids);
+            }
+
+            // Residual connection
+            cur = ggml_add(ctx0, cur, inpSA);
+            cb(cur, "attn_residual", il);
+
+            // Save the tensor before post-attention norm for residual connection
+            ggml_tensor * ffn_residual = cur;
+
+            // Post-attention norm
+            ggml_tensor * attn_post_norm = build_norm(cur, model.layers[il].attn_post_norm, nullptr, LLM_NORM_RMS, il);
+            cb(attn_post_norm, "attn_post_norm", il);
+
+            // MOE FFN layer
+            cur = build_layer_ffn(attn_post_norm, il);
+            cb(cur, "ffn_out", il);
+
+            // Residual connection for FFN - add to the tensor from before post_attention_layernorm
+            cur = ggml_add(ctx0, cur, ffn_residual);
+            cb(cur, "post_moe", il);
+
+            cur = build_cvec(cur, il);
+            cb(cur, "l_out", il);
+
+            if (iters > 1 && !hparams.is_recr(il)) {
+                float alpha = 1.0f / iters;
+                if (const char * env_a = std::getenv("RECURRENT_ALPHA")) {
+                    alpha = std::atof(env_a);
+                }
+                alpha = get_recurrent_alpha(iter, iters, alpha);
+                float beta = 1.0f - alpha;
+                if (const char * env_b = std::getenv("RECURRENT_BETA")) {
+                    beta = std::atof(env_b);
+                }
+                ggml_tensor * scaled_h = ggml_scale(ctx0, cur, alpha);
+                ggml_tensor * scaled_inp = ggml_scale(ctx0, inpSA, beta);
+                cur = ggml_add(ctx0, scaled_h, scaled_inp);
+            }
+
+            // Input for next layer or next iteration
+            inpL = cur;
         }
-
-        if (il == n_layer - 1 && inp_out_ids && cparams.embeddings_nextn_masked) {
-            cur   = ggml_get_rows(ctx0, cur, inp_out_ids);
-            inpSA = ggml_get_rows(ctx0, inpSA, inp_out_ids);
-        }
-
-        // Residual connection
-        cur = ggml_add(ctx0, cur, inpSA);
-        cb(cur, "attn_residual", il);
-
-        // Save the tensor before post-attention norm for residual connection
-        ggml_tensor * ffn_residual = cur;
-
-        // Post-attention norm
-        ggml_tensor * attn_post_norm = build_norm(cur, model.layers[il].attn_post_norm, nullptr, LLM_NORM_RMS, il);
-        cb(attn_post_norm, "attn_post_norm", il);
-
-        // MOE FFN layer
-        cur = build_layer_ffn(attn_post_norm, il);
-        cb(cur, "ffn_out", il);
-
-        // Residual connection for FFN - add to the tensor from before post_attention_layernorm
-        cur = ggml_add(ctx0, cur, ffn_residual);
-        cb(cur, "post_moe", il);
-
-        cur = build_cvec(cur, il);
-        cb(cur, "l_out", il);
-
-        // Input for next layer
-        inpL = cur;
     }
     cur = inpL;
 
@@ -284,7 +338,8 @@ ggml_tensor * llama_model_qwen35moe::graph::build_layer_attn(
         ggml_tensor *             cur,
         ggml_tensor *             inp_pos,
         int *                     sections,
-        int                       il) {
+        int                       il,
+        bool                      store_kv) {
     const int64_t n_embd_head = hparams.n_embd_head_v();
     GGML_ASSERT(n_embd_head == hparams.n_embd_head_k());
 
@@ -345,7 +400,7 @@ ggml_tensor * llama_model_qwen35moe::graph::build_layer_attn(
 
     cur = build_attn(inp,
                 nullptr, nullptr, nullptr,
-                Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, kq_scale, il);
+                Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, kq_scale, il, store_kv);
     cb(cur, "attn_pregate", il);
 
     ggml_tensor * gate_sigmoid = ggml_sigmoid(ctx0, gate);

@@ -2026,7 +2026,8 @@ struct llama_model_qwen35 : public llama_model_base {
                     ggml_tensor * cur,
                     ggml_tensor * inp_pos,
                             int * sections,
-                            int   il);
+                            int   il,
+                           bool   store_kv = true);
 
         ggml_tensor * build_layer_attn_linear(
              llm_graph_input_rs * inp,
@@ -2058,7 +2059,6 @@ struct llama_model_qwen35 : public llama_model_base {
     std::unique_ptr<llm_graph_context> build_arch_graph(const llm_graph_params & params) const override;
 };
 
-
 struct llama_model_qwen35moe : public llama_model_base {
     llama_model_qwen35moe(const struct llama_model_params & params) : llama_model_base(params) {}
     void load_arch_hparams(llama_model_loader & ml) override;
@@ -2072,7 +2072,8 @@ struct llama_model_qwen35moe : public llama_model_base {
                     ggml_tensor * cur,
                     ggml_tensor * inp_pos,
                             int * sections,
-                            int   il);
+                            int   il,
+                           bool   store_kv = true);
 
         ggml_tensor * build_layer_attn_linear(
              llm_graph_input_rs * inp,
@@ -2241,5 +2242,22 @@ static inline float get_recurrent_alpha(int iter, int iters, float default_alpha
         }
     }
     return default_alpha;
+}
+
+// decide when to write the KV cache during recurrent iteration:
+//   "last"  (default) - write on the final iteration so the cache reflects the refined state
+//   "first"           - write on the first iteration (previous behaviour)
+//   "all"             - write on every iteration
+static inline bool get_store_kv(int iter, int iters) {
+    if (const char * env_kv = std::getenv("RECURRENT_KV")) {
+        std::string kv_mode(env_kv);
+        if (kv_mode == "first") {
+            return iter == 0;
+        }
+        if (kv_mode == "all") {
+            return true;
+        }
+    }
+    return iter == iters - 1;
 }
 

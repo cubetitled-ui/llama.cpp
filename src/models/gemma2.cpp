@@ -63,7 +63,7 @@ llama_model_gemma2::graph::graph(const llama_model & model, const llm_graph_para
     const int64_t n_embd_head = hparams.n_embd_head_k();
 
     int S = 50; // Устойчивость
-    int D = 4;  // Глубина рекуррентности
+    int D = 12; // Глубина рекуррентности
 
     if (const char * env_s = std::getenv("RECURRENT_S")) {
         S = std::atoi(env_s);
@@ -150,7 +150,7 @@ llama_model_gemma2::graph::graph(const llama_model & model, const llm_graph_para
 
             cur = build_attn(inp_attn,
                     model.layers[il].wo, NULL, model.layers[il].wo_s,
-                    Qcur, iter == 0 ? Kcur : nullptr, iter == 0 ? Vcur : nullptr, nullptr, nullptr, nullptr, 1.0f, il);
+                    Qcur, get_store_kv(iter, iters) ? Kcur : nullptr, get_store_kv(iter, iters) ? Vcur : nullptr, nullptr, nullptr, nullptr, 1.0f, il);
         }
         if (il == n_layer - 1 && inp_out_ids) {
             cur  = ggml_get_rows(ctx0,  cur, inp_out_ids);

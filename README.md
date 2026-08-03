@@ -35,9 +35,11 @@
 
 `llamar.cpp` injects KV-Decoupled Recurrent layers at inference-time for the following architectures without fine-tuning:
 * 🦙 **LLaMA & LLaMA 2 / 3 / 3.1 / 3.2** (`src/models/llama.cpp`)
-* 👑 **Qwen, Qwen2, Qwen2.5, & Qwen3.5** (`src/models/qwen2.cpp`, `src/models/qwen3.cpp`)
-* 💎 **Gemma 2** (`src/models/gemma2.cpp`) *(New)*
-* 🌪️ **Mistral (7B v0.3) & Mixtral (8x22B)** (`src/models/mistral3.cpp`) *(New)*
+* 👑 **Qwen, Qwen2, Qwen2.5, & Qwen3** (`src/models/qwen2.cpp`, `src/models/qwen3.cpp`)
+* 🎛️ **Qwen2 MoE & Qwen3 MoE** (`src/models/qwen2moe.cpp`, `src/models/qwen3moe.cpp`) *(New)*
+* ✨ **Qwen3.5 (Next/Dense) & Qwen3.5 MoE** (`src/models/qwen35.cpp`, `src/models/qwen35moe.cpp`) *(New)*
+* 💎 **Gemma 2** (`src/models/gemma2.cpp`)
+* 🌪️ **Mistral (7B v0.3) & Mixtral (8x22B)** (`src/models/mistral3.cpp`)
 
 ---
 
@@ -85,12 +87,16 @@ make -j$(nproc) llama-cli llama-server llama-bench
 In `llamar.cpp`, recurrence is injected dynamically at inference-time and is controlled via environment variables.
 
 #### 1. Recurrence Control Variables
-* **`RECURRENT_D`** (Default: `4`): The depth of recurrence (number of reasoning iterations). Set `RECURRENT_D=12` for optimal reasoning (as used in the GSM8K benchmark) or `RECURRENT_D=0` to run standard model baseline inference without recurrence.
+* **`RECURRENT_D`** (Default: `12`): The depth of recurrence (number of reasoning iterations). This is the default for all supported architectures. Set `RECURRENT_D=12` for optimal reasoning (as used in the GSM8K benchmark) or `RECURRENT_D=0` to run standard model baseline inference without recurrence.
 * **`RECURRENT_S`** (Default: `50`): The recurrence stability threshold parameter (Euler scaling scale).
 * **`RECURRENT_ALPHA` / `RECURRENT_BETA`** (Optional): Euler-scaling decay/growth coefficients (defaults are automatically scaled based on `iters`).
 * **`RECURRENT_LAYERS`** (Optional): Comma-separated list of 0-indexed layer IDs to apply recurrence (e.g. `RECURRENT_LAYERS="10,20,30"`). Overrides standard automatic layer placement.
 * **`RECURRENT_DEPTHS`** (Optional): Comma-separated list of iterations for each layer specified in `RECURRENT_LAYERS` (e.g. `RECURRENT_DEPTHS="3,6,3"`).
 * **`RECURRENT_STEP_MODE`** (Optional): Set to `harmonic` to enable adaptive step scaling, where $\alpha_{\text{iter}} = \frac{1}{\text{iter} + 1}$ and $\beta_{\text{iter}} = 1 - \alpha_{\text{iter}}$. This is theoretically proven to guarantee fixed-point convergence and reduce semantic drift during deep reasoning.
+* **`RECURRENT_KV`** (Optional): Controls **when the KV cache is written** during recurrent iterations. Defaults to `last`.
+  * `last` - write KV only on the final iteration, so the cache reflects the refined state (recommended).
+  * `first` - write KV on the first iteration only (previous behaviour).
+  * `all` - write KV on every iteration.
 
 
 #### 2. Optimizations Flags for MoE & Causal Blocks
@@ -122,6 +128,18 @@ RECURRENT_D=12 ./bin/llama-cli \
   -t 12 \
   -p "Explain quantum computing in simple terms."
 ```
+
+**Running a hybrid Delta-Net / Qwen3.5 model (e.g. Bonsai-27B) on CPU/GPU:**
+```bash
+RECURRENT_D=12 ./bin/llama-cli \
+  -m /path/to/Bonsai-27B-Q1_0.gguf \
+  -ngl 16 \
+  -fa on \
+  -t 12 \
+  -p "Write a short story about a robot."
+```
+> [!NOTE]
+> In hybrid models (Qwen3.5 Next, Qwen3.5 MoE, and Delta-Net variants), recurrence applies only to the **full-attention layers**; the native recurrent (linear/gated delta net) layers are executed once and are already recurrent by design.
 
 ---
 
