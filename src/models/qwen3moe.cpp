@@ -117,6 +117,8 @@ llama_model_qwen3moe::graph::graph(const llama_model & model, const llm_graph_pa
 
         int iters = recurrent_iters[il];
 
+        ggml_tensor * inp_layer_orig = inpL;
+
         for (int iter = 0; iter < iters; ++iter) {
             ggml_tensor * inpSA = inpL;
 
@@ -205,9 +207,19 @@ llama_model_qwen3moe::graph::graph(const llama_model & model, const llm_graph_pa
                 if (const char * env_b = std::getenv("RECURRENT_BETA")) {
                     beta = std::atof(env_b);
                 }
-                ggml_tensor * scaled_h = ggml_scale(ctx0, cur, alpha);
+                float gamma = get_recurrent_gamma();
+
+                ggml_tensor * scaled_h   = ggml_scale(ctx0, cur, alpha);
                 ggml_tensor * scaled_inp = ggml_scale(ctx0, inpSA, beta);
-                cur = ggml_add(ctx0, scaled_h, scaled_inp);
+                ggml_tensor * h_step     = ggml_add(ctx0, scaled_h, scaled_inp);
+
+                if (gamma > 0.0f) {
+                    ggml_tensor * h_step_scaled = ggml_scale(ctx0, h_step, 1.0f - gamma);
+                    ggml_tensor * anchor_scaled = ggml_scale(ctx0, inp_layer_orig, gamma);
+                    cur = ggml_add(ctx0, h_step_scaled, anchor_scaled);
+                } else {
+                    cur = h_step;
+                }
             }
 
             // input for next layer or next iteration

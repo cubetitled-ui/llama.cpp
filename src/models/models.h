@@ -2210,6 +2210,56 @@ static inline int get_recurrent_layers_count(int n_layer) {
     return N < 1 ? 1 : N;
 }
 
+static inline int get_recurrent_block_loops() {
+    if (const char * env_bl = std::getenv("RECURRENT_BLOCK_LOOPS")) {
+        int l = std::atoi(env_bl);
+        return l < 1 ? 1 : l;
+    }
+    return 1;
+}
+
+static inline std::pair<int, int> get_recurrent_block_range(int n_layer) {
+    int start_pct = 25;
+    int end_pct   = 75;
+    if (const char * env_start = std::getenv("RECURRENT_BLOCK_START_PCT")) {
+        start_pct = std::atoi(env_start);
+    }
+    if (const char * env_end = std::getenv("RECURRENT_BLOCK_END_PCT")) {
+        end_pct = std::atoi(env_end);
+    }
+    int l_start = (n_layer * start_pct) / 100;
+    int l_end   = (n_layer * end_pct)   / 100;
+    if (l_end <= l_start) {
+        l_start = 0;
+        l_end   = n_layer - 1;
+    }
+    if (l_end >= n_layer) {
+        l_end = n_layer - 1;
+    }
+    return {l_start, l_end};
+}
+
+static inline float get_recurrent_block_alpha(int loop, int loops) {
+    if (const char * env_a = std::getenv("RECURRENT_BLOCK_ALPHA")) {
+        return std::atof(env_a);
+    }
+    return 0.35f;
+}
+
+static inline float get_recurrent_block_exit_alpha() {
+    if (const char * env_ea = std::getenv("RECURRENT_BLOCK_EXIT_ALPHA")) {
+        return std::atof(env_ea);
+    }
+    return 0.5f;
+}
+
+static inline float get_recurrent_gamma() {
+    if (const char * env_g = std::getenv("RECURRENT_GAMMA")) {
+        return std::atof(env_g);
+    }
+    return 0.0f;
+}
+
 static inline std::vector<int> get_recurrent_iters(int n_layer, int D, int S, int L2, int L3, int L4, int c2, int c3, int c4) {
     std::vector<int> recurrent_iters(n_layer, 1);
 
@@ -2221,8 +2271,23 @@ static inline std::vector<int> get_recurrent_iters(int n_layer, int D, int S, in
             if (L3 >= 0 && L3 < n_layer) recurrent_iters[L3] = c3;
             if (L4 >= 0 && L4 < n_layer) recurrent_iters[L4] = c4;
         } else {
-            // split the network into N zones and distribute the total depth D across them
-            // guarantee at least 2 iterations per selected layer so every one actually recurs
+            int start_pct = 25;
+            int end_pct   = 75;
+            if (const char * env_start = std::getenv("RECURRENT_START_PCT")) {
+                start_pct = std::atoi(env_start);
+            }
+            if (const char * env_end = std::getenv("RECURRENT_END_PCT")) {
+                end_pct = std::atoi(env_end);
+            }
+
+            int w_start = (n_layer * start_pct) / 100;
+            int w_end   = (n_layer * end_pct)   / 100;
+            if (w_end <= w_start) {
+                w_start = 0;
+                w_end   = n_layer;
+            }
+            int w_len = w_end - w_start;
+
             int base = D / N;
             int rem  = D % N;
             if (base < 2) {
@@ -2232,8 +2297,8 @@ static inline std::vector<int> get_recurrent_iters(int n_layer, int D, int S, in
 
             int pos = 0;
             for (int i = 0; i < N; ++i) {
-                int size = (n_layer - pos) / (N - i);
-                int zone_start = pos;
+                int size = (w_len - pos) / (N - i);
+                int zone_start = w_start + pos;
                 pos += size;
 
                 int layer = zone_start + (S * (size - 1)) / 100;
@@ -2280,27 +2345,37 @@ static inline std::vector<int> get_recurrent_iters(int n_layer, int D, int S, in
 
 static inline float get_recurrent_alpha(int iter, int iters, float default_alpha) {
     if (const char * env_mode = std::getenv("RECURRENT_STEP_MODE")) {
-        if (std::string(env_mode) == "harmonic") {
-            return 1.0f / (iter + 1);
+        std::string mode(env_mode);
+        if (mode == "mann" || mode == "sqrt") {
+            return 1.0f / std::sqrt(float(iter + 1));
+        }
+        if (mode == "harmonic") {
+            return 1.0f / float(iter + 1);
+        }
+        if (mode == "constant") {
+            return default_alpha;
         }
     }
     return default_alpha;
 }
 
 // decide when to write the KV cache during recurrent iteration:
-//   "last"  (default) - write on the final iteration so the cache reflects the refined state
-//   "first"           - write on the first iteration (previous behaviour)
-//   "all"             - write on every iteration
+//   "all"   (default) - write on every iteration so intermediate self-attention is valid
+//   "first"           - write on the first iteration
+//   "last"            - write on the final iteration
 static inline bool get_store_kv(int iter, int iters) {
     if (const char * env_kv = std::getenv("RECURRENT_KV")) {
         std::string kv_mode(env_kv);
         if (kv_mode == "first") {
             return iter == 0;
         }
+        if (kv_mode == "last") {
+            return iter == iters - 1;
+        }
         if (kv_mode == "all") {
             return true;
         }
     }
-    return iter == iters - 1;
+    return true;
 }
 

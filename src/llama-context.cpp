@@ -2346,6 +2346,7 @@ void llama_context::output_reorder() {
 //
 
 uint32_t llama_context::graph_max_nodes(uint32_t n_tokens) const {
+    uint32_t res = 0;
     if (model.arch == LLM_ARCH_QWEN3NEXT ||
         model.arch == LLM_ARCH_KIMI_LINEAR ||
         model.arch == LLM_ARCH_QWEN35 ||
@@ -2353,11 +2354,24 @@ uint32_t llama_context::graph_max_nodes(uint32_t n_tokens) const {
         model.arch == LLM_ARCH_DEEPSEEK4 ||
         model.arch == LLM_ARCH_NANBEIGE ||
         model.arch == LLM_ARCH_MINIMAX_M3) {
-        return std::max<uint32_t>(n_tokens * 40, 32u * model.n_tensors());
+        res = std::max<uint32_t>(n_tokens * 40, 32u * model.n_tensors());
+    } else {
+        res = std::max<uint32_t>(1024u, 8u*model.n_tensors());
     }
-    uint32_t res = std::max<uint32_t>(1024u, 8u*model.n_tensors());
     for (const auto & lora : model.loras) {
         res += lora->get_n_nodes();
+    }
+    if (const char * env_bl = std::getenv("RECURRENT_BLOCK_LOOPS")) {
+        int l = std::atoi(env_bl);
+        if (l > 1) {
+            res *= (l + 1);
+        }
+    }
+    if (const char * env_d = std::getenv("RECURRENT_D")) {
+        int d = std::atoi(env_d);
+        if (d > 0) {
+            res *= 2;
+        }
     }
     return res;
 }
