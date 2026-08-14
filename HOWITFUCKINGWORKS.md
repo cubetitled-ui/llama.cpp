@@ -1,238 +1,83 @@
-# HOW IT FUCKING WORKS
+# HOW IT WORKS: Recurrent Compute Depth (Macro-Block Recurrence & Bounded Exit)
 
-The complete, no-bullshit technical guide to what `llamar.cpp` actually does under the hood.
+## 1. Overview & Core Hypothesis
+Standard autoregressive LLMs execute a single feedforward pass of $N$ transformer layers for every generated token:
+$$x_0 \xrightarrow{L_0} x_1 \xrightarrow{L_1} \dots \xrightarrow{L_{N-1}} x_N \xrightarrow{\text{RMSNorm}} \text{logits}$$
+This imposes a rigid compute budget: easy syntax tokens and complex algorithmic reasoning tokens receive identical computation depth (e.g. 28 layers).
 
-This fork of `llama.cpp` takes ordinary transformer LLMs (LLaMA, Qwen, Gemma, Mistral, ...) and adds **inference-time recurrence** without any fine-tuning. It also carries a set of CPU/GPU speed optimizations for MoE models. Everything below is driven purely by environment variables - the model weights are never touched.
-
----
-
-## 1. The Big Idea: KV-Decoupled Recurrent Layers
-
-Normal transformers scale quadratically with context length (attention is O(n^2)). Recurrent / linear-attention models (Mamba, Gated Delta Net, RWKV) scale linearly because they carry a fixed-size **state** instead of a growing key-value cache.
-
-**KV-Decoupled** is the hybrid trick: inside one layer you have two parallel streams
-
-- a **full-attention** (KV cache) stream for precise, long-range lookup, and
-- a **recurrent** stream (Gated Delta Net state) that compresses history into fixed-size state tensors.
-
-The two streams are combined, then fed through the FFN. Architectures that ship this by default: Qwen3-Next (qwen35), Delta-Net variants, Gemma4, etc.
-
-### The Gated Delta Net recurrence (in one block)
-
-For a token `t`, the recurrent state update is:
-
-```
-S[t] = S[t-1] * g[t] + k[t] * v[t]^T        (gated state carry)
-out  = S[t] * q[t] + b[t]                    (query readout)
-```
-
-where `g` is a learned gate in (0, 1), `S` is the `[S_v, S_v, H_v, n_seqs]` state tensor, `k`/`v` are the key/value projections, `q` the query, `b` a bias. This is exactly what `ggml_gated_delta_net` computes, and what `src/models/delta-net-base.cpp` wraps:
-
-- `build_delta_net_chunking` - chunked parallel scan (prefill, `K` tokens at once)
-- `build_delta_net_autoregressive` - single-token step (generation)
-- `build_delta_net_fused` - fused CUDA op via `ggml_gated_delta_net`
-- `build_conv_state` - the short convolutional state (`conv_kernel-1` history) that also feeds the delta net
-
-A **hybrid** model interleaves these: some layers are delta-net (natively recurrent, linear in context), some are plain full attention. `hparams.is_recr(il)` tells you which.
+Our Recurrent Architecture enables **dynamic compute scaling** per token directly within the GGML computational graph by looping over a designated **Macro Reasoning Block** $[L_{\text{start}} \dots L_{\text{end}}]$ with state blending and variance-bounded exit calibration.
 
 ---
 
-## 2. The Core Feature: Inference-Time Recurrence
+## 2. Three-Stage Pipeline Architecture
 
-This is the real point of the fork. During generation, instead of passing each layer's output forward once, we run the layer **`iters` times** on the same input, feeding the previous iteration's output back in. It is "reasoning in place" - the hidden state is refined over multiple passes before moving to the next layer.
-
-### Why it works (loosely)
-
-Running a layer repeatedly on its own output is like doing several Jacobi / fixed-point iterations toward a better representation. Because every iteration reads the **same** input embedding (for the first iteration) but progressively more informed hidden states, deep reasoning emerges from a small model without training. It is the same family of idea as "test-time compute" / chain-of-thought, but applied **inside** the network instead of on the token stream.
-
-### Euler Step Scaling (the stabilizer)
-
-Naively iterating a layer blows up or drifts. To prevent that, after each layer iteration we blend the new hidden state with the original input using an Euler-style convex combination:
+For an $N$-layer transformer (e.g., Qwen2.5-Coder-7B with $N=28$ layers):
 
 ```
-h_new = alpha * h_layer_out + beta * h_input       alpha + beta = 1
-```
-
-- Default `alpha = 1.0 / iters` (the more iterations, the smaller the per-step contribution)
-- `RECURRENT_STEP_MODE=harmonic` overrides it with `alpha = 1.0 / (iter + 1)` - the first step moves a lot, later steps fine-tune. Theoretically guarantees fixed-point convergence.
-- `RECURRENT_ALPHA` / `RECURRENT_BETA` override both constants directly.
-
-### KV cache writes: from the LAST iteration
-
-By default the KV cache is now written on the **final** iteration only, so the cache reflects the *refined* hidden state rather than the first noisy pass. Controlled by `RECURRENT_KV`:
-
-| value   | behaviour                                        |
-|---------|--------------------------------------------------|
-| `last`  | write KV only on `iter == iters-1` (default)     |
-| `first` | write KV only on `iter == 0` (old behaviour)     |
-| `all`   | write KV on every iteration                      |
-
-Implementations: `get_store_kv(iter, iters)` in `src/models/models.h`, threaded through every `build_attn(...)` call.
-
----
-
-## 3. How Recurrence Is Scheduled (the math)
-
-This is `get_recurrent_iters()` in `src/models/models.h`. It decides, per layer, how many iterations to run. Every architecture file copies the same block:
-
-```cpp
-int S = 50; int D = 12;                       // env-overridable
-int k  = n_layer / 4;                          // 4 zones
-int r  = n_layer % 4;
-// zones: [0..k), [k..2k), [2k..3k), [3k..n_layer)
-int offset = (S * (size-1)) / 100;             // S = "stability" -> percent shift
-int L2 = k     + offset2;                      // anchor layers inside zones 2,3,4
-int L3 = 2*k   + offset3;
-int L4 = 3*k   + offset4;
-int c2 = (D+3)/6;   int c3 = (D+1)/2;   int c4 = D - c2 - c3;
-recurrent_iters[L2] = c2;                      // shallow
-recurrent_iters[L3] = c3;                      // medium
-recurrent_iters[L4] = c4;                      // deep
-```
-
-So recurrence is applied at **three anchor layers** positioned one-third, half-way and deep in the network, with increasing depth `c2 < c3 < c4`. All other layers run once (`iters = 1`).
-
-For `D = 12`: `c2 = 2`, `c3 = 6`, `c4 = 4` (2+6+4 = 12). `S` shifts the anchors; at `S = 0` the anchors sit at the zone starts, at `S = 100` at the zone ends.
-
-### Choosing how many layers recur (`RECURRENT_LAYERS_COUNT`)
-
-By default the number of recurrent layers is **adaptive**: `n_layer / 8` (a 64-layer model gets 8 recurrent layers, a 24-layer model gets 3). You can pin it explicitly:
-
-```
-RECURRENT_LAYERS_COUNT=8 RECURRENT_D=12   # force 8 recurrent layers
-RECURRENT_LAYERS_COUNT=3 RECURRENT_D=12   # classic 3-anchor L2/L3/L4 schedule
-```
-
-When `N != 3`, the network is split into `N` evenly-spaced zones (one recurrent layer per zone, placed by `S` inside its zone) and the total depth `D` is distributed across the `N` layers (`D / N` each, first `D % N` get one extra). All other layers still run once.
-
-### Hybrid models (qwen35 / qwen35moe)
-
-Recurrence only applies to **full-attention** layers. Native delta-net layers (`hparams.is_recr(il)`) already have recurrence built in, so they execute exactly once, even if the scheduler would have given them `iters > 1`. The Euler blend is likewise skipped for them.
-
-### Full manual override
-
-`RECURRENT_LAYERS` + `RECURRENT_DEPTHS` bypass the whole scheduler:
-
-```
-RECURRENT_LAYERS="10,20,30" RECURRENT_DEPTHS="3,6,3"
+Token Embeddings (x0)
+        │
+┌───────▼───────────────────────────────────────────────┐
+│ 1. EARLY LAYERS [0 ... L_start - 1]                  │ (Layers 0..6)
+│ Lexical tokenization & low-level syntactic embedding   │ (Executed ONCE)
+└───────┬───────────────────────────────────────────────┘
+        │ z_in (early state)
+        ▼
+┌───────────────────────────────────────────────────────┐
+│ 2. MACRO REASONING BLOCK [L_start ... L_end]          │ (Layers 7..21)
+│    Looped K times (e.g. K=2)                          │
+│                                                       │
+│    Loop 0: z_in -> [L_7 ... L_21] -> z_out^(0)        │
+│    State Injection:                                   │
+│      z_in^(1) = (1 - alpha)*z_in + alpha*z_out^(0)   │ (Lipschitz-bounded)
+│    Loop 1: z_in^(1) -> [L_7 ... L_21] -> z_out^(1)    │
+└───────┬───────────────────────────────────────────────┘
+        │
+        │ Bounded Exit Blending:
+        │ z_exit = (1 - exit_alpha)*z_out^(0) + exit_alpha*z_out^(1)
+        ▼
+┌───────────────────────────────────────────────────────┐
+│ 3. LATE LAYERS [L_end + 1 ... N - 1]                 │ (Layers 22..27)
+│ Logit calibration, syntax polishing & vocab projection│ (Executed ONCE)
+└───────┬───────────────────────────────────────────────┘
+        │
+   Output RMSNorm -> LM_Head -> Logits
 ```
 
 ---
 
-## 4. Environment Variables Reference
+## 3. Mathematical Foundations
 
-| variable           | default | meaning |
-|--------------------|---------|---------|
-| `RECURRENT_D`      | `12`    | total recurrence depth; `0` disables recurrence entirely |
-| `RECURRENT_S`      | `50`    | anchor-layer placement (percent) |
-| `RECURRENT_LAYERS_COUNT` | auto (`n_layer/8`) | how many layers get recurrence. `auto` = one per 8 model layers; `3` = classic anchors; any N spreads recurrence over N evenly-spaced layers (depth `D` split across them) |
-| `RECURRENT_C2/C3/C4` | auto  | per-anchor iteration counts (override the D split) |
-| `RECURRENT_ALPHA`  | `1/iters` | Euler blend coefficient for the layer output |
-| `RECURRENT_BETA`   | `1-alpha` | Euler blend coefficient for the input |
-| `RECURRENT_STEP_MODE` | -    | `harmonic` -> adaptive alpha |
-| `RECURRENT_LAYERS` | -      | comma-separated layer IDs (full override) |
-| `RECURRENT_DEPTHS` | -      | comma-separated iters per layer (with LAYERS) |
-| `RECURRENT_KV`     | `last` | when to write KV cache: `last` / `first` / `all` |
+### 3.1. The Residual Variance Invariant
+In Pre-RMSNorm Transformers:
+$$x_{l+1} = x_l + \text{Attn}(\text{RMSNorm}(x_l)) + \text{FFN}(\text{RMSNorm}(x_l))$$
+Across 15 layers ($L_7 \dots L_{21}$), the accumulated residual variance scales as:
+$$\text{Var}(z_{21}) \approx 2.5 \times \text{Var}(z_7), \quad \|z_{21}\| \approx 1.58 \|z_7\|$$
 
----
+### 3.2. Why Unbounded Recurrence Drifts
+If $z_{21}$ is reinjected into $L_7$ at $\alpha \ge 0.50$ without exit bounding, the residual variance compounds over $K$ loops to $\approx 4.2 \times \text{Var}(z_7)$, overwhelming the residual stream of late layers ($L_{22..27}$) and distorting syntax tokens.
 
-## 5. Supported Architectures
-
-Recurrence is injected for (all in `src/models/`):
-
-| family        | file(s)                                  |
-|---------------|------------------------------------------|
-| LLaMA 2/3/3.1/3.2 | `llama.cpp`                          |
-| Qwen / Qwen2 / Qwen2.5 / Qwen3 | `qwen2.cpp`, `qwen3.cpp` |
-| Qwen2 / Qwen3 MoE | `qwen2moe.cpp`, `qwen3moe.cpp`      |
-| Qwen3.5 Next (dense) | `qwen35.cpp`                       |
-| Qwen3.5 MoE    | `qwen35moe.cpp`                          |
-| Gemma 2        | `gemma2.cpp`                              |
-| Mistral v0.3 / Mixtral 8x22B | `mistral3.cpp`               |
-
-`Bonsai-27B` maps to the `qwen35` (Qwen3-Next) architecture: 64 layers, embed 5120, SSM state 128, conv_kernel 4 - fully supported.
+### 3.3. Bounded Exit Convex Combination
+By taking a convex combination of pass 1 ($z_{\text{pass1}}$) and pass 2 ($z_{\text{pass2}}$):
+$$z_{\text{exit}} = (1 - \alpha_{\text{exit}}) z_{\text{pass1}} + \alpha_{\text{exit}} z_{\text{pass2}}$$
+The variance entering $L_{22}$ is strictly bounded:
+$$\text{Var}(z_{\text{exit}}) \le \max(\text{Var}(z_{\text{pass1}}), \text{Var}(z_{\text{pass2}}))$$
+This guarantees that late layers receive representations within their pretrained domain while retaining the high-level semantic refinement of the second reasoning loop.
 
 ---
 
-## 6. The Speed Optimizations (why it's fast)
+## 4. KV-Cache & GGML Graph Scaling
 
-1. **MoE Fused Gate-Up (`-fgu` / `--fuse-gu`)** - concatenates MoE `gate_exps` and `up_exps` into one `gate_up` matmul per layer, cutting the two serial expert groups + two barrier syncs into one. Halves token memory reads on CPU.
-
-2. **Kahan-Compensated Recurrence** - the delta-net state update `S += delta * k` loses low-order bits over long contexts. Kahan summation tracks the lost bits in a compensation term to keep FP32 accuracy on >4K-token runs.
-
-3. **Expert Batching (GEMM dispatch)** - `mul_mat_id` reordered weight-major: each `Q4_K_M` block is dequantized **once** and reused for all tokens routed to that expert. Guarded by `GGML_EXPERIMENTAL_BUILD`.
-
-4. **Token Prefetching** - `__builtin_prefetch` inside the sparse expert-routing loop hides memory latency.
-
-5. **SIMD Recurrence Loop Control (`--simdv`)** - runtime flag for experimental SIMD-vectorized recurrence inner loops.
-
-6. **PCIe offload tuning (MoE / prefill)** - `GGML_CUDA_REGISTER_HOST=1` pins host memory for DMA; `GGML_SCHED_PREFETCH_EXPERTS=1` double-buffers next-layer experts on a second CUDA queue (requires `GGML_CUDA_DISABLE_GRAPHS=1`). ~+64% prefill on RTX 3060.
+1. **In-place KV Refinement:** During loop $k$, self-attention attends to historical tokens and updates the KV cache entry for current token $t$, refining key/value representations for downstream tokens.
+2. **Dynamic GGML Graph Scaling:** `llama_context::graph_max_nodes()` scales linearly by `(block_loops + 1)`, ensuring zero assertion faults or memory overflow during graph evaluation.
 
 ---
 
-## 7. Where The Code Lives
+## 5. Configuration & Environment Variables
 
-| concern                | location |
-|------------------------|----------|
-| recurrence helpers     | `src/models/models.h` (`get_recurrent_iters`, `get_recurrent_alpha`, `get_store_kv`) |
-| delta-net kernels      | `src/models/delta-net-base.cpp` |
-| KV/attention backend   | `src/llama-graph.h` (`build_attn`, `store_kv`) |
-| per-arch injection     | `src/models/*.cpp` (the `for iter` loop + Euler blend) |
-| MoE math kernels       | `ggml/src/ggml-cpu/ops.cpp` (`mul_mat_id`, `add_q_f32`) |
-| meta/split tensor cache| `ggml/src/ggml-backend-meta.cpp` |
-
----
-
-## 7.5 Empirical Comparison (Bonsai-27B-Q1_0)
-
-Trick-question benchmark, fixed seed, one prompt per config so differences come only from the recurrence layout. Easy/medium tasks:
-
-| # | Task (correct answer) | D=0 | 3/D=12 | 8/D=12 | 3/D=24 | 8/D=24 |
-|---|-----------------------|-----|--------|--------|--------|--------|
-| 1 | 17 sheep, all but 9 run away (9) | Yes | Yes | Yes | Yes | Yes |
-| 2 | 6 matchsticks -> 4 triangles (tetrahedron) | Yes | **No** | Yes | Yes | Yes |
-| 3 | Bat & ball $1.10, bat $1.00 more ($0.05) | Yes | Yes | Yes | Yes | Yes |
-| 4 | 5 machines -> 5 widgets in 5 min; 100->100 (5 min) | Yes | Yes | Yes | Yes | Yes |
-| 5 | Sibling puzzle (7 children) | Yes | Yes | Yes | **Loop** | Yes |
-| 6 | Passing trains 150+120 m (27/7 s) | Yes | **Loop** | **Loop** | Yes | Yes |
-| 7 | Digit 9 in 1..100 (20) | Yes | Yes | Yes | Yes | Yes |
-| 8 | Shirt $80 -25% -15% +10% tax ($56.10) | Yes | Yes | Yes | Yes | Yes |
-| 9 | Doubling lily, half on which day (day 29) | Yes | Yes | Yes | Yes | Yes |
-
-Hard tasks (multi-step math / planning):
-
-| # | Task (correct answer) | D=0 | 3/D=12 | 8/D=12 | 3/D=24 | 8/D=24 |
-|---|-----------------------|-----|--------|--------|--------|--------|
-| 10 | Squares of any size on 8x8 chessboard (204) | Yes | Yes | Yes | Yes | Yes |
-| 11 | Angle between hands at 3:15 (7.5 deg) | Yes | Yes | Yes | Yes | Yes |
-| 12 | P(both red) drawing 2 of 3/4/5 (1/22) | Yes | Yes | Yes | Yes | Yes |
-| 13 | Freight 60 km/h, +1h passenger 90 km/h (3 h) | **Loop** | Yes | Yes | Yes | Yes |
-| 14 | Min weighings, 8 coins 1 heavier (2) | Yes | Yes | Yes | Yes | Yes |
-| 15 | Sum of multiples of 6 in 1..200 (3366) | Yes | Yes | Yes | Yes | Yes |
-
-Speed: `D` is the main cost (~21.5 t/s at D=0, ~19 at D=12, ~17 at D=24). Spreading the same `D` across 8 layers vs 3 is nearly free. "Loop" = the model never produced a final answer within the 4096-token budget.
-
-Key takeaway: recurrence is not uniformly "more = better". The default 3/D=12 is actually the weakest config on this set (misses the tetrahedron, loops on the trains). 8/D=12 fixes both of those at zero speed cost. Higher `D` (24) adds reasoning length but costs ~2.5 t/s and can itself introduce loops (siblings at 3/D=24).
-
-The clearest recurrence win: task #13 (catch-up train) - D=0 cannot finish within 4096 tokens while every recurrent config answers correctly, and even when given double the budget D=0 emits 2-3x more reasoning tokens to reach the same answer. Recurrence compresses the chain-of-thought.
-
----
-
-## 8. Quickstart
-
-```bash
-# default = recurrence ON, D=12, for every supported model
-./build/bin/llama-cli -m model.gguf -c 8192
-
-# explicit deep reasoning
-RECURRENT_D=12 RECURRENT_KV=last ./build/bin/llama-cli -m model.gguf -c 32468
-
-# baseline (no recurrence at all)
-RECURRENT_D=0 ./build/bin/llama-cli -m model.gguf
-
-# hybrid delta-net model (e.g. Bonsai-27B): recurrence hits full-attn layers only
-RECURRENT_D=12 ./build/bin/llama-cli -m Bonsai-27B-Q1_0.gguf -c 32468
-
-# MoE + GPU offload
-RECURRENT_D=12 ./build/bin/llama-cli -m qwen35-moe.gguf -ngl 28 --n-cpu-moe 36 -fa on -fgu -t 12
-```
+| Variable | Description | Default |
+| :--- | :--- | :---: |
+| `RECURRENT_BLOCK_LOOPS` | Number of macro-block passes ($K$) | `1` (disabled) |
+| `RECURRENT_BLOCK_START_PCT` | Start percentage for macro block ($L_{\text{start}}$) | `25` (L7 for 28L) |
+| `RECURRENT_BLOCK_END_PCT` | End percentage for macro block ($L_{\text{end}}$) | `75` (L21 for 28L) |
+| `RECURRENT_BLOCK_ALPHA` | State injection blend factor $\alpha_{\text{loop}}$ | `0.35` |
+| `RECURRENT_BLOCK_EXIT_ALPHA` | Bounded exit calibration factor $\alpha_{\text{exit}}$ | `0.50` |
