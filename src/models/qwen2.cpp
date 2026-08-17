@@ -108,7 +108,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
     const int block_loops = get_recurrent_block_loops();
     auto [block_start, block_end] = get_recurrent_block_range(n_layer, model.arch, model.hparams.n_embd);
 
-    auto build_layer = [&](int il, int iter, int iters) {
+    auto build_layer = [&](int il, int iter, int iters, int bloop = 0, int bloops = 1) {
         ggml_tensor * inpSA = inpL;
 
         // norm
@@ -141,7 +141,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
 
             cur = build_attn(inp_attn,
                     model.layers[il].wo, model.layers[il].wo_b, model.layers[il].wo_s,
-                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il, get_store_kv(iter, iters));
+                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il, get_store_kv(iter, iters, bloop, bloops));
         }
         if (il == n_layer - 1 && inp_out_ids) {
             cur   = ggml_get_rows(ctx0,   cur, inp_out_ids);
@@ -203,7 +203,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
             for (int il = block_start; il <= block_end; ++il) {
                 int iters = recurrent_iters[il];
                 for (int iter = 0; iter < iters; ++iter) {
-                    build_layer(il, iter, iters);
+                    build_layer(il, iter, iters, bloop, block_loops);
                 }
             }
             if (bloop == 0) {
