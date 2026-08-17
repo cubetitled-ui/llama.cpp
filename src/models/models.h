@@ -2291,21 +2291,37 @@ static inline std::pair<int, int> get_recurrent_block_range(int n_layer, llm_arc
 }
 
 static inline float get_recurrent_block_alpha(int loop, int loops, llm_arch arch = LLM_ARCH_UNKNOWN, int n_embd = 0) {
-    (void) loop;
-    (void) loops;
+    float base_alpha;
     if (const char * env_a = std::getenv("RECURRENT_BLOCK_ALPHA")) {
-        return std::atof(env_a);
+        base_alpha = std::atof(env_a);
+    } else {
+        recurrent_block_preset preset = get_recurrent_preset_for_arch(arch, n_embd);
+        base_alpha = preset.alpha;
     }
-    recurrent_block_preset preset = get_recurrent_preset_for_arch(arch, n_embd);
-    return preset.alpha;
+    if (loops <= 4) {
+        return base_alpha;
+    }
+    // harmonic decay: reduce alpha on later passes to prevent fixed-point collapse
+    float decay = 0.2f;
+    if (const char * env_decay = std::getenv("RECURRENT_BLOCK_DECAY")) {
+        decay = std::atof(env_decay);
+    }
+    return base_alpha / (1.0f + decay * float(loop));
 }
 
-static inline float get_recurrent_block_exit_alpha(llm_arch arch = LLM_ARCH_UNKNOWN, int n_embd = 0) {
+static inline float get_recurrent_block_exit_alpha(llm_arch arch = LLM_ARCH_UNKNOWN, int n_embd = 0, int loops = 1) {
+    float ea;
     if (const char * env_ea = std::getenv("RECURRENT_BLOCK_EXIT_ALPHA")) {
-        return std::atof(env_ea);
+        ea = std::atof(env_ea);
+    } else {
+        recurrent_block_preset preset = get_recurrent_preset_for_arch(arch, n_embd);
+        ea = preset.exit_alpha;
     }
-    recurrent_block_preset preset = get_recurrent_preset_for_arch(arch, n_embd);
-    return preset.exit_alpha;
+    // scale down exit_alpha at high loop counts to preserve logit diversity
+    if (loops > 4) {
+        ea = ea * std::sqrt(2.0f / float(loops));
+    }
+    return ea;
 }
 
 static inline float get_recurrent_gamma() {

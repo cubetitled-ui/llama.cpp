@@ -313,7 +313,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
         }
 
         if (first_pass_out != nullptr) {
-            float exit_alpha = get_recurrent_block_exit_alpha(model.arch);
+            float exit_alpha = get_recurrent_block_exit_alpha(model.arch, 0, block_loops);
             if (exit_alpha < 1.0f) {
                 ggml_tensor * s_pass1 = ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha);
                 ggml_tensor * s_pass2 = ggml_scale(ctx0, inpL, exit_alpha);
