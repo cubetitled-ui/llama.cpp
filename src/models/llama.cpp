@@ -159,7 +159,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
     ggml_tensor * inp_out_ids = build_inp_out_ids();
 
     const int block_loops = get_recurrent_block_loops();
-    auto [block_start, block_end] = get_recurrent_block_range(n_layer);
+    auto [block_start, block_end] = get_recurrent_block_range(n_layer, model.arch);
 
     auto build_layer = [&](int il, int iter, int iters) {
         res->t_layer_inp[il] = inpL;
@@ -305,7 +305,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
                 first_pass_out = inpL;
             }
             if (bloop + 1 < block_loops) {
-                float b_alpha = get_recurrent_block_alpha(bloop, block_loops);
+                float b_alpha = get_recurrent_block_alpha(bloop, block_loops, model.arch);
                 ggml_tensor * s_orig = ggml_scale(ctx0, block_inp_orig, 1.0f - b_alpha);
                 ggml_tensor * s_cur  = ggml_scale(ctx0, inpL, b_alpha);
                 inpL = ggml_add(ctx0, s_orig, s_cur);
@@ -313,7 +313,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
         }
 
         if (first_pass_out != nullptr) {
-            float exit_alpha = get_recurrent_block_exit_alpha();
+            float exit_alpha = get_recurrent_block_exit_alpha(model.arch);
             if (exit_alpha < 1.0f) {
                 ggml_tensor * s_pass1 = ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha);
                 ggml_tensor * s_pass2 = ggml_scale(ctx0, inpL, exit_alpha);

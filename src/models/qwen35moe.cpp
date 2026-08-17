@@ -163,8 +163,8 @@ llama_model_qwen35moe::graph::graph(const llama_model & model, const llm_graph_p
 
     GGML_ASSERT(n_embd_head == hparams.n_embd_head_k());
 
-    int S = 50; // Устойчивость
-    int D = 12; // Глубина рекуррентности
+    int S = 0;
+    int D = 0;
 
     if (const char * env_s = std::getenv("RECURRENT_S")) {
         S = std::atoi(env_s);
