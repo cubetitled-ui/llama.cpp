@@ -97,15 +97,21 @@ Instead of discarding $h^{(0)}$ or blindly feeding $h^{(1)}$, we compute a weigh
 $$h_{\text{loop}} = (1 - \alpha) \cdot h^{(0)} + \alpha \cdot h^{(1)}$$
 * **Why $\alpha \approx 0.11 - 0.12$?** A small $\alpha$ preserves the foundational representation while injecting a perturbation containing the first pass's findings. This prevents latent collapse into numerical instability.
 
-### Step 4: Pass 2 (Verification & Refinement)
-The blended state is routed through the exact same reasoning weights a second time:
-$$h^{(2)} = F_{\text{core}}(h_{\text{loop}})$$
-*On this second pass, self-attention attends to the blended representation, performing self-correction, logic verification, and denoising.*
+### Step 4: Pass 2..K (Verification & Iterative Refinement)
+The blended state is routed through the exact same reasoning weights for $K$ iterations (`RECURRENT_BLOCK_LOOPS`):
+$$h^{(t)} = F_{\text{core}}(h_{\text{loop}}^{(t-1)})$$
+*On each subsequent pass, self-attention attends to the iteratively refined representation, performing self-correction, logic verification, and denoising.*
 
-### Step 5: Exit Damping Transition
+### Step 5: Dynamic Harmonic Decay & Anti-Collapse Scaling
+When scaling beyond 2 loops ($K > 4$, e.g., Ultra-Max with `LOOPS=8`), static $\alpha$ causes fixed-point latent attraction. `llamar.cpp` utilizes **Harmonic Decay Scaling**:
+$$\alpha_t = \frac{\alpha_{\text{base}}}{1 + \gamma \cdot t}, \quad \text{where } \gamma = 0.20$$
+This preserves expansive reasoning in early iterations while stabilizing the latent vector on later passes.
+
+### Step 6: Adaptive Exit Damping Transition
 To smoothly transition the refined state into the exit zone without exploding activation norms:
-$$h_{\text{exit}} = \text{exit\_alpha} \cdot h^{(2)} + (1 - \text{exit\_alpha}) \cdot h^{(0)}$$
-* **$\text{exit\_alpha} \approx 0.42 - 0.47$** delivers the optimal balance between aggressive reasoning depth and output calibration.
+$$h_{\text{exit}} = \text{exit\_alpha}(K) \cdot h^{(K)} + (1 - \text{exit\_alpha}(K)) \cdot h^{(0)}$$
+Where $\text{exit\_alpha}(K)$ scales with loop count for deep recurrence:
+$$\text{exit\_alpha}(K) = \text{exit\_alpha}_{\text{base}} \cdot \sqrt{\frac{2}{K}} \quad (\text{for } K > 4)$$
 
 ---
 
