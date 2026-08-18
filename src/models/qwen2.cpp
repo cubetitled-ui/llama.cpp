@@ -68,47 +68,10 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
 
     ggml_tensor * inp_out_ids = build_inp_out_ids();
 
-    int N = n_layer;
-    int S = 50; // Устойчивость
-    int D = 12; // Глубина рекуррентности
-
-    if (const char * env_s = std::getenv("RECURRENT_S")) {
-        S = std::atoi(env_s);
-    }
-    if (const char * env_d = std::getenv("RECURRENT_D")) {
-        D = std::atoi(env_d);
-    }
-
-    int k = N / 4;
-    int r = N % 4;
-
-    int size1 = k, size2 = k, size3 = k, size4 = k + r;
-    int start1 = 0, start2 = k, start3 = 2 * k, start4 = 3 * k;
-
-    int offset1 = (S * (size1 - 1)) / 100;
-    int offset2 = (S * (size2 - 1)) / 100;
-    int offset3 = (S * (size3 - 1)) / 100;
-    int offset4 = (S * (size4 - 1)) / 100;
-
-    // L1 is not looped, used only for understanding
-    // int L1 = start1 + offset1; 
-    int L2 = start2 + offset2;
-    int L3 = start3 + offset3;
-    int L4 = start4 + offset4;
-
-    int c2 = (D + 3) / 6;
-    int c3 = (D + 1) / 2;
-    int c4 = D - c2 - c3;
-
-    if (const char * env_c2 = std::getenv("RECURRENT_C2")) c2 = std::atoi(env_c2);
-    if (const char * env_c3 = std::getenv("RECURRENT_C3")) c3 = std::atoi(env_c3);
-    if (const char * env_c4 = std::getenv("RECURRENT_C4")) c4 = std::atoi(env_c4);
-
-    std::vector<int> recurrent_iters = get_recurrent_iters(n_layer, D, S, L2, L3, L4, c2, c3, c4);
     const int block_loops = get_recurrent_block_loops();
     auto [block_start, block_end] = get_recurrent_block_range(n_layer, model.arch, model.hparams.n_embd);
 
-    auto build_layer = [&](int il, int iter, int iters, int bloop = 0, int bloops = 1) {
+    auto build_layer = [&](int il, int bloop = 0, int bloops = 1) {
         ggml_tensor * inpSA = inpL;
 
         // norm
@@ -141,7 +104,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
 
             cur = build_attn(inp_attn,
                     model.layers[il].wo, model.layers[il].wo_b, model.layers[il].wo_s,
-                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il, get_store_kv(iter, iters, bloop, bloops));
+                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il, get_store_kv(bloop, bloops));
         }
         if (il == n_layer - 1 && inp_out_ids) {
             cur   = ggml_get_rows(ctx0,   cur, inp_out_ids);
@@ -169,34 +132,16 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
         cur = build_cvec(cur, il);
         cb(cur, "l_out", il);
 
-        if (iters > 1) {
-            float alpha = 1.0f / iters;
-            if (const char * env_a = std::getenv("RECURRENT_ALPHA")) {
-                alpha = std::atof(env_a);
-            }
-            alpha = get_recurrent_alpha(iter, iters, alpha);
-            float beta = 1.0f - alpha;
-            if (const char * env_b = std::getenv("RECURRENT_BETA")) {
-                beta = std::atof(env_b);
-            }
-            ggml_tensor * scaled_h   = ggml_scale(ctx0, cur, alpha);
-            ggml_tensor * scaled_inp = ggml_scale(ctx0, inpSA, beta);
-            cur = ggml_add(ctx0, scaled_h, scaled_inp);
-        }
-
         inpL = cur;
     };
 
     if (block_loops > 1 && block_start <= block_end) {
-        // 1. Early layers
+        // 1. Early syntactic layers (Zone 1)
         for (int il = 0; il < block_start; ++il) {
-            int iters = recurrent_iters[il];
-            for (int iter = 0; iter < iters; ++iter) {
-                build_layer(il, iter, iters);
-            }
+            build_layer(il);
         }
 
-        // 2. Macro-Block Recurrent Reasoning Window
+        // 2. Focal Macro-Reasoning Nexus (Zone 2: layers 12..19)
         ggml_tensor * block_inp_orig = inpL;
         ggml_tensor * first_pass_out = nullptr;
         const bool dual_stream = get_recurrent_dual_stream();
@@ -205,55 +150,44 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
 
         for (int bloop = 0; bloop < block_loops; ++bloop) {
             for (int il = block_start; il <= block_end; ++il) {
-                int iters = recurrent_iters[il];
-                for (int iter = 0; iter < iters; ++iter) {
-                    build_layer(il, iter, iters, bloop, block_loops);
-                }
+                build_layer(il, bloop, block_loops);
             }
             if (bloop == 0) {
                 first_pass_out = inpL;
             }
             if (bloop + 1 < block_loops) {
                 float b_alpha = get_recurrent_block_alpha(bloop, block_loops, model.arch, model.hparams.n_embd);
-                float e_gate  = get_recurrent_entropy_gate(bloop, block_loops);
-                float eff_alpha = b_alpha * e_gate;
-                ggml_tensor * s_orig = ggml_scale(ctx0, block_inp_orig, 1.0f - eff_alpha);
-                ggml_tensor * s_cur  = ggml_scale(ctx0, inpL, eff_alpha);
+                ggml_tensor * s_orig = ggml_scale(ctx0, block_inp_orig, 1.0f - b_alpha);
+                ggml_tensor * s_cur  = ggml_scale(ctx0, inpL, b_alpha);
                 inpL = ggml_add(ctx0, s_orig, s_cur);
             }
         }
 
-        // Optional Dual-Stream Orthogonal Counter-Hypothesis Pass
-        if (dual_stream && block_loops > 1 && first_pass_out != nullptr) {
-            ggml_tensor * prim_final = inpL; // Capture the fully reasoned primary hypothesis
+        // Dual-Stream Orthogonal Counter-Verification Pass
+        if (dual_stream && first_pass_out != nullptr) {
+            ggml_tensor * prim_final = inpL;
 
-            // Anti-drift orthogonal trajectory: h_alt_in = h0 - beta*(h_prim - h0)
+            // Anti-drift orthogonal counter-trajectory: h_alt = h0 - beta*(h_prim - h0)
             ggml_tensor * delta_prim = ggml_sub(ctx0, prim_final, block_inp_orig);
             ggml_tensor * scaled_delta = ggml_scale(ctx0, delta_prim, counter_beta);
             inpL = ggml_sub(ctx0, block_inp_orig, scaled_delta);
 
             for (int il = block_start; il <= block_end; ++il) {
-                int iters = recurrent_iters[il];
-                for (int iter = 0; iter < iters; ++iter) {
-                    build_layer(il, iter, iters, block_loops, block_loops);
-                }
+                build_layer(il, block_loops, block_loops);
             }
             alt_stream_out = inpL;
 
-            // Mathematically sound Consensus Gating:
-            // 92% deep refined hypothesis + 8% orthogonal counter-verification
-            ggml_tensor * s_p = ggml_scale(ctx0, prim_final, 0.92f);
-            ggml_tensor * s_a = ggml_scale(ctx0, alt_stream_out, 0.08f);
+            // High-precision consensus gating: 94% primary + 6% counter-verification
+            ggml_tensor * s_p = ggml_scale(ctx0, prim_final, 0.94f);
+            ggml_tensor * s_a = ggml_scale(ctx0, alt_stream_out, 0.06f);
             ggml_tensor * consensus = ggml_add(ctx0, s_p, s_a);
 
-            // Apply Exit Damping: blend consensus with anchor state h0 to stabilize logit variance
+            // Exit Damping: blend consensus with anchor state h0 to stabilize logit variance
             float exit_alpha = get_recurrent_block_exit_alpha(model.arch, model.hparams.n_embd, block_loops);
             ggml_tensor * s_exit_c = ggml_scale(ctx0, consensus, exit_alpha);
             ggml_tensor * s_exit_a = ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha);
             inpL = ggml_add(ctx0, s_exit_a, s_exit_c);
-        }
-
-        if (first_pass_out != nullptr && !dual_stream) {
+        } else if (first_pass_out != nullptr) {
             float exit_alpha = get_recurrent_block_exit_alpha(model.arch, model.hparams.n_embd, block_loops);
             if (exit_alpha < 1.0f) {
                 ggml_tensor * s_pass1 = ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha);
@@ -262,19 +196,13 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
             }
         }
 
-        // 3. Late logit calibration layers
+        // 3. Late logit calibration layers (Zone 3)
         for (int il = block_end + 1; il < n_layer; ++il) {
-            int iters = recurrent_iters[il];
-            for (int iter = 0; iter < iters; ++iter) {
-                build_layer(il, iter, iters);
-            }
+            build_layer(il);
         }
     } else {
         for (int il = 0; il < n_layer; ++il) {
-            int iters = recurrent_iters[il];
-            for (int iter = 0; iter < iters; ++iter) {
-                build_layer(il, iter, iters);
-            }
+            build_layer(il);
         }
     }
 

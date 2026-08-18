@@ -2194,35 +2194,8 @@ struct llama_model_step35 : public llama_model_base {
 
 #include <vector>
 #include <string>
-#include <sstream>
 #include <cstdlib>
-
-// decide how many layers get recurrence:
-//   default - adaptive: 1 recurrent layer per 8 model layers (64-layer model -> 8 recurrent layers)
-//   RECURRENT_LAYERS_COUNT=N - explicit override (N=3 keeps the classic L2/L3/L4 anchors)
-//   the network is split into N evenly-spaced zones, one recurrent layer per zone
-static inline int get_recurrent_layers_count(int n_layer) {
-    if (const char * env_n = std::getenv("RECURRENT_LAYERS_COUNT")) {
-        int N = std::atoi(env_n);
-        return N < 1 ? 1 : N;
-    }
-    int N = n_layer / 8;
-    return N < 1 ? 1 : N;
-}
-
-static inline int get_recurrent_block_loops() {
-    if (const char * env_mode = std::getenv("RECURRENT_MODE")) {
-        std::string m(env_mode);
-        if (m == "fast" || m == "1") return 2;
-        if (m == "balanced" || m == "sweet" || m == "2") return 3; // Golden sweet-spot (JSON 74.1%, C++ 12.2%)
-        if (m == "ultra" || m == "deep" || m == "3") return 8;     // Deep deduction
-    }
-    if (const char * env_bl = std::getenv("RECURRENT_BLOCK_LOOPS")) {
-        int l = std::atoi(env_bl);
-        return l < 1 ? 1 : l;
-    }
-    return 1;
-}
+#include <cmath>
 
 struct recurrent_block_preset {
     int start_pct;
@@ -2240,23 +2213,18 @@ static inline recurrent_block_preset get_recurrent_preset_for_arch(llm_arch arch
         case LLM_ARCH_QWEN3VL:
         case LLM_ARCH_QWEN3NEXT:
         case LLM_ARCH_QWEN35:
-            // Scale-Aware Qwen/DeepSeek-R1 tuning:
+            // Scale-Aware Focal Reasoning Nexus (Layers 12..19 for 28-layer models):
             if (n_embd > 0 && n_embd <= 2048) {
-                // Calibrated for DeepSeek-R1-1.5B / Qwen2-1.5B
                 return {40, 66, 0.10f, 0.45f};
             }
-            // Calibrated on 7B+ benchmarks: Concentrated relational reasoning nexus (layers 12..19 out of 28)
-            // Preserves 100% exact syntax in SQL & C++ while achieving peak mathematical deduction
             return {42, 64, 0.10f, 0.40f};
 
         case LLM_ARCH_LLAMA:
         case LLM_ARCH_LLAMA4:
-            // Calibrated for LLaMA-3/LLaMA-4 broad syntactic & causal core
             return {36, 70, 0.12f, 0.45f};
 
         case LLM_ARCH_GEMMA:
         case LLM_ARCH_GEMMA2:
-            // Calibrated for Gemma-2 deep attention & alternating window
             return {40, 74, 0.10f, 0.40f};
 
         case LLM_ARCH_QWEN2MOE:
@@ -2267,7 +2235,6 @@ static inline recurrent_block_preset get_recurrent_preset_for_arch(llm_arch arch
         case LLM_ARCH_MISTRAL4:
         case LLM_ARCH_DEEPSEEK2:
         case LLM_ARCH_GROK:
-            // Calibrated for MoE architectures with dynamic routing variance control
             return {38, 72, 0.14f, 0.35f};
 
         default:
@@ -2275,26 +2242,26 @@ static inline recurrent_block_preset get_recurrent_preset_for_arch(llm_arch arch
     }
 }
 
+static inline int get_recurrent_block_loops() {
+    if (const char * env_mode = std::getenv("RECURRENT_MODE")) {
+        std::string m(env_mode);
+        if (m == "fast" || m == "1") return 2;
+        if (m == "balanced" || m == "sweet" || m == "2") return 2;
+        if (m == "ultra" || m == "deep" || m == "3") return 4;
+        if (m == "off" || m == "0") return 1;
+    }
+    if (const char * env_bl = std::getenv("RECURRENT_BLOCK_LOOPS")) {
+        int l = std::atoi(env_bl);
+        return l < 1 ? 1 : l;
+    }
+    // Default active dual-stream 2-loop pass
+    return 2;
+}
+
 static inline std::pair<int, int> get_recurrent_block_range(int n_layer, llm_arch arch = LLM_ARCH_UNKNOWN, int n_embd = 0) {
     recurrent_block_preset preset = get_recurrent_preset_for_arch(arch, n_embd);
     int start_pct = preset.start_pct;
     int end_pct   = preset.end_pct;
-
-    // Focal Reasoning Optimization (Speedup mode):
-    // Concentrates recurrence on the high-density relational core (e.g. 42%..64%)
-    // cutting redundant layer evaluations by ~45% while preserving logic depth
-    if (const char * env_focal = std::getenv("RECURRENT_FOCUS_MODE")) {
-        int focal = std::atoi(env_focal);
-        if (focal == 1) {
-            // Fast Focal Core: ~50% layer reduction
-            start_pct = 42;
-            end_pct   = 64;
-        } else if (focal == 2) {
-            // Ultra-Focal Core: concentrated 5-layer reasoning nexus
-            start_pct = 45;
-            end_pct   = 60;
-        }
-    }
 
     if (const char * env_start = std::getenv("RECURRENT_BLOCK_START_PCT")) {
         start_pct = std::atoi(env_start);
@@ -2315,206 +2282,45 @@ static inline std::pair<int, int> get_recurrent_block_range(int n_layer, llm_arc
 }
 
 static inline float get_recurrent_block_alpha(int loop, int loops, llm_arch arch = LLM_ARCH_UNKNOWN, int n_embd = 0) {
-    float base_alpha;
     if (const char * env_a = std::getenv("RECURRENT_BLOCK_ALPHA")) {
-        base_alpha = std::atof(env_a);
-    } else {
-        recurrent_block_preset preset = get_recurrent_preset_for_arch(arch, n_embd);
-        base_alpha = preset.alpha;
+        return std::atof(env_a);
     }
-    
-    // For small loops (1..3), preserve full expressive alpha
-    if (loops <= 3) {
-        return base_alpha;
-    }
-    
-    // Adaptive Geometric-Harmonic Decay for deep loops:
-    // Prevents overthinking / semantic drift on standard syntax and SQL while keeping reasoning power
-    float decay = 0.25f;
-    if (const char * env_decay = std::getenv("RECURRENT_BLOCK_DECAY")) {
-        decay = std::atof(env_decay);
-    }
-    return base_alpha / (1.0f + decay * float(loop));
+    recurrent_block_preset preset = get_recurrent_preset_for_arch(arch, n_embd);
+    return preset.alpha;
 }
 
 static inline float get_recurrent_block_exit_alpha(llm_arch arch = LLM_ARCH_UNKNOWN, int n_embd = 0, int loops = 1) {
-    float ea;
     if (const char * env_ea = std::getenv("RECURRENT_BLOCK_EXIT_ALPHA")) {
-        ea = std::atof(env_ea);
-    } else {
-        recurrent_block_preset preset = get_recurrent_preset_for_arch(arch, n_embd);
-        ea = preset.exit_alpha;
+        return std::atof(env_ea);
     }
-    // Scale exit alpha smoothly with sqrt(3/loops) to maintain anchor grounding for syntax
-    if (loops > 3) {
-        ea = ea * std::sqrt(3.0f / float(loops));
-    }
-    return ea;
+    recurrent_block_preset preset = get_recurrent_preset_for_arch(arch, n_embd);
+    return preset.exit_alpha;
 }
 
-// Dynamic Latent Entropy Gate:
-// Dynamically adjusts blending weight alpha based on task complexity.
-// Routine tokens (SQL keywords, Python defs) maintain high anchor stability (95% h0),
-// while complex deductive reasoning receives full recurrent depth.
-static inline float get_recurrent_entropy_gate(int loop, int loops) {
-    if (const char * env_gate = std::getenv("RECURRENT_ENTROPY_GATE")) {
-        float g = std::atof(env_gate);
-        return g > 0.0f ? g : 1.0f;
-    }
-    // Default dynamic gating curve: soft exponential transition
-    return 1.0f / (1.0f + 0.15f * float(loop));
-}
-
-// Dual-Stream Orthogonal Anti-Drift parameters:
 static inline bool get_recurrent_dual_stream() {
     if (const char * env_ds = std::getenv("RECURRENT_DUAL_STREAM")) {
         return std::atoi(env_ds) != 0;
     }
-    return false;
+    return true; // Active by default for Dual-Stream reasoning
 }
 
 static inline float get_recurrent_counter_beta() {
     if (const char * env_b = std::getenv("RECURRENT_COUNTER_BETA")) {
         return std::atof(env_b);
     }
-    return 0.06f; // Calibrated 6% soft orthogonal anchor (preserves SQL syntax exact match)
+    return 0.06f; // Calibrated 6% soft orthogonal counter-hypothesis
 }
 
-static inline float get_recurrent_gamma() {
-    if (const char * env_g = std::getenv("RECURRENT_GAMMA")) {
-        return std::atof(env_g);
-    }
-    return 0.0f;
+static inline std::vector<int> get_recurrent_iters(int n_layer, int = 0, int = 0, int = 0, int = 0, int = 0, int = 0, int = 0, int = 0) {
+    return std::vector<int>(n_layer, 1);
 }
+static inline float get_recurrent_alpha(int = 0, int = 1, float default_alpha = 0.5f) { return default_alpha; }
+static inline float get_recurrent_gamma() { return 0.0f; }
+static inline float get_recurrent_entropy_gate(int = 0, int = 1) { return 1.0f; }
 
-static inline std::vector<int> get_recurrent_iters(int n_layer, int D, int S, int L2, int L3, int L4, int c2, int c3, int c4) {
-    std::vector<int> recurrent_iters(n_layer, 1);
-
-    const int N = get_recurrent_layers_count(n_layer);
-
-    if (D > 0) {
-        if (N == 3) {
-            if (L2 >= 0 && L2 < n_layer) recurrent_iters[L2] = c2;
-            if (L3 >= 0 && L3 < n_layer) recurrent_iters[L3] = c3;
-            if (L4 >= 0 && L4 < n_layer) recurrent_iters[L4] = c4;
-        } else {
-            int start_pct = 25;
-            int end_pct   = 75;
-            if (const char * env_start = std::getenv("RECURRENT_START_PCT")) {
-                start_pct = std::atoi(env_start);
-            }
-            if (const char * env_end = std::getenv("RECURRENT_END_PCT")) {
-                end_pct = std::atoi(env_end);
-            }
-
-            int w_start = (n_layer * start_pct) / 100;
-            int w_end   = (n_layer * end_pct)   / 100;
-            if (w_end <= w_start) {
-                w_start = 0;
-                w_end   = n_layer;
-            }
-            int w_len = w_end - w_start;
-
-            int base = D / N;
-            int rem  = D % N;
-            if (base < 2) {
-                base = 2;
-                rem  = 0;
-            }
-
-            int pos = 0;
-            for (int i = 0; i < N; ++i) {
-                int size = (w_len - pos) / (N - i);
-                int zone_start = w_start + pos;
-                pos += size;
-
-                int layer = zone_start + (S * (size - 1)) / 100;
-                if (layer >= 0 && layer < n_layer) {
-                    recurrent_iters[layer] = base + (i < rem ? 1 : 0);
-                }
-            }
-        }
-    }
-
-    if (const char * env_layers = std::getenv("RECURRENT_LAYERS")) {
-        if (const char * env_depths = std::getenv("RECURRENT_DEPTHS")) {
-            std::string layers_str(env_layers);
-            std::string depths_str(env_depths);
-
-            std::vector<int> parsed_layers;
-            std::vector<int> parsed_depths;
-
-            std::stringstream ss_l(layers_str);
-            std::string token;
-            while (std::getline(ss_l, token, ',')) {
-                if (!token.empty()) {
-                    parsed_layers.push_back(std::atoi(token.c_str()));
-                }
-            }
-
-            std::stringstream ss_d(depths_str);
-            while (std::getline(ss_d, token, ',')) {
-                if (!token.empty()) {
-                    parsed_depths.push_back(std::atoi(token.c_str()));
-                }
-            }
-
-            for (size_t i = 0; i < parsed_layers.size() && i < parsed_depths.size(); ++i) {
-                int target_layer = parsed_layers[i];
-                if (target_layer >= 0 && target_layer < n_layer) {
-                    recurrent_iters[target_layer] = parsed_depths[i];
-                }
-            }
-        }
-    }
-    return recurrent_iters;
-}
-
-static inline float get_recurrent_alpha(int iter, int iters, float default_alpha) {
-    if (const char * env_mode = std::getenv("RECURRENT_STEP_MODE")) {
-        std::string mode(env_mode);
-        if (mode == "mann" || mode == "sqrt") {
-            return 1.0f / std::sqrt(float(iter + 1));
-        }
-        if (mode == "harmonic") {
-            return 1.0f / float(iter + 1);
-        }
-        if (mode == "constant") {
-            return default_alpha;
-        }
-    }
-    return default_alpha;
-}
-
-// Fast In-Place Residual Fusion flag:
-// Eliminates redundant intermediary tensor copies by fusing scale+add into single-pass execution
-static inline bool get_recurrent_fast_fusion() {
-    if (const char * env_ff = std::getenv("RECURRENT_FAST_FUSION")) {
-        return std::atoi(env_ff) != 0;
-    }
-    return true; // Enabled by default for max throughput
-}
-
-// decide when to write the KV cache during recurrent iteration:
-//   "all"   (default) - write on every iteration so intermediate self-attention is valid
-//   "first"           - write on the first iteration
-//   "last"            - write on the final iteration
-static inline bool get_store_kv(int iter, int iters, int bloop = 0, int block_loops = 1) {
-    // If inside a multi-pass macro-block, only write KV cache on the final pass to save bandwidth
+static inline bool get_store_kv(int = 0, int = 1, int bloop = 0, int block_loops = 1) {
     if (block_loops > 1 && bloop < block_loops - 1) {
         return false;
-    }
-    if (const char * env_kv = std::getenv("RECURRENT_KV")) {
-        std::string kv_mode(env_kv);
-        if (kv_mode == "first") {
-            return iter == 0;
-        }
-        if (kv_mode == "last") {
-            return iter == iters - 1;
-        }
-        if (kv_mode == "all") {
-            return true;
-        }
     }
     return true;
 }
