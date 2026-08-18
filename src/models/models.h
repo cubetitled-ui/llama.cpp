@@ -2485,6 +2485,15 @@ static inline float get_recurrent_alpha(int iter, int iters, float default_alpha
     return default_alpha;
 }
 
+// Fast In-Place Residual Fusion flag:
+// Eliminates redundant intermediary tensor copies by fusing scale+add into single-pass execution
+static inline bool get_recurrent_fast_fusion() {
+    if (const char * env_ff = std::getenv("RECURRENT_FAST_FUSION")) {
+        return std::atoi(env_ff) != 0;
+    }
+    return true; // Enabled by default for max throughput
+}
+
 // decide when to write the KV cache during recurrent iteration:
 //   "all"   (default) - write on every iteration so intermediate self-attention is valid
 //   "first"           - write on the first iteration
