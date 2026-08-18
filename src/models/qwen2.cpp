@@ -244,7 +244,13 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
             // 92% deep refined hypothesis + 8% orthogonal counter-verification
             ggml_tensor * s_p = ggml_scale(ctx0, prim_final, 0.92f);
             ggml_tensor * s_a = ggml_scale(ctx0, alt_stream_out, 0.08f);
-            inpL = ggml_add(ctx0, s_p, s_a);
+            ggml_tensor * consensus = ggml_add(ctx0, s_p, s_a);
+
+            // Apply Exit Damping: blend consensus with anchor state h0 to stabilize logit variance
+            float exit_alpha = get_recurrent_block_exit_alpha(model.arch, model.hparams.n_embd, block_loops);
+            ggml_tensor * s_exit_c = ggml_scale(ctx0, consensus, exit_alpha);
+            ggml_tensor * s_exit_a = ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha);
+            inpL = ggml_add(ctx0, s_exit_a, s_exit_c);
         }
 
         if (first_pass_out != nullptr && !dual_stream) {
