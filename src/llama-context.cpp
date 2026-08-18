@@ -2361,10 +2361,22 @@ uint32_t llama_context::graph_max_nodes(uint32_t n_tokens) const {
     for (const auto & lora : model.loras) {
         res += lora->get_n_nodes();
     }
+    int block_loops = 1;
+    if (const char * env_mode = std::getenv("RECURRENT_MODE")) {
+        std::string m(env_mode);
+        if (m == "fast" || m == "1") block_loops = 2;
+        if (m == "balanced" || m == "sweet" || m == "2") block_loops = 3;
+        if (m == "ultra" || m == "deep" || m == "3") block_loops = 8;
+    }
     if (const char * env_bl = std::getenv("RECURRENT_BLOCK_LOOPS")) {
-        int l = std::atoi(env_bl);
-        if (l > 1) {
-            res *= (l + 1);
+        block_loops = std::atoi(env_bl);
+    }
+    if (block_loops > 1) {
+        res *= (block_loops + 2);
+    }
+    if (const char * env_ds = std::getenv("RECURRENT_DUAL_STREAM")) {
+        if (std::atoi(env_ds) != 0) {
+            res *= 2;
         }
     }
     if (const char * env_d = std::getenv("RECURRENT_D")) {
