@@ -294,6 +294,10 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
 
         ggml_tensor * block_inp_orig = inpL;
         ggml_tensor * first_pass_out = nullptr;
+        const bool dual_stream = get_recurrent_dual_stream();
+        const float counter_beta = get_recurrent_counter_beta();
+        ggml_tensor * alt_stream_out = nullptr;
+
         for (int bloop = 0; bloop < block_loops; ++bloop) {
             for (int il = block_start; il <= block_end; ++il) {
                 int iters = recurrent_iters[il];
@@ -305,15 +309,41 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
                 first_pass_out = inpL;
             }
             if (bloop + 1 < block_loops) {
-                float b_alpha = get_recurrent_block_alpha(bloop, block_loops, model.arch);
-                ggml_tensor * s_orig = ggml_scale(ctx0, block_inp_orig, 1.0f - b_alpha);
-                ggml_tensor * s_cur  = ggml_scale(ctx0, inpL, b_alpha);
+                float b_alpha = get_recurrent_block_alpha(bloop, block_loops, model.arch, model.hparams.n_embd);
+                float e_gate  = get_recurrent_entropy_gate(bloop, block_loops);
+                float eff_alpha = b_alpha * e_gate;
+                ggml_tensor * s_orig = ggml_scale(ctx0, block_inp_orig, 1.0f - eff_alpha);
+                ggml_tensor * s_cur  = ggml_scale(ctx0, inpL, eff_alpha);
                 inpL = ggml_add(ctx0, s_orig, s_cur);
             }
         }
 
-        if (first_pass_out != nullptr) {
-            float exit_alpha = get_recurrent_block_exit_alpha(model.arch, 0, block_loops);
+        // Optional Dual-Stream Orthogonal Counter-Hypothesis Pass
+        if (dual_stream && block_loops > 1 && first_pass_out != nullptr) {
+            ggml_tensor * prim_final = inpL;
+
+            // Anti-drift orthogonal trajectory: h_alt_in = h0 - beta*(h_prim - h0)
+            ggml_tensor * delta_prim = ggml_sub(ctx0, prim_final, block_inp_orig);
+            ggml_tensor * scaled_delta = ggml_scale(ctx0, delta_prim, counter_beta);
+            inpL = ggml_sub(ctx0, block_inp_orig, scaled_delta);
+
+            for (int il = block_start; il <= block_end; ++il) {
+                int iters = recurrent_iters[il];
+                for (int iter = 0; iter < iters; ++iter) {
+                    build_layer(il, iter, iters, block_loops, block_loops);
+                }
+            }
+            alt_stream_out = inpL;
+
+            // Mathematically sound Consensus Gating:
+            // 92% deep refined hypothesis + 8% orthogonal counter-verification
+            ggml_tensor * s_p = ggml_scale(ctx0, prim_final, 0.92f);
+            ggml_tensor * s_a = ggml_scale(ctx0, alt_stream_out, 0.08f);
+            inpL = ggml_add(ctx0, s_p, s_a);
+        }
+
+        if (first_pass_out != nullptr && !dual_stream) {
+            float exit_alpha = get_recurrent_block_exit_alpha(model.arch, model.hparams.n_embd, block_loops);
             if (exit_alpha < 1.0f) {
                 ggml_tensor * s_pass1 = ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha);
                 ggml_tensor * s_pass2 = ggml_scale(ctx0, inpL, exit_alpha);
