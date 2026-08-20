@@ -71,7 +71,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
     const int block_loops = get_recurrent_block_loops();
     auto [block_start, block_end] = get_recurrent_block_range(n_layer, model.arch, model.hparams.n_embd);
 
-    auto build_layer = [&](int il, int bloop = 0, int bloops = 1) {
+    auto build_layer = [&](int il, int bloop = 0, int bloops = 1, bool is_alt = false) {
         ggml_tensor * inpSA = inpL;
 
         // norm
@@ -104,7 +104,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
 
             cur = build_attn(inp_attn,
                     model.layers[il].wo, model.layers[il].wo_b, model.layers[il].wo_s,
-                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il, get_store_kv(bloop, bloops));
+                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il, get_store_kv(bloop, bloops, is_alt));
         }
         if (il == n_layer - 1 && inp_out_ids) {
             cur   = ggml_get_rows(ctx0,   cur, inp_out_ids);
@@ -150,7 +150,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
 
         for (int bloop = 0; bloop < block_loops; ++bloop) {
             for (int il = block_start; il <= block_end; ++il) {
-                build_layer(il, bloop, block_loops);
+                build_layer(il, bloop, block_loops, false);
             }
             if (bloop == 0) {
                 first_pass_out = inpL;
@@ -173,7 +173,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
             inpL = ggml_sub(ctx0, block_inp_orig, scaled_delta);
 
             for (int il = block_start; il <= block_end; ++il) {
-                build_layer(il, block_loops, block_loops);
+                build_layer(il, block_loops, block_loops, true);
             }
             alt_stream_out = inpL;
 

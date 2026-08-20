@@ -126,7 +126,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
     const int block_loops = get_recurrent_block_loops();
     auto [block_start, block_end] = get_recurrent_block_range(n_layer, model.arch);
 
-    auto build_layer = [&](int il, int bloop = 0, int bloops = 1) {
+    auto build_layer = [&](int il, int bloop = 0, int bloops = 1, bool is_alt = false) {
         res->t_layer_inp[il] = inpL;
         ggml_tensor * inpSA = inpL;
 
@@ -175,7 +175,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
             } else {
                 cur = build_attn(inp_attn,
                         model.layers[il].wo, model.layers[il].wo_b, model.layers[il].wo_s,
-                        Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, kq_scale, il, get_store_kv(0, 1, bloop, bloops));
+                        Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, kq_scale, il, get_store_kv(bloop, bloops, is_alt));
             }
             cb(cur, "attn_out", il);
         }
@@ -248,7 +248,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
 
         for (int bloop = 0; bloop < block_loops; ++bloop) {
             for (int il = block_start; il <= block_end; ++il) {
-                build_layer(il, bloop, block_loops);
+                build_layer(il, bloop, block_loops, false);
             }
             if (bloop == 0) {
                 first_pass_out = inpL;
@@ -271,7 +271,7 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
             inpL = ggml_sub(ctx0, block_inp_orig, scaled_delta);
 
             for (int il = block_start; il <= block_end; ++il) {
-                build_layer(il, block_loops, block_loops);
+                build_layer(il, block_loops, block_loops, true);
             }
             alt_stream_out = inpL;
 

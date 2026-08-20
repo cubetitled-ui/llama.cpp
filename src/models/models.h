@@ -2215,17 +2215,17 @@ static inline recurrent_block_preset get_recurrent_preset_for_arch(llm_arch arch
         case LLM_ARCH_QWEN35:
             // Scale-Aware Focal Reasoning Nexus (Layers 12..19 for 28-layer models):
             if (n_embd > 0 && n_embd <= 2048) {
-                return {40, 66, 0.10f, 0.45f};
+                return {40, 66, 0.20f, 0.62f};
             }
-            return {42, 64, 0.10f, 0.40f};
+            return {42, 64, 0.20f, 0.62f};
 
         case LLM_ARCH_LLAMA:
         case LLM_ARCH_LLAMA4:
-            return {36, 70, 0.12f, 0.45f};
+            return {36, 70, 0.20f, 0.62f};
 
         case LLM_ARCH_GEMMA:
         case LLM_ARCH_GEMMA2:
-            return {40, 74, 0.10f, 0.40f};
+            return {40, 74, 0.20f, 0.62f};
 
         case LLM_ARCH_QWEN2MOE:
         case LLM_ARCH_QWEN3MOE:
@@ -2235,10 +2235,10 @@ static inline recurrent_block_preset get_recurrent_preset_for_arch(llm_arch arch
         case LLM_ARCH_MISTRAL4:
         case LLM_ARCH_DEEPSEEK2:
         case LLM_ARCH_GROK:
-            return {38, 72, 0.14f, 0.35f};
+            return {38, 72, 0.20f, 0.62f};
 
         default:
-            return {38, 71, 0.12f, 0.42f};
+            return {38, 71, 0.20f, 0.62f};
     }
 }
 
@@ -2318,7 +2318,10 @@ static inline float get_recurrent_alpha(int = 0, int = 1, float default_alpha = 
 static inline float get_recurrent_gamma() { return 0.0f; }
 static inline float get_recurrent_entropy_gate(int = 0, int = 1) { return 1.0f; }
 
-static inline bool get_store_kv(int = 0, int = 1, int bloop = 0, int block_loops = 1) {
+static inline bool get_store_kv(int bloop = 0, int block_loops = 1, bool is_alt_stream = false) {
+    if (is_alt_stream) {
+        return false;
+    }
     if (block_loops > 1 && bloop < block_loops - 1) {
         return false;
     }
