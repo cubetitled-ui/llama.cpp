@@ -2311,6 +2311,27 @@ static inline float get_recurrent_counter_beta() {
     return 0.06f; // Calibrated 6% soft orthogonal counter-hypothesis
 }
 
+static inline float get_recurrent_counter_gamma() {
+    if (const char * env_g = std::getenv("RECURRENT_COUNTER_GAMMA")) {
+        return std::atof(env_g);
+    }
+    return 0.06f; // Calibrated 6% consensus regularizer
+}
+
+static inline float get_recurrent_momentum() {
+    if (const char * env_m = std::getenv("RECURRENT_MOMENTUM")) {
+        return std::atof(env_m);
+    }
+    return 0.0f;
+}
+
+static inline bool get_recurrent_normalize_delta() {
+    if (const char * env_nd = std::getenv("RECURRENT_NORMALIZE_DELTA")) {
+        return std::atoi(env_nd) != 0;
+    }
+    return false;
+}
+
 static inline bool get_store_kv(int bloop = 0, int block_loops = 1, bool is_alt_stream = false) {
     if (is_alt_stream) {
         return false;

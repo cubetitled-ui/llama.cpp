@@ -156,6 +156,8 @@ llama_model_qwen3::graph::graph(const llama_model & model, const llm_graph_param
         const float exit_alpha = get_recurrent_block_exit_alpha(model.arch, model.hparams.n_embd, block_loops);
         const bool dual_stream = get_recurrent_dual_stream();
         const float beta = get_recurrent_counter_beta();
+        const float gamma = get_recurrent_counter_gamma();
+        const float momentum = get_recurrent_momentum();
 
         for (int bloop = 0; bloop < block_loops; ++bloop) {
             for (int il = block_start; il <= block_end; ++il) {
@@ -165,16 +167,21 @@ llama_model_qwen3::graph::graph(const llama_model & model, const llm_graph_param
                 first_pass_out = inpL;
             }
             if (bloop + 1 < block_loops) {
-                ggml_tensor * mixed = ggml_add(ctx0,
-                    ggml_scale(ctx0, block_inp_orig, 1.0f - alpha),
-                    ggml_scale(ctx0, inpL, alpha));
-                cb(mixed, "recurrent_block_inp", bloop);
-                inpL = mixed;
+                float b_alpha = get_recurrent_block_alpha(bloop, block_loops, model.arch, model.hparams.n_embd);
+                ggml_tensor * s_orig = ggml_scale(ctx0, block_inp_orig, 1.0f - b_alpha);
+                ggml_tensor * s_cur  = ggml_scale(ctx0, inpL, b_alpha);
+                inpL = ggml_add(ctx0, s_orig, s_cur);
+                if (momentum > 0.0f) {
+                    ggml_tensor * delta_m = ggml_sub(ctx0, s_cur, s_orig);
+                    inpL = ggml_add(ctx0, inpL, ggml_scale(ctx0, delta_m, momentum));
+                }
+                cb(inpL, "recurrent_block_inp", bloop);
             }
         }
 
         if (dual_stream && first_pass_out != nullptr) {
-            ggml_tensor * delta = ggml_sub(ctx0, first_pass_out, block_inp_orig);
+            ggml_tensor * prim_final = inpL;
+            ggml_tensor * delta = ggml_sub(ctx0, prim_final, block_inp_orig);
             ggml_tensor * scaled_delta = ggml_scale(ctx0, delta, beta);
             inpL = ggml_sub(ctx0, block_inp_orig, scaled_delta);
 
@@ -184,8 +191,8 @@ llama_model_qwen3::graph::graph(const llama_model & model, const llm_graph_param
             alt_stream_out = inpL;
 
             ggml_tensor * consensus = ggml_add(ctx0,
-                ggml_scale(ctx0, first_pass_out, 1.0f - beta),
-                ggml_scale(ctx0, alt_stream_out, beta));
+                ggml_scale(ctx0, first_pass_out, 1.0f - gamma),
+                ggml_scale(ctx0, alt_stream_out, gamma));
             cb(consensus, "recurrent_consensus", 0);
 
             inpL = ggml_add(ctx0,

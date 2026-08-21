@@ -1,0 +1,45 @@
+{
+  "benchmark": "SWE-bench_Lite",
+  "mode": "dualstream",
+  "total_samples": 2,
+  "valid_syntax_count": 2,
+  "valid_syntax_rate_pct": 100.0,
+  "target_file_match_count": 2,
+  "target_file_match_rate_pct": 100.0,
+  "mean_latency_seconds": 6.480059266090393,
+  "timestamp": "2026-08-21 16:26:16 UTC",
+  "results": [
+    {
+      "index": 1,
+      "instance_id": "astropy__astropy-12907",
+      "repo": "astropy/astropy",
+      "is_valid_syntax": true,
+      "target_file_match": true,
+      "gold_files": [
+        "astropy/modeling/separable.py"
+      ],
+      "pred_files": [
+        "astropy/modeling/separable.py"
+      ],
+      "latency_seconds": 6.889917850494385,
+      "extracted_diff": "diff --git a/astropy/modeling/separable.py b/astropy/modeling/separable.py\nindex 1234567..89abcdef 100644\n--- a/astropy/modeling/separable.py\n+++ b/astropy/modeling/separable.py\n@@ -123,7 +123,7 @@ def separability_matrix(model):\n         return np.eye(len(model.inputs))\n \n     # Compute the separability matrix for each component\n-    separability_matrices = [separability_matrix(component) for component in model.components]\n+    separability_matrices = [separability_matrix(component) for component in model.components if component.is_separable]\n \n     # Compute the overall separability matrix\n     separability_matrix = np.zeros((len(model.inputs), len(model.inputs)))\n@@ -131,6 +131,7 @@ def separability_matrix(model):\n         separability_matrix[i, j] = np.all([separability_matrices[k][i, j] for k in range(len(model.components))])\n \n     return separability_matrix\n+",
+      "raw_response": "```diff\ndiff --git a/astropy/modeling/separable.py b/astropy/modeling/separable.py\nindex 1234567..89abcdef 100644\n--- a/astropy/modeling/separable.py\n+++ b/astropy/modeling/separable.py\n@@ -123,7 +123,7 @@ def separability_matrix(model):\n         return np.eye(len(model.inputs))\n \n     # Compute the separability matrix for each component\n-    separability_matrices = [separability_matrix(component) for component in model.components]\n+    separability_matrices = [separability_matrix(component) for component in model.components if component.is_separable]\n \n     # Compute the overall separability matrix\n     separability_matrix = np.zeros((len(model.inputs), len(model.inputs)))\n@@ -131,6 +131,7 @@ def separability_matrix(model):\n         separability_matrix[i, j] = np.all([separability_matrices[k][i, j] for k in range(len(model.components))])\n \n     return separability_matrix\n+\n```"
+    },
+    {
+      "index": 2,
+      "instance_id": "astropy__astropy-14182",
+      "repo": "astropy/astropy",
+      "is_valid_syntax": true,
+      "target_file_match": true,
+      "gold_files": [
+        "astropy/io/ascii/rst.py"
+      ],
+      "pred_files": [
+        "astropy/io/ascii/rst.py"
+      ],
+      "latency_seconds": 6.070200681686401,
+      "extracted_diff": "diff --git a/astropy/io/ascii/rst.py b/astropy/io/ascii/rst.py\nindex 1234567..89abcdef 100644\n--- a/astropy/io/ascii/rst.py\n+++ b/astropy/io/ascii/rst.py\n@@ -1,6 +1,7 @@\n from astropy.io.ascii.core import BaseTableIO\n from astropy.io.ascii import io_write\n from astropy.io.ascii import Writer\n+from astropy.io.ascii import header_rows\n\n class RST(BaseTableIO):\n     name = 'rst'\n@@ -10,6 +11,7 @@ class RST(BaseTableIO):\n         self._header_rows = None\n\n     def write(self, table, filename, **kwargs):\n+        if 'header_rows' in kwargs:\n+            self._header_rows = kwargs.pop('header_rows')\n         io_write(table, filename, **kwargs)",
+      "raw_response": "```diff\ndiff --git a/astropy/io/ascii/rst.py b/astropy/io/ascii/rst.py\nindex 1234567..89abcdef 100644\n--- a/astropy/io/ascii/rst.py\n+++ b/astropy/io/ascii/rst.py\n@@ -1,6 +1,7 @@\n from astropy.io.ascii.core import BaseTableIO\n from astropy.io.ascii import io_write\n from astropy.io.ascii import Writer\n+from astropy.io.ascii import header_rows\n\n class RST(BaseTableIO):\n     name = 'rst'\n@@ -10,6 +11,7 @@ class RST(BaseTableIO):\n         self._header_rows = None\n\n     def write(self, table, filename, **kwargs):\n+        if 'header_rows' in kwargs:\n+            self._header_rows = kwargs.pop('header_rows')\n         io_write(table, filename, **kwargs)\n```"
+    }
+  ]
+}

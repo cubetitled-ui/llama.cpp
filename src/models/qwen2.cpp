@@ -157,9 +157,14 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
             }
             if (bloop + 1 < block_loops) {
                 float b_alpha = get_recurrent_block_alpha(bloop, block_loops, model.arch, model.hparams.n_embd);
+                float momentum = get_recurrent_momentum();
                 ggml_tensor * s_orig = ggml_scale(ctx0, block_inp_orig, 1.0f - b_alpha);
                 ggml_tensor * s_cur  = ggml_scale(ctx0, inpL, b_alpha);
                 inpL = ggml_add(ctx0, s_orig, s_cur);
+                if (momentum > 0.0f) {
+                    ggml_tensor * delta_m = ggml_sub(ctx0, s_cur, s_orig);
+                    inpL = ggml_add(ctx0, inpL, ggml_scale(ctx0, delta_m, momentum));
+                }
             }
         }
 
@@ -177,9 +182,10 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
             }
             alt_stream_out = inpL;
 
-            // High-precision consensus gating: 94% primary + 6% counter-verification
-            ggml_tensor * s_p = ggml_scale(ctx0, prim_final, 0.94f);
-            ggml_tensor * s_a = ggml_scale(ctx0, alt_stream_out, 0.06f);
+            // High-precision consensus gating with configurable regularizer
+            const float counter_gamma = get_recurrent_counter_gamma();
+            ggml_tensor * s_p = ggml_scale(ctx0, prim_final, 1.0f - counter_gamma);
+            ggml_tensor * s_a = ggml_scale(ctx0, alt_stream_out, counter_gamma);
             ggml_tensor * consensus = ggml_add(ctx0, s_p, s_a);
 
             // Exit Damping: blend consensus with anchor state h0 to stabilize logit variance

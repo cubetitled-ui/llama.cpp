@@ -28,8 +28,8 @@ def parse_args():
                         help="Path to output results JSON file")
     parser.add_argument("--temperature", type=float, default=0.0,
                         help="Sampling temperature (default: 0.0 for deterministic greedy decoding)")
-    parser.add_argument("--max_tokens", type=int, default=512,
-                        help="Maximum generation tokens per problem (default: 512)")
+    parser.add_argument("--max_tokens", type=int, default=1536,
+                        help="Maximum generation tokens per problem (default: 1536)")
     return parser.parse_args()
 
 def extract_numerical_answer(text: str):
@@ -82,9 +82,12 @@ def query_server(port: int, question: str, max_tokens: int, temperature: float) 
     req_data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(url, data=req_data, headers={"Content-Type": "application/json"})
     
-    with urllib.request.urlopen(req, timeout=120) as resp:
+    with urllib.request.urlopen(req, timeout=180) as resp:
         res = json.loads(resp.read().decode("utf-8"))
-        return res["choices"][0]["message"]["content"]
+        msg = res["choices"][0]["message"]
+        content = msg.get("content") or ""
+        reasoning = msg.get("reasoning_content") or ""
+        return f"{reasoning}\n\n{content}".strip()
 
 def main():
     args = parse_args()
