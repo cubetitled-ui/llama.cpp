@@ -68,142 +68,144 @@ llama_model_qwen3::graph::graph(const llama_model & model, const llm_graph_param
 
     ggml_tensor * inp_out_ids = build_inp_out_ids();
 
-    int S = 50;
-    int D = 12;
+    const int block_loops = get_recurrent_block_loops();
+    auto [block_start, block_end] = get_recurrent_block_range(n_layer, model.arch, model.hparams.n_embd);
 
-    if (const char * env_s = std::getenv("RECURRENT_S")) {
-        S = std::atoi(env_s);
-    }
-    if (const char * env_d = std::getenv("RECURRENT_D")) {
-        D = std::atoi(env_d);
-    }
-
-    int k = n_layer / 4;
-    int r = n_layer % 4;
-
-    int size1 = k, size2 = k, size3 = k, size4 = k + r;
-    int start1 = 0, start2 = k, start3 = 2 * k, start4 = 3 * k;
-
-    int offset1 = (S * (size1 - 1)) / 100;
-    int offset2 = (S * (size2 - 1)) / 100;
-    int offset3 = (S * (size3 - 1)) / 100;
-    int offset4 = (S * (size4 - 1)) / 100;
-
-    int L2 = start2 + offset2;
-    int L3 = start3 + offset3;
-    int L4 = start4 + offset4;
-
-    int c2 = (D + 3) / 6;
-    int c3 = (D + 1) / 2;
-    int c4 = D - c2 - c3;
-
-    if (const char * env_c2 = std::getenv("RECURRENT_C2")) c2 = std::atoi(env_c2);
-    if (const char * env_c3 = std::getenv("RECURRENT_C3")) c3 = std::atoi(env_c3);
-    if (const char * env_c4 = std::getenv("RECURRENT_C4")) c4 = std::atoi(env_c4);
-
-    std::vector<int> recurrent_iters = get_recurrent_iters(n_layer, D, S, L2, L3, L4, c2, c3, c4);
-
-    for (int il = 0; il < n_layer; ++il) {
-        res->t_layer_inp[il] = inpL;
-
-        int iters = recurrent_iters[il];
-
-        ggml_tensor * inp_layer_orig = inpL;
-
-        for (int iter = 0; iter < iters; ++iter) {
-            ggml_tensor * inpSA = inpL;
-
-            // norm
-            cur = build_norm(inpL,
-                    model.layers[il].attn_norm, NULL,
-                    LLM_NORM_RMS, il);
-            cb(cur, "attn_norm", il);
-
-            // self-attention
-            {
-                // compute Q and K and RoPE them
-                auto [Qcur, Kcur, Vcur] = build_qkv(model.layers[il], cur,
-                        n_embd_head, n_head, n_head_kv, il);
-
-                Qcur = build_norm(Qcur, model.layers[il].attn_q_norm, NULL, LLM_NORM_RMS, il);
-                cb(Qcur, "Qcur_normed", il);
-
-                Qcur = ggml_rope_ext(
-                        ctx0, Qcur, inp_pos, nullptr,
-                        n_rot, rope_type, n_ctx_orig, freq_base, freq_scale,
-                        ext_factor, attn_factor, beta_fast, beta_slow
-                        );
-
-                Kcur = build_norm(Kcur, model.layers[il].attn_k_norm, NULL, LLM_NORM_RMS, il);
-                cb(Kcur, "Kcur_normed", il);
-
-                Kcur = ggml_rope_ext(
-                        ctx0, Kcur, inp_pos, nullptr,
-                        n_rot, rope_type, n_ctx_orig, freq_base, freq_scale,
-                        ext_factor, attn_factor, beta_fast, beta_slow
-                        );
-
-                cb(Qcur, "Qcur", il);
-                cb(Kcur, "Kcur", il);
-                cb(Vcur, "Vcur", il);
-
-                cur = build_attn(inp_attn,
-                        model.layers[il].wo, model.layers[il].wo_b, model.layers[il].wo_s,
-                        Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il, get_store_kv(iter, iters));
-            }
-            if (il == n_layer - 1 && inp_out_ids) {
-                cur   = ggml_get_rows(ctx0,   cur, inp_out_ids);
-                inpSA = ggml_get_rows(ctx0, inpSA, inp_out_ids);
-            }
-            ggml_tensor * ffn_inp = ggml_add(ctx0, cur, inpSA);
-            cb(ffn_inp, "ffn_inp", il);
-
-            // feed-forward network
-            cur = build_norm(ffn_inp,
-                    model.layers[il].ffn_norm, NULL,
-                    LLM_NORM_RMS, il);
-            cb(cur, "ffn_norm", il);
-
-            cur = build_ffn(cur,
-                    model.layers[il].ffn_up,   NULL, model.layers[il].ffn_up_s,
-                    model.layers[il].ffn_gate, NULL, model.layers[il].ffn_gate_s,
-                    model.layers[il].ffn_down, NULL, model.layers[il].ffn_down_s,
-                    NULL,
-                    LLM_FFN_SILU, LLM_FFN_PAR, il);
-            cb(cur, "ffn_out", il);
-
-            cur = ggml_add(ctx0, cur, ffn_inp);
-
-            cur = build_cvec(cur, il);
-            cb(cur, "l_out", il);
-
-            if (iters > 1) {
-                float alpha = 1.0f / iters;
-                if (const char * env_a = std::getenv("RECURRENT_ALPHA")) {
-                    alpha = std::atof(env_a);
-                }
-                alpha = get_recurrent_alpha(iter, iters, alpha);
-                float beta = 1.0f - alpha;
-                if (const char * env_b = std::getenv("RECURRENT_BETA")) {
-                    beta = std::atof(env_b);
-                }
-                float gamma = get_recurrent_gamma();
-
-                ggml_tensor * scaled_h   = ggml_scale(ctx0, cur, alpha);
-                ggml_tensor * scaled_inp = ggml_scale(ctx0, inpSA, beta);
-                ggml_tensor * h_step     = ggml_add(ctx0, scaled_h, scaled_inp);
-
-                if (gamma > 0.0f) {
-                    ggml_tensor * h_step_scaled = ggml_scale(ctx0, h_step, 1.0f - gamma);
-                    ggml_tensor * anchor_scaled = ggml_scale(ctx0, inp_layer_orig, gamma);
-                    cur = ggml_add(ctx0, h_step_scaled, anchor_scaled);
-                } else {
-                    cur = h_step;
-                }
-            }
-
-            inpL = cur;
+    auto build_layer = [&](int il, int bloop = 0, int bloops = 1, bool is_alt = false) {
+        if (bloop == 0 && !is_alt) {
+            res->t_layer_inp[il] = inpL;
         }
+        ggml_tensor * inpSA = inpL;
+
+        // norm
+        cur = build_norm(inpL,
+                model.layers[il].attn_norm, NULL,
+                LLM_NORM_RMS, il);
+        cb(cur, "attn_norm", il);
+
+        // self-attention
+        {
+            // compute Q and K and RoPE them
+            auto [Qcur, Kcur, Vcur] = build_qkv(model.layers[il], cur,
+                    n_embd_head, n_head, n_head_kv, il);
+
+            Qcur = build_norm(Qcur, model.layers[il].attn_q_norm, NULL, LLM_NORM_RMS, il);
+            cb(Qcur, "Qcur_normed", il);
+
+            Qcur = ggml_rope_ext(
+                    ctx0, Qcur, inp_pos, nullptr,
+                    n_rot, rope_type, n_ctx_orig, freq_base, freq_scale,
+                    ext_factor, attn_factor, beta_fast, beta_slow
+                    );
+
+            Kcur = build_norm(Kcur, model.layers[il].attn_k_norm, NULL, LLM_NORM_RMS, il);
+            cb(Kcur, "Kcur_normed", il);
+
+            Kcur = ggml_rope_ext(
+                    ctx0, Kcur, inp_pos, nullptr,
+                    n_rot, rope_type, n_ctx_orig, freq_base, freq_scale,
+                    ext_factor, attn_factor, beta_fast, beta_slow
+                    );
+
+            cb(Qcur, "Qcur", il);
+            cb(Kcur, "Kcur", il);
+            cb(Vcur, "Vcur", il);
+
+            cur = build_attn(inp_attn,
+                    model.layers[il].wo, model.layers[il].wo_b, model.layers[il].wo_s,
+                    Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, 1.0f/sqrtf(float(n_embd_head)), il, get_store_kv(bloop, bloops, is_alt));
+        }
+        if (il == n_layer - 1 && inp_out_ids) {
+            cur   = ggml_get_rows(ctx0,   cur, inp_out_ids);
+            inpSA = ggml_get_rows(ctx0, inpSA, inp_out_ids);
+        }
+        ggml_tensor * ffn_inp = ggml_add(ctx0, cur, inpSA);
+        cb(ffn_inp, "ffn_inp", il);
+
+        // feed-forward network
+        cur = build_norm(ffn_inp,
+                model.layers[il].ffn_norm, NULL,
+                LLM_NORM_RMS, il);
+        cb(cur, "ffn_norm", il);
+
+        cur = build_ffn(cur,
+                model.layers[il].ffn_up,   NULL, model.layers[il].ffn_up_s,
+                model.layers[il].ffn_gate, NULL, model.layers[il].ffn_gate_s,
+                model.layers[il].ffn_down, NULL, model.layers[il].ffn_down_s,
+                NULL,
+                LLM_FFN_SILU, LLM_FFN_PAR, il);
+        cb(cur, "ffn_out", il);
+
+        cur = ggml_add(ctx0, cur, ffn_inp);
+
+        cur = build_cvec(cur, il);
+        cb(cur, "l_out", il);
+
+        inpL = cur;
+    };
+
+    for (int il = 0; il < block_start; ++il) {
+        build_layer(il, 0, 1, false);
+    }
+
+    if (block_loops > 1 && block_end >= block_start) {
+        ggml_tensor * block_inp_orig = inpL;
+        ggml_tensor * first_pass_out = nullptr;
+        ggml_tensor * alt_stream_out = nullptr;
+        const float alpha = get_recurrent_block_alpha(0, block_loops, model.arch, model.hparams.n_embd);
+        const float exit_alpha = get_recurrent_block_exit_alpha(model.arch, model.hparams.n_embd, block_loops);
+        const bool dual_stream = get_recurrent_dual_stream();
+        const float beta = get_recurrent_counter_beta();
+
+        for (int bloop = 0; bloop < block_loops; ++bloop) {
+            for (int il = block_start; il <= block_end; ++il) {
+                build_layer(il, bloop, block_loops, false);
+            }
+            if (bloop == 0) {
+                first_pass_out = inpL;
+            }
+            if (bloop + 1 < block_loops) {
+                ggml_tensor * mixed = ggml_add(ctx0,
+                    ggml_scale(ctx0, block_inp_orig, 1.0f - alpha),
+                    ggml_scale(ctx0, inpL, alpha));
+                cb(mixed, "recurrent_block_inp", bloop);
+                inpL = mixed;
+            }
+        }
+
+        if (dual_stream && first_pass_out != nullptr) {
+            ggml_tensor * delta = ggml_sub(ctx0, first_pass_out, block_inp_orig);
+            ggml_tensor * scaled_delta = ggml_scale(ctx0, delta, beta);
+            inpL = ggml_sub(ctx0, block_inp_orig, scaled_delta);
+
+            for (int il = block_start; il <= block_end; ++il) {
+                build_layer(il, block_loops, block_loops, true);
+            }
+            alt_stream_out = inpL;
+
+            ggml_tensor * consensus = ggml_add(ctx0,
+                ggml_scale(ctx0, first_pass_out, 1.0f - beta),
+                ggml_scale(ctx0, alt_stream_out, beta));
+            cb(consensus, "recurrent_consensus", 0);
+
+            inpL = ggml_add(ctx0,
+                ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha),
+                ggml_scale(ctx0, consensus, exit_alpha));
+            cb(inpL, "recurrent_exit", 0);
+        } else if (exit_alpha < 1.0f && first_pass_out != nullptr) {
+            inpL = ggml_add(ctx0,
+                ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha),
+                ggml_scale(ctx0, inpL, exit_alpha));
+            cb(inpL, "recurrent_exit", 0);
+        }
+    } else {
+        for (int il = block_start; il <= block_end; ++il) {
+            build_layer(il, 0, 1, false);
+        }
+    }
+
+    for (int il = block_end + 1; il < n_layer; ++il) {
+        build_layer(il, 0, 1, false);
     }
     cur = inpL;
 

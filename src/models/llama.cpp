@@ -127,7 +127,9 @@ llama_model_llama::graph<embed>::graph(const llama_model & model, const llm_grap
     auto [block_start, block_end] = get_recurrent_block_range(n_layer, model.arch);
 
     auto build_layer = [&](int il, int bloop = 0, int bloops = 1, bool is_alt = false) {
-        res->t_layer_inp[il] = inpL;
+        if (bloop == 0 && !is_alt) {
+            res->t_layer_inp[il] = inpL;
+        }
         ggml_tensor * inpSA = inpL;
 
         // norm

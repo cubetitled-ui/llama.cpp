@@ -11,6 +11,7 @@
 #include "llama-model.h"
 #include "llama-ext.h"
 #include "llama.h"
+#include "models/models.h"
 
 #include <cinttypes>
 #include <cmath>
@@ -245,6 +246,7 @@ llama_context::llama_context(
 
     cparams.flash_attn = params.flash_attn_type != LLAMA_FLASH_ATTN_TYPE_DISABLED;
     cparams.auto_fa    = params.flash_attn_type == LLAMA_FLASH_ATTN_TYPE_AUTO;
+    cparams.fused_gate_up = params.fuse_gate_up;
 
     cparams.fused_gdn_ar = true;
     cparams.fused_gdn_ch = true;
@@ -2361,29 +2363,12 @@ uint32_t llama_context::graph_max_nodes(uint32_t n_tokens) const {
     for (const auto & lora : model.loras) {
         res += lora->get_n_nodes();
     }
-    int block_loops = 1;
-    if (const char * env_mode = std::getenv("RECURRENT_MODE")) {
-        std::string m(env_mode);
-        if (m == "fast" || m == "1") block_loops = 2;
-        if (m == "balanced" || m == "sweet" || m == "2") block_loops = 3;
-        if (m == "ultra" || m == "deep" || m == "3") block_loops = 8;
-    }
-    if (const char * env_bl = std::getenv("RECURRENT_BLOCK_LOOPS")) {
-        block_loops = std::atoi(env_bl);
-    }
+    int block_loops = get_recurrent_block_loops();
     if (block_loops > 1) {
         res *= (block_loops + 2);
     }
-    if (const char * env_ds = std::getenv("RECURRENT_DUAL_STREAM")) {
-        if (std::atoi(env_ds) != 0) {
-            res *= 2;
-        }
-    }
-    if (const char * env_d = std::getenv("RECURRENT_D")) {
-        int d = std::atoi(env_d);
-        if (d > 0) {
-            res *= 2;
-        }
+    if (get_recurrent_dual_stream()) {
+        res *= 2;
     }
     return res;
 }

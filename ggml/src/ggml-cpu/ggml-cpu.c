@@ -2845,7 +2845,7 @@ struct ggml_cplan ggml_graph_plan(
                 case GGML_OP_ADD1:
                     {
                         if (ggml_is_quantized(node->src[0]->type)) {
-                            cur = ggml_type_size(GGML_TYPE_F32) * node->src[0]->ne[0] * n_tasks;
+                            cur = ggml_type_size(GGML_TYPE_F32) * (node->src[0]->ne[0] * 2 + CACHE_LINE_SIZE_F32) * n_tasks;
                         }
                     } break;
                 case GGML_OP_ACC:

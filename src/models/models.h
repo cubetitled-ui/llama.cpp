@@ -2311,18 +2311,8 @@ static inline float get_recurrent_counter_beta() {
     return 0.06f; // Calibrated 6% soft orthogonal counter-hypothesis
 }
 
-static inline std::vector<int> get_recurrent_iters(int n_layer, int = 0, int = 0, int = 0, int = 0, int = 0, int = 0, int = 0, int = 0) {
-    return std::vector<int>(n_layer, 1);
-}
-static inline float get_recurrent_alpha(int = 0, int = 1, float default_alpha = 0.5f) { return default_alpha; }
-static inline float get_recurrent_gamma() { return 0.0f; }
-static inline float get_recurrent_entropy_gate(int = 0, int = 1) { return 1.0f; }
-
 static inline bool get_store_kv(int bloop = 0, int block_loops = 1, bool is_alt_stream = false) {
     if (is_alt_stream) {
-        return false;
-    }
-    if (block_loops > 1 && bloop < block_loops - 1) {
         return false;
     }
     return true;
