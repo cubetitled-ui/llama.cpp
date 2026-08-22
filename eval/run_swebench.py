@@ -140,7 +140,7 @@ def main():
         total_latency += elapsed
         
         status_str = f"Syntax={'VALID' if is_valid_syntax else 'INVALID'} | FileMatch={'YES' if target_file_match else 'NO'}"
-        print(f"[{idx:2d}/{len(samples):2d}] {instance_id[:25]:25s} | {status_str} | Time: {elapsed:.2f}s")
+        print(f"[{idx:3d}/{len(samples):3d}] {instance_id[:25]:25s} | {status_str} | Time: {elapsed:.2f}s | Running Match: {file_match_count}/{idx} ({file_match_count/idx*100:.1f}%)", flush=True)
         
         results.append({
             "index": idx,
@@ -154,6 +154,21 @@ def main():
             "extracted_diff": pred_diff,
             "raw_response": raw_response
         })
+        
+        if idx % 5 == 0 or idx == len(samples):
+            interim = {
+                "benchmark": "SWE-bench_Lite",
+                "mode": args.mode,
+                "completed_samples": idx,
+                "total_samples": len(samples),
+                "valid_syntax_count": valid_syntax_count,
+                "target_file_match_count": file_match_count,
+                "target_file_match_rate_pct": (file_match_count / idx) * 100.0,
+                "mean_latency_seconds": total_latency / idx,
+                "results": results
+            }
+            with open(out_file, "w", encoding="utf-8") as f:
+                json.dump(interim, f, indent=2, ensure_ascii=False)
         
     syntax_rate = (valid_syntax_count / len(samples)) * 100.0 if samples else 0.0
     match_rate = (file_match_count / len(samples)) * 100.0 if samples else 0.0
