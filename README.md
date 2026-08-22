@@ -1,10 +1,10 @@
-# Focal Dual-Stream Recurrence for Autoregressive Transformers
+# Focal Macro-Recurrence for Autoregressive Transformers
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/timatigoogl3-code/llama.cpp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Paper](https://img.shields.io/badge/Paper-WHITE__PAPER.md-blue.svg)](WHITE_PAPER.md)
 
-**Focal Dual-Stream Recurrence** is a zero-training, architecture-agnostic test-time latent manifold refinement framework implemented directly within the C++20 / GGML inference engine (`llama.cpp`).
+**Focal Macro-Recurrence** is a zero-training, architecture-agnostic test-time latent manifold refinement framework implemented directly within the C++20 / GGML inference engine (`llama.cpp`).
 
 ---
 
@@ -12,10 +12,11 @@
 
 Standard autoregressive language models generate tokens through a sequential feedforward pass across $L$ transformer decoder layers. In this single-pass paradigm, intermediate semantic errors and arithmetic drift occurring in middle layers propagate irreversibly through remaining layers.
 
-Focal Dual-Stream Recurrence addresses this limitation by introducing inference-time recursive refinement localized to the semantic reasoning sub-manifold (*Focal Reasoning Nexus*, $\mathcal{I}_{\text{nexus}} \subseteq [1, L]$). The system runs:
-1. A **Primary Refinement Stream** that refines reasoning representations across multiple macro-loops.
-2. An **Adversarial Counter-Stream** ($\mathbf{h}_{\text{alt}}$) that applies an anti-directional perturbation ($\mathbf{h}_0 - \beta \mathbf{\Delta}_{\text{prim}}$) to probe hypothesis stability and prevent convergence to local error basins.
-3. A **Key-Value Cache Invariant** ensuring that counter-stream states never pollute persistent context memory.
+Focal Macro-Recurrence addresses this limitation by introducing inference-time recursive refinement localized to the semantic reasoning sub-manifold (*Focal Reasoning Nexus*, $\mathcal{I}_{\text{nexus}} \subseteq [1, L]$). The system runs:
+1. A **Focal Macro-Reasoning Loop** that refines latent representations across multiple passes over the reasoning layers.
+2. **Nesterov-Accelerated Latent Momentum (NALM)** ($\mu$) to accelerate trajectory convergence towards optimal fixed points.
+3. An **Exit Damping Projection** ($\alpha_{\text{exit}}$) stabilizing output logit variance against anchor states.
+4. A **Key-Value Cache Invariant** ensuring $O(1)$ cache allocation without memory expansion.
 
 For the complete formal mathematical specification, proofs, and error bounds, refer to [**`WHITE_PAPER.md`**](WHITE_PAPER.md) (or [**`docs/focal_dual_stream_paper.md`**](docs/focal_dual_stream_paper.md)).
 
@@ -26,21 +27,17 @@ For the complete formal mathematical specification, proofs, and error bounds, re
 ```
 [Layer 0 ... l_start-1] ──> h_0 (State Anchor)
                                │
-               ┌───────────────┴───────────────┐
-               │ Primary Stream                │ Counter-Stream
-               ▼                               ▼
-       Pass 1: G_nexus(h_0)            h_alt^(0) = h_0 - β·Δ_prim
-               │                               │
-               ▼                               ▼
-       Pass 2: G_nexus(h_in^(2))       Pass alt: G_nexus(h_alt^(0)) [KV-Skip]
-               │                               │
-               └───────────────┬───────────────┘
                                ▼
-                   Gated Consensus Fusion (γ)
+               Pass 1: h^(1) = G_nexus(h_0)
+                               │
                                ▼
-                   Exit Projection (α_exit)
+               Pass 2: h^(2) = G_nexus((1 - b_alpha)*h_0 + b_alpha*h^(1) + mu*Delta_m)
+                               │
                                ▼
-                   [Layer l_end+1 ... L] ──> Logits
+               Exit Damping: h_final = (1 - alpha_exit)*h^(1) + alpha_exit*h^(2)
+                               │
+                               ▼
+               [Layer l_end+1 ... L] ──> Logits
 ```
 
 ### 2.1 Nexus Interval Definition
@@ -54,20 +51,13 @@ $$\mathcal{I}_{\text{nexus}} = [l_{\text{start}}, l_{\text{end}}] = [\lfloor 0.4
 1. **State Anchoring:**
    $$\mathbf{h}_0 = \mathbf{h}_{l_{\text{start}}-1} \in \mathbb{R}^{B \times S \times d}$$
 
-2. **Primary Trajectory Displacement:**
-   $$\mathbf{h}_{\text{prim}}^{(1)} = \mathcal{G}_{\text{nexus}}(\mathbf{h}_0), \quad \mathbf{\Delta}_{\text{prim}} = \mathbf{h}_{\text{prim}}^{(1)} - \mathbf{h}_0$$
+2. **Recursive Latent Refinement ($k \ge 2$):**
+   $$\mathbf{s}_{\text{orig}} = (1 - b_\alpha) \mathbf{h}_0, \quad \mathbf{s}_{\text{cur}} = b_\alpha \mathbf{h}^{(k-1)}$$
+   $$\mathbf{h}_{\text{in}}^{(k)} = \mathbf{s}_{\text{orig}} + \mathbf{s}_{\text{cur}} + \mu (\mathbf{s}_{\text{cur}} - \mathbf{s}_{\text{orig}})$$
+   $$\mathbf{h}^{(k)} = \mathcal{G}_{\text{nexus}}(\mathbf{h}_{\text{in}}^{(k)})$$
 
-3. **Adversarial Counter-Stream:**
-   $$\mathbf{h}_{\text{alt}}^{(0)} = \mathbf{h}_0 - \beta \, \mathbf{\Delta}_{\text{prim}}, \quad \beta = 0.06$$
-   $$\mathbf{h}_{\text{alt}} = \mathcal{G}_{\text{nexus}}(\mathbf{h}_{\text{alt}}^{(0)}) \quad [\text{KV Cache Write Disabled}]$$
-
-4. **Primary Recursive Refinement:**
-   $$\mathbf{h}_{\text{in}}^{(2)} = (1 - b_\alpha) \mathbf{h}_0 + b_\alpha \mathbf{h}_{\text{prim}}^{(1)}, \quad b_\alpha = 0.20$$
-   $$\mathbf{h}_{\text{prim}}^{(2)} = \mathcal{G}_{\text{nexus}}(\mathbf{h}_{\text{in}}^{(2)})$$
-
-5. **Gated Consensus Fusion & Exit:**
-   $$\mathbf{h}_{\text{cons}} = (1 - \gamma) \mathbf{h}_{\text{prim}}^{(2)} + \gamma \, \mathbf{h}_{\text{alt}}, \quad \gamma = 0.06$$
-   $$\mathbf{h}_{\text{final}} = (1 - \alpha_{\text{exit}}) \mathbf{h}_{\text{prim}}^{(1)} + \alpha_{\text{exit}} \mathbf{h}_{\text{cons}}, \quad \alpha_{\text{exit}} = 0.62$$
+3. **Exit Damping Projection:**
+   $$\mathbf{h}_{\text{final}} = (1 - \alpha_{\text{exit}}) \mathbf{h}^{(1)} + \alpha_{\text{exit}} \mathbf{h}^{(K)}, \quad \alpha_{\text{exit}} = 0.62$$
 
 ---
 

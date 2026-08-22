@@ -2297,27 +2297,6 @@ static inline float get_recurrent_block_exit_alpha(llm_arch arch = LLM_ARCH_UNKN
     return preset.exit_alpha;
 }
 
-static inline bool get_recurrent_dual_stream() {
-    if (const char * env_ds = std::getenv("RECURRENT_DUAL_STREAM")) {
-        return std::atoi(env_ds) != 0;
-    }
-    return true; // Active by default for Dual-Stream reasoning
-}
-
-static inline float get_recurrent_counter_beta() {
-    if (const char * env_b = std::getenv("RECURRENT_COUNTER_BETA")) {
-        return std::atof(env_b);
-    }
-    return 0.06f; // Calibrated 6% soft orthogonal counter-hypothesis
-}
-
-static inline float get_recurrent_counter_gamma() {
-    if (const char * env_g = std::getenv("RECURRENT_COUNTER_GAMMA")) {
-        return std::atof(env_g);
-    }
-    return 0.06f; // Calibrated 6% consensus regularizer
-}
-
 static inline float get_recurrent_momentum() {
     if (const char * env_m = std::getenv("RECURRENT_MOMENTUM")) {
         return std::atof(env_m);
@@ -2333,9 +2312,9 @@ static inline bool get_recurrent_normalize_delta() {
 }
 
 static inline bool get_store_kv(int bloop = 0, int block_loops = 1, bool is_alt_stream = false) {
-    if (is_alt_stream) {
-        return false;
-    }
+    (void)bloop;
+    (void)block_loops;
+    (void)is_alt_stream;
     return true;
 }
 

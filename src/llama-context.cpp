@@ -2367,9 +2367,6 @@ uint32_t llama_context::graph_max_nodes(uint32_t n_tokens) const {
     if (block_loops > 1) {
         res *= (block_loops + 2);
     }
-    if (get_recurrent_dual_stream()) {
-        res *= 2;
-    }
     return res;
 }
 

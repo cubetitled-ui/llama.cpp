@@ -142,11 +142,9 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
         }
 
         // 2. Focal Macro-Reasoning Nexus (Zone 2: layers 12..19)
+        // 2. Focal Macro-Reasoning Window
         ggml_tensor * block_inp_orig = inpL;
         ggml_tensor * first_pass_out = nullptr;
-        const bool dual_stream = get_recurrent_dual_stream();
-        const float counter_beta = get_recurrent_counter_beta();
-        ggml_tensor * alt_stream_out = nullptr;
 
         for (int bloop = 0; bloop < block_loops; ++bloop) {
             for (int il = block_start; il <= block_end; ++il) {
@@ -168,32 +166,8 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
             }
         }
 
-        // Dual-Stream Orthogonal Counter-Verification Pass
-        if (dual_stream && first_pass_out != nullptr) {
-            ggml_tensor * prim_final = inpL;
-
-            // Anti-drift orthogonal counter-trajectory: h_alt = h0 - beta*(h_prim - h0)
-            ggml_tensor * delta_prim = ggml_sub(ctx0, prim_final, block_inp_orig);
-            ggml_tensor * scaled_delta = ggml_scale(ctx0, delta_prim, counter_beta);
-            inpL = ggml_sub(ctx0, block_inp_orig, scaled_delta);
-
-            for (int il = block_start; il <= block_end; ++il) {
-                build_layer(il, block_loops, block_loops, true);
-            }
-            alt_stream_out = inpL;
-
-            // High-precision consensus gating with configurable regularizer
-            const float counter_gamma = get_recurrent_counter_gamma();
-            ggml_tensor * s_p = ggml_scale(ctx0, prim_final, 1.0f - counter_gamma);
-            ggml_tensor * s_a = ggml_scale(ctx0, alt_stream_out, counter_gamma);
-            ggml_tensor * consensus = ggml_add(ctx0, s_p, s_a);
-
-            // Exit Damping: blend consensus with anchor state h0 to stabilize logit variance
-            float exit_alpha = get_recurrent_block_exit_alpha(model.arch, model.hparams.n_embd, block_loops);
-            ggml_tensor * s_exit_c = ggml_scale(ctx0, consensus, exit_alpha);
-            ggml_tensor * s_exit_a = ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha);
-            inpL = ggml_add(ctx0, s_exit_a, s_exit_c);
-        } else if (first_pass_out != nullptr) {
+        // Exit Damping: blend refined state with anchor state h0 to stabilize logit variance
+        if (first_pass_out != nullptr) {
             float exit_alpha = get_recurrent_block_exit_alpha(model.arch, model.hparams.n_embd, block_loops);
             if (exit_alpha < 1.0f) {
                 ggml_tensor * s_pass1 = ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha);

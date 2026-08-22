@@ -1,0 +1,254 @@
+{
+  "benchmark": "SWE-bench_Lite",
+  "mode": "baseline",
+  "total_samples": 15,
+  "valid_syntax_count": 15,
+  "valid_syntax_rate_pct": 100.0,
+  "target_file_match_count": 8,
+  "target_file_match_rate_pct": 53.333333333333336,
+  "mean_latency_seconds": 5.544772911071777,
+  "timestamp": "2026-08-22 07:37:53 UTC",
+  "results": [
+    {
+      "index": 1,
+      "instance_id": "astropy__astropy-12907",
+      "repo": "astropy/astropy",
+      "is_valid_syntax": true,
+      "target_file_match": true,
+      "gold_files": [
+        "astropy/modeling/separable.py"
+      ],
+      "pred_files": [
+        "astropy/modeling/separable.py"
+      ],
+      "latency_seconds": 4.0912840366363525,
+      "extracted_diff": "diff --git a/astropy/modeling/separable.py b/astropy/modeling/separable.py\nindex 1234567..89abcdef 100644\n--- a/astropy/modeling/separable.py\n+++ b/astropy/modeling/separable.py\n@@ -123,7 +123,7 @@ def separability_matrix(model):\n         return np.eye(len(model.inputs))\n \n     # Compute the separability matrix\n-    separability = np.zeros((len(model.inputs), len(model.inputs)))\n+    separability = np.zeros((len(model.inputs), len(model.inputs)), dtype=bool)\n     for i in range(len(model.inputs)):\n         for j in range(len(model.inputs)):\n             if i == j:\n@@ -131,7 +131,7 @@ def separability_matrix(model):\n                 separability[i, j] = True\n             else:\n                 separability[i, j] = False\n-    return separability\n+    return separability.astype(bool)",
+      "raw_response": "```diff\ndiff --git a/astropy/modeling/separable.py b/astropy/modeling/separable.py\nindex 1234567..89abcdef 100644\n--- a/astropy/modeling/separable.py\n+++ b/astropy/modeling/separable.py\n@@ -123,7 +123,7 @@ def separability_matrix(model):\n         return np.eye(len(model.inputs))\n \n     # Compute the separability matrix\n-    separability = np.zeros((len(model.inputs), len(model.inputs)))\n+    separability = np.zeros((len(model.inputs), len(model.inputs)), dtype=bool)\n     for i in range(len(model.inputs)):\n         for j in range(len(model.inputs)):\n             if i == j:\n@@ -131,7 +131,7 @@ def separability_matrix(model):\n                 separability[i, j] = True\n             else:\n                 separability[i, j] = False\n-    return separability\n+    return separability.astype(bool)\n```"
+    },
+    {
+      "index": 2,
+      "instance_id": "astropy__astropy-14182",
+      "repo": "astropy/astropy",
+      "is_valid_syntax": true,
+      "target_file_match": true,
+      "gold_files": [
+        "astropy/io/ascii/rst.py"
+      ],
+      "pred_files": [
+        "astropy/io/ascii/rst.py"
+      ],
+      "latency_seconds": 4.4067182540893555,
+      "extracted_diff": "diff --git a/astropy/io/ascii/rst.py b/astropy/io/ascii/rst.py\nindex 1234567..89abcdef 100644\n--- a/astropy/io/ascii/rst.py\n+++ b/astropy/io/ascii/rst.py\n@@ -1,6 +1,7 @@\n from astropy.io.ascii.core import BaseTableWriter\n from astropy.io.ascii import io_write\n from astropy.io.ascii import Writer\n+from astropy.io.ascii import fast_writer\n from astropy.io.ascii import core\n from astropy.io.ascii import table\n from astropy.io.ascii import utils\n@@ -10,6 +11,7 @@ class RST(BaseTableWriter):\n     def __init__(self, *args, **kwargs):\n         super().__init__(*args, **kwargs)\n         self.header_rows = kwargs.pop('header_rows', None)\n+        self.fast_writer = kwargs.pop('fast_writer', False)\n \n     def write(self, table, filename, **kwargs):\n         if self.fast_writer:",
+      "raw_response": "```diff\ndiff --git a/astropy/io/ascii/rst.py b/astropy/io/ascii/rst.py\nindex 1234567..89abcdef 100644\n--- a/astropy/io/ascii/rst.py\n+++ b/astropy/io/ascii/rst.py\n@@ -1,6 +1,7 @@\n from astropy.io.ascii.core import BaseTableWriter\n from astropy.io.ascii import io_write\n from astropy.io.ascii import Writer\n+from astropy.io.ascii import fast_writer\n from astropy.io.ascii import core\n from astropy.io.ascii import table\n from astropy.io.ascii import utils\n@@ -10,6 +11,7 @@ class RST(BaseTableWriter):\n     def __init__(self, *args, **kwargs):\n         super().__init__(*args, **kwargs)\n         self.header_rows = kwargs.pop('header_rows', None)\n+        self.fast_writer = kwargs.pop('fast_writer', False)\n \n     def write(self, table, filename, **kwargs):\n         if self.fast_writer:\n```"
+    },
+    {
+      "index": 3,
+      "instance_id": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "is_valid_syntax": true,
+      "target_file_match": true,
+      "gold_files": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "pred_files": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "latency_seconds": 3.0639727115631104,
+      "extracted_diff": "diff --git a/astropy/io/ascii/qdp.py b/astropy/io/ascii/qdp.py\nindex 1234567..89abcdef 100644\n--- a/astropy/io/ascii/qdp.py\n+++ b/astropy/io/ascii/qdp.py\n@@ -123,7 +123,7 @@ def read(filename, format='ascii.qdp', **kwargs):\n         # Read the file\n         with open(filename, 'r') as f:\n             lines = f.readlines()\n-            lines = [line.strip().upper() for line in lines]\n+            lines = [line.strip() for line in lines]\n \n         # Parse the lines\n         table = Table()",
+      "raw_response": "```diff\ndiff --git a/astropy/io/ascii/qdp.py b/astropy/io/ascii/qdp.py\nindex 1234567..89abcdef 100644\n--- a/astropy/io/ascii/qdp.py\n+++ b/astropy/io/ascii/qdp.py\n@@ -123,7 +123,7 @@ def read(filename, format='ascii.qdp', **kwargs):\n         # Read the file\n         with open(filename, 'r') as f:\n             lines = f.readlines()\n-            lines = [line.strip().upper() for line in lines]\n+            lines = [line.strip() for line in lines]\n \n         # Parse the lines\n         table = Table()\n```"
+    },
+    {
+      "index": 4,
+      "instance_id": "astropy__astropy-14995",
+      "repo": "astropy/astropy",
+      "is_valid_syntax": true,
+      "target_file_match": false,
+      "gold_files": [
+        "astropy/nddata/mixins/ndarithmetic.py"
+      ],
+      "pred_files": [
+        "astropy/nddata/core.py"
+      ],
+      "latency_seconds": 3.444425344467163,
+      "extracted_diff": "diff --git a/astropy/nddata/core.py b/astropy/nddata/core.py\nindex 1234567..89abcdef 100644\n--- a/astropy/nddata/core.py\n+++ b/astropy/nddata/core.py\n@@ -123,7 +123,7 @@ def multiply(self, other, handle_mask=np.bitwise_or):\n         if not isinstance(other, NDDataRef):\n             raise TypeError(\"The operand must be an NDDataRef instance.\")\n \n-        if self.mask is None or other.mask is None:\n+        if self.mask is None and other.mask is None:\n             return NDDataRef(self.data * other.data, mask=None)\n \n         if self.mask is not None and other.mask is not None:",
+      "raw_response": "```diff\ndiff --git a/astropy/nddata/core.py b/astropy/nddata/core.py\nindex 1234567..89abcdef 100644\n--- a/astropy/nddata/core.py\n+++ b/astropy/nddata/core.py\n@@ -123,7 +123,7 @@ def multiply(self, other, handle_mask=np.bitwise_or):\n         if not isinstance(other, NDDataRef):\n             raise TypeError(\"The operand must be an NDDataRef instance.\")\n \n-        if self.mask is None or other.mask is None:\n+        if self.mask is None and other.mask is None:\n             return NDDataRef(self.data * other.data, mask=None)\n \n         if self.mask is not None and other.mask is not None:\n```"
+    },
+    {
+      "index": 5,
+      "instance_id": "astropy__astropy-6938",
+      "repo": "astropy/astropy",
+      "is_valid_syntax": true,
+      "target_file_match": false,
+      "gold_files": [
+        "astropy/io/fits/fitsrec.py"
+      ],
+      "pred_files": [
+        "astropy/io/fitsrec.py"
+      ],
+      "latency_seconds": 3.9371490478515625,
+      "extracted_diff": "diff --git a/astropy/io/fitsrec.py b/astropy/io/fitsrec.py\nindex 1234567..89abcdef 100644\n--- a/astropy/io/fitsrec.py\n+++ b/astropy/io/fitsrec.py\n@@ -123,7 +123,7 @@ def _convert_fitsrec_to_table(fitsrec_data, format):\n         # Replace exponent separator in floating point numbers\n         if 'D' in format:\n             output_field = output_field.replace(encode_ascii('E'), encode_ascii('D'))\n-            # output_field = output_field.replace(encode_ascii('E'), encode_ascii('D'))  # Commented out to avoid unnecessary copy\n+            # output_field = output_field.replace(encode_ascii('E'), encode_ascii('D'))  # Commented out to avoid unnecessary copy",
+      "raw_response": "```diff\ndiff --git a/astropy/io/fitsrec.py b/astropy/io/fitsrec.py\nindex 1234567..89abcdef 100644\n--- a/astropy/io/fitsrec.py\n+++ b/astropy/io/fitsrec.py\n@@ -123,7 +123,7 @@ def _convert_fitsrec_to_table(fitsrec_data, format):\n         # Replace exponent separator in floating point numbers\n         if 'D' in format:\n             output_field = output_field.replace(encode_ascii('E'), encode_ascii('D'))\n-            # output_field = output_field.replace(encode_ascii('E'), encode_ascii('D'))  # Commented out to avoid unnecessary copy\n+            # output_field = output_field.replace(encode_ascii('E'), encode_ascii('D'))  # Commented out to avoid unnecessary copy\n```\n\nThis fix ensures that the `replace` operation is performed in-place on the `chararray` object, which is the correct behavior."
+    },
+    {
+      "index": 6,
+      "instance_id": "astropy__astropy-7746",
+      "repo": "astropy/astropy",
+      "is_valid_syntax": true,
+      "target_file_match": false,
+      "gold_files": [
+        "astropy/wcs/wcs.py"
+      ],
+      "pred_files": [
+        "astropy/astropy/wcs/wcs.py"
+      ],
+      "latency_seconds": 6.6939697265625,
+      "extracted_diff": "diff --git a/astropy/astropy/wcs/wcs.py b/astropy/astropy/wcs/wcs.py\nindex 1234567..89abcdef 100644\n--- a/astropy/astropy/wcs/wcs.py\n+++ b/astropy/astropy/wcs/wcs.py\n@@ -1352,7 +1352,7 @@ def wcs_pix2world(self, *args, **kwargs):\n         return self._array_converter(\n             lambda xy, o: self.wcs.p2s(xy, o)['world'],\n             'output', *args, **kwargs)\n-    wcs_pix2world.__doc__ = \"\"\"\n+    wcs_pix2world.__doc__ = \"Transforms pixel coordinates to world coordinates by doing\"\n\n@@ -1267,7 +1267,7 @@ def _array_converter(self, func, sky, ra_dec_order, *args):\n         if ra_dec_order and sky == 'input':\n             xy = self._denormalize_sky(xy)\n         output = func(xy, origin)\n-        if ra_dec_order and sky == 'output':\n+        if ra_dec_order and sky == 'output':\n             output = self._normalize_sky(output)\n\n@@ -1223,7 +1223,7 @@ def _return_list_of_arrays(axes, origin):\n             if ra_dec_order and sky == 'input':\n                 xy = self._denormalize_sky(xy)\n             output = func(xy, origin)\n-            if ra_dec_order and sky == 'output':\n+            if ra_dec_order and sky == 'output':\n                 output = self._normalize_sky(output)",
+      "raw_response": "```diff\ndiff --git a/astropy/astropy/wcs/wcs.py b/astropy/astropy/wcs/wcs.py\nindex 1234567..89abcdef 100644\n--- a/astropy/astropy/wcs/wcs.py\n+++ b/astropy/astropy/wcs/wcs.py\n@@ -1352,7 +1352,7 @@ def wcs_pix2world(self, *args, **kwargs):\n         return self._array_converter(\n             lambda xy, o: self.wcs.p2s(xy, o)['world'],\n             'output', *args, **kwargs)\n-    wcs_pix2world.__doc__ = \"\"\"\n+    wcs_pix2world.__doc__ = \"Transforms pixel coordinates to world coordinates by doing\"\n\n@@ -1267,7 +1267,7 @@ def _array_converter(self, func, sky, ra_dec_order, *args):\n         if ra_dec_order and sky == 'input':\n             xy = self._denormalize_sky(xy)\n         output = func(xy, origin)\n-        if ra_dec_order and sky == 'output':\n+        if ra_dec_order and sky == 'output':\n             output = self._normalize_sky(output)\n\n@@ -1223,7 +1223,7 @@ def _return_list_of_arrays(axes, origin):\n             if ra_dec_order and sky == 'input':\n                 xy = self._denormalize_sky(xy)\n             output = func(xy, origin)\n-            if ra_dec_order and sky == 'output':\n+            if ra_dec_order and sky == 'output':\n                 output = self._normalize_sky(output)\n```"
+    },
+    {
+      "index": 7,
+      "instance_id": "django__django-10914",
+      "repo": "django/django",
+      "is_valid_syntax": true,
+      "target_file_match": false,
+      "gold_files": [
+        "django/conf/global_settings.py"
+      ],
+      "pred_files": [
+        "django/conf/settings.py"
+      ],
+      "latency_seconds": 2.3913416862487793,
+      "extracted_diff": "diff --git a/django/conf/settings.py b/django/conf/settings.py\nindex 1234567..89abcdef 100644\n--- a/django/conf/settings.py\n+++ b/django/conf/settings.py\n@@ -123,7 +123,7 @@ FILE_UPLOAD_HANDLERS = [\n     'django.core.files.uploadhandler.MemoryUploadedFileHandler',\n     'django.core.files.uploadhandler.TemporaryUploadedFileHandler',\n ]\n-FILE_UPLOAD_PERMISSIONS = 0o644\n+FILE_UPLOAD_PERMISSIONS = 0o640",
+      "raw_response": "```diff\ndiff --git a/django/conf/settings.py b/django/conf/settings.py\nindex 1234567..89abcdef 100644\n--- a/django/conf/settings.py\n+++ b/django/conf/settings.py\n@@ -123,7 +123,7 @@ FILE_UPLOAD_HANDLERS = [\n     'django.core.files.uploadhandler.MemoryUploadedFileHandler',\n     'django.core.files.uploadhandler.TemporaryUploadedFileHandler',\n ]\n-FILE_UPLOAD_PERMISSIONS = 0o644\n+FILE_UPLOAD_PERMISSIONS = 0o640\n```"
+    },
+    {
+      "index": 8,
+      "instance_id": "django__django-10924",
+      "repo": "django/django",
+      "is_valid_syntax": true,
+      "target_file_match": true,
+      "gold_files": [
+        "django/db/models/fields/__init__.py"
+      ],
+      "pred_files": [
+        "django/db/models/fields/__init__.py"
+      ],
+      "latency_seconds": 26.989975452423096,
+      "extracted_diff": "diff --git a/django/db/models/fields/__init__.py b/django/db/models/fields/__init__.py\nindex 1234567..89abcdef 100644\n--- a/django/db/models/fields/__init__.py\n+++ b/django/db/models/fields/__init__.py\n@@ -123,6 +123,7 @@ class FilePathField(models.Field):\n         self.path = path\n         self.match = match\n         self.allow_files = allow_files\n+        self.allow_dirs = allow_dirs\n         self.max_length = max_length\n         self.blank = blank\n         self.null = null\n@@ -131,6 +132,7 @@ class FilePathField(models.Field):\n         self.validators = []\n         self.error_messages = {\n             'invalid_path': _('The path \"%s\" is not a valid path.'),\n+            'invalid_dir': _('The path \"%s\" is not a directory.'),\n         }\n         self.default = default\n         self.choices = choices\n@@ -140,6 +142,7 @@ class FilePathField(models.Field):\n         self.help_text = help_text\n         self.db_index = db_index\n         self.unique = unique\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -150,6 +153,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -160,6 +164,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -170,6 +175,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -180,6 +186,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -190,6 +197,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -200,6 +208,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -210,6 +219,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -220,6 +229,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -230,6 +239,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -240,6 +249,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -250,6 +259,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -260,6 +269,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -270,6 +279,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -280,6 +289,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -290,6 +299,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -300,6 +309,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -3",
+      "raw_response": "```diff\ndiff --git a/django/db/models/fields/__init__.py b/django/db/models/fields/__init__.py\nindex 1234567..89abcdef 100644\n--- a/django/db/models/fields/__init__.py\n+++ b/django/db/models/fields/__init__.py\n@@ -123,6 +123,7 @@ class FilePathField(models.Field):\n         self.path = path\n         self.match = match\n         self.allow_files = allow_files\n+        self.allow_dirs = allow_dirs\n         self.max_length = max_length\n         self.blank = blank\n         self.null = null\n@@ -131,6 +132,7 @@ class FilePathField(models.Field):\n         self.validators = []\n         self.error_messages = {\n             'invalid_path': _('The path \"%s\" is not a valid path.'),\n+            'invalid_dir': _('The path \"%s\" is not a directory.'),\n         }\n         self.default = default\n         self.choices = choices\n@@ -140,6 +142,7 @@ class FilePathField(models.Field):\n         self.help_text = help_text\n         self.db_index = db_index\n         self.unique = unique\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -150,6 +153,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -160,6 +164,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -170,6 +175,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -180,6 +186,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -190,6 +197,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -200,6 +208,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -210,6 +219,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -220,6 +229,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -230,6 +239,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -240,6 +249,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -250,6 +259,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -260,6 +269,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -270,6 +279,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -280,6 +289,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -290,6 +299,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -300,6 +309,7 @@ class FilePathField(models.Field):\n         self.choices = choices\n         self.help_text = help_text\n         self.db_index = db_index\n+        self.db_column = db_column\n         self.db_tablespace = db_tablespace\n         self.db_type = self.get_db_type\n         self.choices = choices\n@@ -3"
+    },
+    {
+      "index": 9,
+      "instance_id": "django__django-11001",
+      "repo": "django/django",
+      "is_valid_syntax": true,
+      "target_file_match": false,
+      "gold_files": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "pred_files": [
+        "django/db/backends/sqlite3/compiler.py"
+      ],
+      "latency_seconds": 3.18381929397583,
+      "extracted_diff": "diff --git a/django/db/backends/sqlite3/compiler.py b/django/db/backends/sqlite3/compiler.py\nindex 1234567..89abcdef 100644\n--- a/django/db/backends/sqlite3/compiler.py\n+++ b/django/db/backends/sqlite3/compiler.py\n@@ -123,7 +123,7 @@ class SQLCompiler(BaseCompiler):\n         # Remove any ORDER BY clauses that are already in the query.\n         without_ordering = self.ordering_parts.search(sql).group(1)\n         if without_ordering:\n-            sql = sql.replace(without_ordering, '')\n+            sql = sql.replace(without_ordering, '').replace('\\n', ' ')\n         return sql",
+      "raw_response": "```diff\ndiff --git a/django/db/backends/sqlite3/compiler.py b/django/db/backends/sqlite3/compiler.py\nindex 1234567..89abcdef 100644\n--- a/django/db/backends/sqlite3/compiler.py\n+++ b/django/db/backends/sqlite3/compiler.py\n@@ -123,7 +123,7 @@ class SQLCompiler(BaseCompiler):\n         # Remove any ORDER BY clauses that are already in the query.\n         without_ordering = self.ordering_parts.search(sql).group(1)\n         if without_ordering:\n-            sql = sql.replace(without_ordering, '')\n+            sql = sql.replace(without_ordering, '').replace('\\n', ' ')\n         return sql\n```"
+    },
+    {
+      "index": 10,
+      "instance_id": "django__django-11019",
+      "repo": "django/django",
+      "is_valid_syntax": true,
+      "target_file_match": true,
+      "gold_files": [
+        "django/forms/widgets.py"
+      ],
+      "pred_files": [
+        "django/forms/widgets.py"
+      ],
+      "latency_seconds": 4.045528411865234,
+      "extracted_diff": "diff --git a/django/forms/widgets.py b/django/forms/widgets.py\nindex 1234567..89abcdef 100644\n--- a/django/forms/widgets.py\n+++ b/django/forms/widgets.py\n@@ -142,7 +142,7 @@ class Media:\n         return Media(css=self.css, js=self.js)\n \n     def __add__(self, other):\n-        return Media(css=self.css + other.css, js=self.js + other.js)\n+        return Media(css=self.css + other.css, js=self.js + other.js[::-1])\n \n     def __iadd__(self, other):\n         self.css.extend(other.css)\n@@ -150,7 +150,7 @@ class Media:\n         return self",
+      "raw_response": "```diff\ndiff --git a/django/forms/widgets.py b/django/forms/widgets.py\nindex 1234567..89abcdef 100644\n--- a/django/forms/widgets.py\n+++ b/django/forms/widgets.py\n@@ -142,7 +142,7 @@ class Media:\n         return Media(css=self.css, js=self.js)\n \n     def __add__(self, other):\n-        return Media(css=self.css + other.css, js=self.js + other.js)\n+        return Media(css=self.css + other.css, js=self.js + other.js[::-1])\n \n     def __iadd__(self, other):\n         self.css.extend(other.css)\n@@ -150,7 +150,7 @@ class Media:\n         return self\n```\n\nThis fix reverses the order of the JavaScript files in the `__add__` method, ensuring that the final order is text-editor.js, text-editor-extras.js, color-picker.js, which resolves the `MediaOrderConflictWarning`."
+    },
+    {
+      "index": 11,
+      "instance_id": "django__django-11039",
+      "repo": "django/django",
+      "is_valid_syntax": true,
+      "target_file_match": false,
+      "gold_files": [
+        "django/core/management/commands/sqlmigrate.py"
+      ],
+      "pred_files": [
+        "django/db/migrations/executor.py",
+        "tests/migrations/test_commands.py"
+      ],
+      "latency_seconds": 5.976947069168091,
+      "extracted_diff": "diff --git a/django/db/migrations/executor.py b/django/db/migrations/executor.py\nindex 1234567..89abcdef 100644\n--- a/django/db/migrations/executor.py\n+++ b/django/db/migrations/executor.py\n@@ -123,7 +123,7 @@ class MigrationExecutor:\n         self.connection = connection\n         self.migration = migration\n         self.migration_module = migration.module\n-        self.output_transaction = migration.atomic and self.connection.features.can_rollback_ddl\n+        self.output_transaction = migration.atomic and self.connection.features.can_rollback_ddl and self.connection.features.can_rollback_ddl\n\n         # Create a new schema editor for this migration\n         self.schema_editor = self.connection.schema_editor()\n\ndiff --git a/tests/migrations/test_commands.py b/tests/migrations/test_commands.py\nindex 1234567..89abcdef 100644\n--- a/tests/migrations/test_commands.py\n+++ b/tests/migrations/test_commands.py\n@@ -123,7 +123,7 @@ class MigrationExecutor:\n         self.connection = connection\n         self.migration = migration\n         self.migration_module = migration.module\n-        self.output_transaction = migration.atomic and self.connection.features.can_rollback_ddl\n+        self.output_transaction = migration.atomic and self.connection.features.can_rollback_ddl and self.connection.features.can_rollback_ddl\n\n         # Create a new schema editor for this migration\n         self.schema_editor = self.connection.schema_editor()",
+      "raw_response": "```diff\ndiff --git a/django/db/migrations/executor.py b/django/db/migrations/executor.py\nindex 1234567..89abcdef 100644\n--- a/django/db/migrations/executor.py\n+++ b/django/db/migrations/executor.py\n@@ -123,7 +123,7 @@ class MigrationExecutor:\n         self.connection = connection\n         self.migration = migration\n         self.migration_module = migration.module\n-        self.output_transaction = migration.atomic and self.connection.features.can_rollback_ddl\n+        self.output_transaction = migration.atomic and self.connection.features.can_rollback_ddl and self.connection.features.can_rollback_ddl\n\n         # Create a new schema editor for this migration\n         self.schema_editor = self.connection.schema_editor()\n\ndiff --git a/tests/migrations/test_commands.py b/tests/migrations/test_commands.py\nindex 1234567..89abcdef 100644\n--- a/tests/migrations/test_commands.py\n+++ b/tests/migrations/test_commands.py\n@@ -123,7 +123,7 @@ class MigrationExecutor:\n         self.connection = connection\n         self.migration = migration\n         self.migration_module = migration.module\n-        self.output_transaction = migration.atomic and self.connection.features.can_rollback_ddl\n+        self.output_transaction = migration.atomic and self.connection.features.can_rollback_ddl and self.connection.features.can_rollback_ddl\n\n         # Create a new schema editor for this migration\n         self.schema_editor = self.connection.schema_editor()\n```"
+    },
+    {
+      "index": 12,
+      "instance_id": "django__django-11049",
+      "repo": "django/django",
+      "is_valid_syntax": true,
+      "target_file_match": false,
+      "gold_files": [
+        "django/db/models/fields/__init__.py"
+      ],
+      "pred_files": [
+        "django/core/validators.py"
+      ],
+      "latency_seconds": 4.052661418914795,
+      "extracted_diff": "diff --git a/django/core/validators.py b/django/core/validators.py\nindex 1234567..89abcdef 100644\n--- a/django/core/validators.py\n+++ b/django/core/validators.py\n@@ -123,7 +123,7 @@ def validate_duration(value):\n     if not value:\n         return\n     try:\n-        duration = parse_duration(value)\n+        duration = parse_duration(value, allow_seconds=False)\n     except ValueError:\n         raise ValidationError(\n             _(\"Enter a valid duration in the format [DD] [HH:[MM:]]ss[.uuuuuu].\"),\n@@ -131,7 +131,7 @@ def validate_duration(value):\n     if not duration:\n         return\n     try:\n-        duration = parse_duration(value)\n+        duration = parse_duration(value, allow_seconds=True)\n     except ValueError:\n         raise ValidationError(\n             _(\"Enter a valid duration in the format [DD] [[HH:]MM:]ss[.uuuuuu].\"),",
+      "raw_response": "```diff\ndiff --git a/django/core/validators.py b/django/core/validators.py\nindex 1234567..89abcdef 100644\n--- a/django/core/validators.py\n+++ b/django/core/validators.py\n@@ -123,7 +123,7 @@ def validate_duration(value):\n     if not value:\n         return\n     try:\n-        duration = parse_duration(value)\n+        duration = parse_duration(value, allow_seconds=False)\n     except ValueError:\n         raise ValidationError(\n             _(\"Enter a valid duration in the format [DD] [HH:[MM:]]ss[.uuuuuu].\"),\n@@ -131,7 +131,7 @@ def validate_duration(value):\n     if not duration:\n         return\n     try:\n-        duration = parse_duration(value)\n+        duration = parse_duration(value, allow_seconds=True)\n     except ValueError:\n         raise ValidationError(\n             _(\"Enter a valid duration in the format [DD] [[HH:]MM:]ss[.uuuuuu].\"),\n```"
+    },
+    {
+      "index": 13,
+      "instance_id": "django__django-11099",
+      "repo": "django/django",
+      "is_valid_syntax": true,
+      "target_file_match": true,
+      "gold_files": [
+        "django/contrib/auth/validators.py"
+      ],
+      "pred_files": [
+        "django/contrib/auth/validators.py"
+      ],
+      "latency_seconds": 5.319418668746948,
+      "extracted_diff": "diff --git a/django/contrib/auth/validators.py b/django/contrib/auth/validators.py\nindex 1234567..89abcdef 100644\n--- a/django/contrib/auth/validators.py\n+++ b/django/contrib/auth/validators.py\n@@ -1,6 +1,6 @@\n from django.core.exceptions import ValidationError\n from django.utils.regex_escape import escape\n-from django.utils.text import slugify\n+from django.utils.text import slugify, re\n\n class UsernameValidator:\n     def __init__(self, message=None):\n@@ -10,7 +10,7 @@ class UsernameValidator:\n         self.message = message or \"Enter a valid username.\"\n\n     def __call__(self, value):\n-        if not re.match(r'^[\\w.@+-]+$', value):\n+        if not re.match(r'\\A[\\w.@+-]+\\Z', value):\n             raise ValidationError(self.message)\n\n class ASCIIUsernameValidator(UsernameValidator):\n@@ -19,7 +19,7 @@ class ASCIIUsernameValidator(UsernameValidator):\n         self.message = message or \"Enter a valid username.\"\n\n     def __call__(self, value):\n-        if not re.match(r'^[\\w.@+-]+$', value):\n+        if not re.match(r'\\A[\\w.@+-]+\\Z', value):\n             raise ValidationError(self.message)\n\n class UnicodeUsernameValidator(UsernameValidator):",
+      "raw_response": "```diff\ndiff --git a/django/contrib/auth/validators.py b/django/contrib/auth/validators.py\nindex 1234567..89abcdef 100644\n--- a/django/contrib/auth/validators.py\n+++ b/django/contrib/auth/validators.py\n@@ -1,6 +1,6 @@\n from django.core.exceptions import ValidationError\n from django.utils.regex_escape import escape\n-from django.utils.text import slugify\n+from django.utils.text import slugify, re\n\n class UsernameValidator:\n     def __init__(self, message=None):\n@@ -10,7 +10,7 @@ class UsernameValidator:\n         self.message = message or \"Enter a valid username.\"\n\n     def __call__(self, value):\n-        if not re.match(r'^[\\w.@+-]+$', value):\n+        if not re.match(r'\\A[\\w.@+-]+\\Z', value):\n             raise ValidationError(self.message)\n\n class ASCIIUsernameValidator(UsernameValidator):\n@@ -19,7 +19,7 @@ class ASCIIUsernameValidator(UsernameValidator):\n         self.message = message or \"Enter a valid username.\"\n\n     def __call__(self, value):\n-        if not re.match(r'^[\\w.@+-]+$', value):\n+        if not re.match(r'\\A[\\w.@+-]+\\Z', value):\n             raise ValidationError(self.message)\n\n class UnicodeUsernameValidator(UsernameValidator):\n```"
+    },
+    {
+      "index": 14,
+      "instance_id": "django__django-11133",
+      "repo": "django/django",
+      "is_valid_syntax": true,
+      "target_file_match": true,
+      "gold_files": [
+        "django/http/response.py"
+      ],
+      "pred_files": [
+        "django/http/response.py"
+      ],
+      "latency_seconds": 2.5044825077056885,
+      "extracted_diff": "diff --git a/django/http/response.py b/django/http/response.py\nindex 1234567..89abcdef 100644\n--- a/django/http/response.py\n+++ b/django/http/response.py\n@@ -123,7 +123,7 @@ class HttpResponse:\n         if isinstance(content, bytes):\n             self._content = content\n         elif isinstance(content, memoryview):\n-            self._content = content.tobytes()\n+            self._content = bytes(content)\n         elif isinstance(content, str):\n             self._content = content.encode('utf-8')\n         else:",
+      "raw_response": "```diff\ndiff --git a/django/http/response.py b/django/http/response.py\nindex 1234567..89abcdef 100644\n--- a/django/http/response.py\n+++ b/django/http/response.py\n@@ -123,7 +123,7 @@ class HttpResponse:\n         if isinstance(content, bytes):\n             self._content = content\n         elif isinstance(content, memoryview):\n-            self._content = content.tobytes()\n+            self._content = bytes(content)\n         elif isinstance(content, str):\n             self._content = content.encode('utf-8')\n         else:\n```"
+    },
+    {
+      "index": 15,
+      "instance_id": "django__django-11179",
+      "repo": "django/django",
+      "is_valid_syntax": true,
+      "target_file_match": true,
+      "gold_files": [
+        "django/db/models/deletion.py"
+      ],
+      "pred_files": [
+        "django/db/models/deletion.py"
+      ],
+      "latency_seconds": 3.0699000358581543,
+      "extracted_diff": "diff --git a/django/db/models/deletion.py b/django/db/models/deletion.py\nindex 1234567..89abcdef 100644\n--- a/django/db/models/deletion.py\n+++ b/django/db/models/deletion.py\n@@ -276,6 +276,7 @@ def delete(self, using=None, cascade=False, restrict=False, high_level=False,\n                 # Clear the PK on the model instance.\n                 instance.pk = None\n             else:\n+                instance.pk = None\n                 # Clear the PK on the model instance.\n                 instance.pk = None",
+      "raw_response": "```diff\ndiff --git a/django/db/models/deletion.py b/django/db/models/deletion.py\nindex 1234567..89abcdef 100644\n--- a/django/db/models/deletion.py\n+++ b/django/db/models/deletion.py\n@@ -276,6 +276,7 @@ def delete(self, using=None, cascade=False, restrict=False, high_level=False,\n                 # Clear the PK on the model instance.\n                 instance.pk = None\n             else:\n+                instance.pk = None\n                 # Clear the PK on the model instance.\n                 instance.pk = None\n```\n\nThis patch ensures that the primary key (PK) of the model instance is cleared after the `delete()` method is called, regardless of whether the model has dependencies or not."
+    }
+  ]
+}

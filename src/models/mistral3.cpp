@@ -229,12 +229,7 @@ llama_model_mistral3::graph::graph(const llama_model & model, const llm_graph_pa
     if (block_loops > 1 && block_end >= block_start) {
         ggml_tensor * block_inp_orig = inpL;
         ggml_tensor * first_pass_out = nullptr;
-        ggml_tensor * alt_stream_out = nullptr;
-        const float alpha = get_recurrent_block_alpha(0, block_loops, model.arch);
         const float exit_alpha = get_recurrent_block_exit_alpha(model.arch, 0, block_loops);
-        const bool dual_stream = get_recurrent_dual_stream();
-        const float beta = get_recurrent_counter_beta();
-        const float gamma = get_recurrent_counter_gamma();
         const float momentum = get_recurrent_momentum();
 
         for (int bloop = 0; bloop < block_loops; ++bloop) {
@@ -257,27 +252,7 @@ llama_model_mistral3::graph::graph(const llama_model & model, const llm_graph_pa
             }
         }
 
-        if (dual_stream && first_pass_out != nullptr) {
-            ggml_tensor * prim_final = inpL;
-            ggml_tensor * delta = ggml_sub(ctx0, prim_final, block_inp_orig);
-            ggml_tensor * scaled_delta = ggml_scale(ctx0, delta, beta);
-            inpL = ggml_sub(ctx0, block_inp_orig, scaled_delta);
-
-            for (int il = block_start; il <= block_end; ++il) {
-                build_layer(il, block_loops, block_loops, true);
-            }
-            alt_stream_out = inpL;
-
-            ggml_tensor * consensus = ggml_add(ctx0,
-                ggml_scale(ctx0, first_pass_out, 1.0f - gamma),
-                ggml_scale(ctx0, alt_stream_out, gamma));
-            cb(consensus, "recurrent_consensus", 0);
-
-            inpL = ggml_add(ctx0,
-                ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha),
-                ggml_scale(ctx0, consensus, exit_alpha));
-            cb(inpL, "recurrent_exit", 0);
-        } else if (exit_alpha < 1.0f && first_pass_out != nullptr) {
+        if (exit_alpha < 1.0f && first_pass_out != nullptr) {
             inpL = ggml_add(ctx0,
                 ggml_scale(ctx0, first_pass_out, 1.0f - exit_alpha),
                 ggml_scale(ctx0, inpL, exit_alpha));
