@@ -1,0 +1,1519 @@
+{
+  "benchmark": "MBPP_Unit_Tests",
+  "mode": "baseline",
+  "total_samples": 100,
+  "passed_count": 81,
+  "pass_rate_pct": 81.0,
+  "mean_latency_seconds": 2.0631849122047425,
+  "timestamp": "2026-08-22 08:36:16 UTC",
+  "results": [
+    {
+      "index": 1,
+      "task_id": 2,
+      "prompt": "Write a function to find the shared elements from the given two lists.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert set(similar_elements((3, 4, 5, 6),(5, 7, 4, 10))) == set((4, 5))",
+        "assert set(similar_elements((1, 2, 3, 4),(5, 4, 3, 7))) == set((3, 4))",
+        "assert set(similar_elements((11, 12, 14, 13),(17, 15, 14, 13))) == set((13, 14))"
+      ],
+      "latency_seconds": 0.7570552825927734,
+      "extracted_code": "def similar_elements(list1, list2):\n    # Convert both lists to sets to remove duplicates and find intersection\n    return set(list1) & set(list2)",
+      "raw_response": "```python\ndef similar_elements(list1, list2):\n    # Convert both lists to sets to remove duplicates and find intersection\n    return set(list1) & set(list2)\n```"
+    },
+    {
+      "index": 2,
+      "task_id": 3,
+      "prompt": "Write a python function to identify non-prime numbers.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert is_not_prime(2) == False",
+        "assert is_not_prime(10) == True",
+        "assert is_not_prime(35) == True",
+        "assert is_not_prime(37) == False"
+      ],
+      "latency_seconds": 2.0543012619018555,
+      "extracted_code": "def is_not_prime(n):\n    # Check if the number is less than 2, which is not prime\n    if n < 2:\n        return True\n    # Check for factors from 2 to the square root of n\n    for i in range(2, int(n**0.5) + 1):\n        # If a factor is found, the number is not prime\n        if n % i == 0:\n            return True\n    # If no factors are found, the number is prime\n    return False",
+      "raw_response": "```python\ndef is_not_prime(n):\n    # Check if the number is less than 2, which is not prime\n    if n < 2:\n        return True\n    # Check for factors from 2 to the square root of n\n    for i in range(2, int(n**0.5) + 1):\n        # If a factor is found, the number is not prime\n        if n % i == 0:\n            return True\n    # If no factors are found, the number is prime\n    return False\n```"
+    },
+    {
+      "index": 3,
+      "task_id": 4,
+      "prompt": "Write a function to find the n largest integers from a given list of numbers, returned in descending order.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert heap_queue_largest( [25, 35, 22, 85, 14, 65, 75, 22, 58],3)==[85, 75, 65]",
+        "assert heap_queue_largest( [25, 35, 22, 85, 14, 65, 75, 22, 58],2)==[85, 75]",
+        "assert heap_queue_largest( [25, 35, 22, 85, 14, 65, 75, 22, 58],5)==[85, 75, 65, 58, 35]"
+      ],
+      "latency_seconds": 2.337312936782837,
+      "extracted_code": "import heapq\n\ndef heap_queue_largest(numbers, n):\n    # Use heapq.nlargest to find the n largest numbers in the list\n    largest_numbers = heapq.nlargest(n, numbers)\n    # Return the largest numbers in descending order\n    return sorted(largest_numbers, reverse=True)\n\n# Test the function with the provided test case\nassert heap_queue_largest( [25, 35, 22, 85, 14, 65, 75, 22, 58],3)==[85, 75, 65]",
+      "raw_response": "```python\nimport heapq\n\ndef heap_queue_largest(numbers, n):\n    # Use heapq.nlargest to find the n largest numbers in the list\n    largest_numbers = heapq.nlargest(n, numbers)\n    # Return the largest numbers in descending order\n    return sorted(largest_numbers, reverse=True)\n\n# Test the function with the provided test case\nassert heap_queue_largest( [25, 35, 22, 85, 14, 65, 75, 22, 58],3)==[85, 75, 65]\n```"
+    },
+    {
+      "index": 4,
+      "task_id": 6,
+      "prompt": "Write a python function to check whether the two numbers differ at one bit position only or not.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert differ_At_One_Bit_Pos(13,9) == True",
+        "assert differ_At_One_Bit_Pos(15,8) == False",
+        "assert differ_At_One_Bit_Pos(2,4) == False",
+        "assert differ_At_One_Bit_Pos(2, 3) == True",
+        "assert differ_At_One_Bit_Pos(5, 1) == True",
+        "assert differ_At_One_Bit_Pos(1, 5) == True"
+      ],
+      "latency_seconds": 1.8117783069610596,
+      "extracted_code": "def differ_At_One_Bit_Pos(x, y):\n    # Calculate the XOR of x and y\n    xor_result = x ^ y\n    \n    # Check if the XOR result is non-zero and has exactly one bit set\n    return xor_result != 0 and (xor_result & (xor_result - 1)) == 0\n\n# Test the function with the provided assertion\nassert differ_At_One_Bit_Pos(13, 9) == True",
+      "raw_response": "```python\ndef differ_At_One_Bit_Pos(x, y):\n    # Calculate the XOR of x and y\n    xor_result = x ^ y\n    \n    # Check if the XOR result is non-zero and has exactly one bit set\n    return xor_result != 0 and (xor_result & (xor_result - 1)) == 0\n\n# Test the function with the provided assertion\nassert differ_At_One_Bit_Pos(13, 9) == True\n```"
+    },
+    {
+      "index": 5,
+      "task_id": 7,
+      "prompt": "Write a function to find all words which are at least 4 characters long in a string.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert set(find_char_long('Please move back to stream')) == set(['Please', 'move', 'back', 'stream'])",
+        "assert set(find_char_long('Jing Eco and Tech')) == set(['Jing', 'Tech'])",
+        "assert set(find_char_long('Jhingai wulu road Zone 3')) == set(['Jhingai', 'wulu', 'road', 'Zone'])"
+      ],
+      "latency_seconds": 1.5127487182617188,
+      "extracted_code": "import re\n\ndef find_char_long(text):\n    # Use regular expression to find all words with at least 4 characters\n    return set(re.findall(r'\\b\\w{4,}\\b', text))\n\n# Test the function with the provided assertion\nassert set(find_char_long('Please move back to stream')) == set(['Please', 'move', 'back', 'stream'])",
+      "raw_response": "```python\nimport re\n\ndef find_char_long(text):\n    # Use regular expression to find all words with at least 4 characters\n    return set(re.findall(r'\\b\\w{4,}\\b', text))\n\n# Test the function with the provided assertion\nassert set(find_char_long('Please move back to stream')) == set(['Please', 'move', 'back', 'stream'])\n```"
+    },
+    {
+      "index": 6,
+      "task_id": 8,
+      "prompt": "Write a function to find squares of individual elements in a list.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert square_nums([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])==[1, 4, 9, 16, 25, 36, 49, 64, 81, 100]",
+        "assert square_nums([10,20,30])==([100,400,900])",
+        "assert square_nums([12,15])==([144,225])"
+      ],
+      "latency_seconds": 2.112318515777588,
+      "extracted_code": "def square_nums(nums):\n    # Use list comprehension to square each element in the list\n    return [x**2 for x in nums]\n\n# Test the function with the provided assertion\nassert square_nums([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) == [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]",
+      "raw_response": "```python\ndef square_nums(nums):\n    # Use list comprehension to square each element in the list\n    return [x**2 for x in nums]\n\n# Test the function with the provided assertion\nassert square_nums([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) == [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]\n```"
+    },
+    {
+      "index": 7,
+      "task_id": 9,
+      "prompt": "Write a python function to find the minimum number of rotations (greater than 0) required to get the same string.",
+      "passed": false,
+      "test_message": "AssertionError:",
+      "test_list": [
+        "assert find_Rotations(\"aaaa\") == 1",
+        "assert find_Rotations(\"ab\") == 2",
+        "assert find_Rotations(\"abc\") == 3"
+      ],
+      "latency_seconds": 2.3085103034973145,
+      "extracted_code": "def find_Rotations(s):\n    # Check if the string is already a palindrome\n    if s == s[::-1]:\n        return 0\n    # Iterate through the string to find the minimum rotations\n    for i in range(1, len(s)):\n        # Check if the substring from the current position to the end followed by the substring from the start to the current position is a palindrome\n        if s[i:] + s[:i] == s[::-1]:\n            return i\n    # If no rotation results in a palindrome, return the length of the string\n    return len(s)",
+      "raw_response": "```python\ndef find_Rotations(s):\n    # Check if the string is already a palindrome\n    if s == s[::-1]:\n        return 0\n    # Iterate through the string to find the minimum rotations\n    for i in range(1, len(s)):\n        # Check if the substring from the current position to the end followed by the substring from the start to the current position is a palindrome\n        if s[i:] + s[:i] == s[::-1]:\n            return i\n    # If no rotation results in a palindrome, return the length of the string\n    return len(s)\n```"
+    },
+    {
+      "index": 8,
+      "task_id": 11,
+      "prompt": "Write a python function to remove first and last occurrence of a given character from the string.",
+      "passed": false,
+      "test_message": "Traceback (most recent call last):\n  File \"<string>\", line 23, in <module>\n    assert remove_Occ(\"hello\",\"l\") == \"heo\"\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+      "test_list": [
+        "assert remove_Occ(\"hello\",\"l\") == \"heo\"",
+        "assert remove_Occ(\"abcda\",\"a\") == \"bcd\"",
+        "assert remove_Occ(\"PHP\",\"P\") == \"H\""
+      ],
+      "latency_seconds": 2.7970006465911865,
+      "extracted_code": "def remove_Occ(s, c):\n    # Find the first occurrence of the character\n    first_index = s.find(c)\n    # Find the last occurrence of the character\n    last_index = s.rfind(c)\n    \n    # If the character is not found, return the original string\n    if first_index == -1 or last_index == -1:\n        return s\n    \n    # Remove the first occurrence\n    s = s[:first_index] + s[first_index + 1:]\n    # Remove the last occurrence\n    s = s[:last_index] + s[last_index + 1:]\n    \n    return s\n\n# Test the function with the provided test case\nassert remove_Occ(\"hello\",\"l\") == \"heo\"",
+      "raw_response": "```python\ndef remove_Occ(s, c):\n    # Find the first occurrence of the character\n    first_index = s.find(c)\n    # Find the last occurrence of the character\n    last_index = s.rfind(c)\n    \n    # If the character is not found, return the original string\n    if first_index == -1 or last_index == -1:\n        return s\n    \n    # Remove the first occurrence\n    s = s[:first_index] + s[first_index + 1:]\n    # Remove the last occurrence\n    s = s[:last_index] + s[last_index + 1:]\n    \n    return s\n\n# Test the function with the provided test case\nassert remove_Occ(\"hello\",\"l\") == \"heo\"\n```"
+    },
+    {
+      "index": 9,
+      "task_id": 12,
+      "prompt": "Write a function to sort a given matrix in ascending order according to the sum of its rows.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert sort_matrix([[1, 2, 3], [2, 4, 5], [1, 1, 1]])==[[1, 1, 1], [1, 2, 3], [2, 4, 5]]",
+        "assert sort_matrix([[1, 2, 3], [-2, 4, -5], [1, -1, 1]])==[[-2, 4, -5], [1, -1, 1], [1, 2, 3]]",
+        "assert sort_matrix([[5,8,9],[6,4,3],[2,1,4]])==[[2, 1, 4], [6, 4, 3], [5, 8, 9]]"
+      ],
+      "latency_seconds": 1.791062355041504,
+      "extracted_code": "def sort_matrix(matrix):\n    # Sort the matrix based on the sum of its rows\n    matrix.sort(key=sum)\n    return matrix\n\n# Test the function with the provided test case\nassert sort_matrix([[1, 2, 3], [2, 4, 5], [1, 1, 1]]) == [[1, 1, 1], [1, 2, 3], [2, 4, 5]]",
+      "raw_response": "```python\ndef sort_matrix(matrix):\n    # Sort the matrix based on the sum of its rows\n    matrix.sort(key=sum)\n    return matrix\n\n# Test the function with the provided test case\nassert sort_matrix([[1, 2, 3], [2, 4, 5], [1, 1, 1]]) == [[1, 1, 1], [1, 2, 3], [2, 4, 5]]\n```"
+    },
+    {
+      "index": 10,
+      "task_id": 14,
+      "prompt": "Write a python function to find the volume of a triangular prism.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert find_Volume(10,8,6) == 240",
+        "assert find_Volume(3,2,2) == 6",
+        "assert find_Volume(1,2,1) == 1"
+      ],
+      "latency_seconds": 1.5540626049041748,
+      "extracted_code": "def find_Volume(length, base, height):\n    # Calculate the area of the triangular base\n    base_area = 0.5 * base * height\n    # Calculate the volume of the prism\n    volume = length * base_area\n    return volume\n\n# Test the function with the provided assertion\nassert find_Volume(10, 8, 6) == 240",
+      "raw_response": "```python\ndef find_Volume(length, base, height):\n    # Calculate the area of the triangular base\n    base_area = 0.5 * base * height\n    # Calculate the volume of the prism\n    volume = length * base_area\n    return volume\n\n# Test the function with the provided assertion\nassert find_Volume(10, 8, 6) == 240\n```"
+    },
+    {
+      "index": 11,
+      "task_id": 16,
+      "prompt": "Write a function to that returns true if the input string contains sequences of lowercase letters joined with an underscore and false otherwise.",
+      "passed": false,
+      "test_message": "AssertionError:",
+      "test_list": [
+        "assert text_lowercase_underscore(\"aab_cbbbc\")==(True)",
+        "assert text_lowercase_underscore(\"aab_Abbbc\")==(False)",
+        "assert text_lowercase_underscore(\"Aaab_abbbc\")==(False)"
+      ],
+      "latency_seconds": 1.2742536067962646,
+      "extracted_code": "import re\n\ndef text_lowercase_underscore(text):\n    # Use regular expression to find sequences of lowercase letters joined with an underscore\n    return bool(re.search(r'[a-z]+_[a-z]+', text))\n\n# Test the function with the provided assertion\nassert text_lowercase_underscore(\"aab_cbbbc\") == (True)",
+      "raw_response": "```python\nimport re\n\ndef text_lowercase_underscore(text):\n    # Use regular expression to find sequences of lowercase letters joined with an underscore\n    return bool(re.search(r'[a-z]+_[a-z]+', text))\n\n# Test the function with the provided assertion\nassert text_lowercase_underscore(\"aab_cbbbc\") == (True)\n```"
+    },
+    {
+      "index": 12,
+      "task_id": 17,
+      "prompt": "Write a function that returns the perimeter of a square given its side length as input.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert square_perimeter(10)==40",
+        "assert square_perimeter(5)==20",
+        "assert square_perimeter(4)==16"
+      ],
+      "latency_seconds": 0.6152863502502441,
+      "extracted_code": "def square_perimeter(side_length):\n    # Calculate the perimeter of a square\n    perimeter = 4 * side_length\n    return perimeter",
+      "raw_response": "```python\ndef square_perimeter(side_length):\n    # Calculate the perimeter of a square\n    perimeter = 4 * side_length\n    return perimeter\n```"
+    },
+    {
+      "index": 13,
+      "task_id": 18,
+      "prompt": "Write a function to remove characters from the first string which are present in the second string.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert remove_dirty_chars(\"probasscurve\", \"pros\") == 'bacuve'",
+        "assert remove_dirty_chars(\"digitalindia\", \"talent\") == 'digiidi'",
+        "assert remove_dirty_chars(\"exoticmiles\", \"toxic\") == 'emles'"
+      ],
+      "latency_seconds": 1.872145414352417,
+      "extracted_code": "def remove_dirty_chars(s1, s2):\n    # Create a set of characters from s2 for quick lookup\n    dirty_chars = set(s2)\n    # Use a list comprehension to filter out characters in s1 that are in dirty_chars\n    result = ''.join([char for char in s1 if char not in dirty_chars])\n    return result\n\n# Test the function with the provided test case\nassert remove_dirty_chars(\"probasscurve\", \"pros\") == 'bacuve'",
+      "raw_response": "```python\ndef remove_dirty_chars(s1, s2):\n    # Create a set of characters from s2 for quick lookup\n    dirty_chars = set(s2)\n    # Use a list comprehension to filter out characters in s1 that are in dirty_chars\n    result = ''.join([char for char in s1 if char not in dirty_chars])\n    return result\n\n# Test the function with the provided test case\nassert remove_dirty_chars(\"probasscurve\", \"pros\") == 'bacuve'\n```"
+    },
+    {
+      "index": 14,
+      "task_id": 19,
+      "prompt": "Write a function to find whether a given array of integers contains any duplicate element.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert test_duplicate(([1,2,3,4,5]))==False",
+        "assert test_duplicate(([1,2,3,4, 4]))==True",
+        "assert test_duplicate([1,1,2,2,3,3,4,4,5])==True"
+      ],
+      "latency_seconds": 1.6574325561523438,
+      "extracted_code": "def test_duplicate(arr):\n    # Create a set to store unique elements\n    seen = set()\n    # Iterate through each element in the array\n    for num in arr:\n        # If the number is already in the set, return True\n        if num in seen:\n            return True\n        # Add the number to the set\n        seen.add(num)\n    # If no duplicates are found, return False\n    return False",
+      "raw_response": "```python\ndef test_duplicate(arr):\n    # Create a set to store unique elements\n    seen = set()\n    # Iterate through each element in the array\n    for num in arr:\n        # If the number is already in the set, return True\n        if num in seen:\n            return True\n        # Add the number to the set\n        seen.add(num)\n    # If no duplicates are found, return False\n    return False\n```"
+    },
+    {
+      "index": 15,
+      "task_id": 20,
+      "prompt": "Write a function to check if the given number is woodball or not.",
+      "passed": false,
+      "test_message": "File \"<string>\", line 112\n    if n\n        ^\nSyntaxError: expected ':'",
+      "test_list": [
+        "assert is_woodall(383) == True",
+        "assert is_woodall(254) == False",
+        "assert is_woodall(200) == False"
+      ],
+      "latency_seconds": 17.822599411010742,
+      "extracted_code": "def is_woodall(n):\n    # Check if the number is less than 2\n    if n < 2:\n        return False\n    # Check if the number is a power of 2\n    if n & (n - 1) == 0:\n        return False\n    # Check if the number is a multiple of 3\n    if n % 3 == 0:\n        return False\n    # Check if the number is a multiple of 4\n    if n % 4 == 0:\n        return False\n    # Check if the number is a multiple of 5\n    if n % 5 == 0:\n        return False\n    # Check if the number is a multiple of 6\n    if n % 6 == 0:\n        return False\n    # Check if the number is a multiple of 7\n    if n % 7 == 0:\n        return False\n    # Check if the number is a multiple of 8\n    if n % 8 == 0:\n        return False\n    # Check if the number is a multiple of 9\n    if n % 9 == 0:\n        return False\n    # Check if the number is a multiple of 10\n    if n % 10 == 0:\n        return False\n    # Check if the number is a multiple of 11\n    if n % 11 == 0:\n        return False\n    # Check if the number is a multiple of 12\n    if n % 12 == 0:\n        return False\n    # Check if the number is a multiple of 13\n    if n % 13 == 0:\n        return False\n    # Check if the number is a multiple of 14\n    if n % 14 == 0:\n        return False\n    # Check if the number is a multiple of 15\n    if n % 15 == 0:\n        return False\n    # Check if the number is a multiple of 16\n    if n % 16 == 0:\n        return False\n    # Check if the number is a multiple of 17\n    if n % 17 == 0:\n        return False\n    # Check if the number is a multiple of 18\n    if n % 18 == 0:\n        return False\n    # Check if the number is a multiple of 19\n    if n % 19 == 0:\n        return False\n    # Check if the number is a multiple of 20\n    if n % 20 == 0:\n        return False\n    # Check if the number is a multiple of 21\n    if n % 21 == 0:\n        return False\n    # Check if the number is a multiple of 22\n    if n % 22 == 0:\n        return False\n    # Check if the number is a multiple of 23\n    if n % 23 == 0:\n        return False\n    # Check if the number is a multiple of 24\n    if n % 24 == 0:\n        return False\n    # Check if the number is a multiple of 25\n    if n % 25 == 0:\n        return False\n    # Check if the number is a multiple of 26\n    if n % 26 == 0:\n        return False\n    # Check if the number is a multiple of 27\n    if n % 27 == 0:\n        return False\n    # Check if the number is a multiple of 28\n    if n % 28 == 0:\n        return False\n    # Check if the number is a multiple of 29\n    if n % 29 == 0:\n        return False\n    # Check if the number is a multiple of 30\n    if n % 30 == 0:\n        return False\n    # Check if the number is a multiple of 31\n    if n % 31 == 0:\n        return False\n    # Check if the number is a multiple of 32\n    if n % 32 == 0:\n        return False\n    # Check if the number is a multiple of 33\n    if n % 33 == 0:\n        return False\n    # Check if the number is a multiple of 34\n    if n % 34 == 0:\n        return False\n    # Check if the number is a multiple of 35\n    if n % 35 == 0:\n        return False\n    # Check if the number is a multiple of 36\n    if n",
+      "raw_response": "```python\ndef is_woodall(n):\n    # Check if the number is less than 2\n    if n < 2:\n        return False\n    # Check if the number is a power of 2\n    if n & (n - 1) == 0:\n        return False\n    # Check if the number is a multiple of 3\n    if n % 3 == 0:\n        return False\n    # Check if the number is a multiple of 4\n    if n % 4 == 0:\n        return False\n    # Check if the number is a multiple of 5\n    if n % 5 == 0:\n        return False\n    # Check if the number is a multiple of 6\n    if n % 6 == 0:\n        return False\n    # Check if the number is a multiple of 7\n    if n % 7 == 0:\n        return False\n    # Check if the number is a multiple of 8\n    if n % 8 == 0:\n        return False\n    # Check if the number is a multiple of 9\n    if n % 9 == 0:\n        return False\n    # Check if the number is a multiple of 10\n    if n % 10 == 0:\n        return False\n    # Check if the number is a multiple of 11\n    if n % 11 == 0:\n        return False\n    # Check if the number is a multiple of 12\n    if n % 12 == 0:\n        return False\n    # Check if the number is a multiple of 13\n    if n % 13 == 0:\n        return False\n    # Check if the number is a multiple of 14\n    if n % 14 == 0:\n        return False\n    # Check if the number is a multiple of 15\n    if n % 15 == 0:\n        return False\n    # Check if the number is a multiple of 16\n    if n % 16 == 0:\n        return False\n    # Check if the number is a multiple of 17\n    if n % 17 == 0:\n        return False\n    # Check if the number is a multiple of 18\n    if n % 18 == 0:\n        return False\n    # Check if the number is a multiple of 19\n    if n % 19 == 0:\n        return False\n    # Check if the number is a multiple of 20\n    if n % 20 == 0:\n        return False\n    # Check if the number is a multiple of 21\n    if n % 21 == 0:\n        return False\n    # Check if the number is a multiple of 22\n    if n % 22 == 0:\n        return False\n    # Check if the number is a multiple of 23\n    if n % 23 == 0:\n        return False\n    # Check if the number is a multiple of 24\n    if n % 24 == 0:\n        return False\n    # Check if the number is a multiple of 25\n    if n % 25 == 0:\n        return False\n    # Check if the number is a multiple of 26\n    if n % 26 == 0:\n        return False\n    # Check if the number is a multiple of 27\n    if n % 27 == 0:\n        return False\n    # Check if the number is a multiple of 28\n    if n % 28 == 0:\n        return False\n    # Check if the number is a multiple of 29\n    if n % 29 == 0:\n        return False\n    # Check if the number is a multiple of 30\n    if n % 30 == 0:\n        return False\n    # Check if the number is a multiple of 31\n    if n % 31 == 0:\n        return False\n    # Check if the number is a multiple of 32\n    if n % 32 == 0:\n        return False\n    # Check if the number is a multiple of 33\n    if n % 33 == 0:\n        return False\n    # Check if the number is a multiple of 34\n    if n % 34 == 0:\n        return False\n    # Check if the number is a multiple of 35\n    if n % 35 == 0:\n        return False\n    # Check if the number is a multiple of 36\n    if n"
+    },
+    {
+      "index": 16,
+      "task_id": 56,
+      "prompt": "Write a python function to check if a given number is one less than twice its reverse.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert check(70) == False",
+        "assert check(23) == False",
+        "assert check(73) == True"
+      ],
+      "latency_seconds": 1.0149891376495361,
+      "extracted_code": "def check(n):\n    # Reverse the digits of the number\n    reversed_n = int(str(n)[::-1])\n    # Check if the number is one less than twice its reverse\n    return n == 2 * reversed_n - 1",
+      "raw_response": "```python\ndef check(n):\n    # Reverse the digits of the number\n    reversed_n = int(str(n)[::-1])\n    # Check if the number is one less than twice its reverse\n    return n == 2 * reversed_n - 1\n```"
+    },
+    {
+      "index": 17,
+      "task_id": 57,
+      "prompt": "Write a python function to find the largest number that can be formed with the given list of digits.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert find_Max_Num([1,2,3]) == 321",
+        "assert find_Max_Num([4,5,6,1]) == 6541",
+        "assert find_Max_Num([1,2,3,9]) == 9321"
+      ],
+      "latency_seconds": 1.921856164932251,
+      "extracted_code": "def find_Max_Num(digits):\n    # Convert the list of digits to a string\n    digits_str = ''.join(map(str, digits))\n    # Sort the string in descending order\n    sorted_digits_str = sorted(digits_str, reverse=True)\n    # Join the sorted string to form the largest number\n    largest_num = int(''.join(sorted_digits_str))\n    return largest_num\n\n# Test the function with the provided test case\nassert find_Max_Num([1,2,3]) == 321",
+      "raw_response": "```python\ndef find_Max_Num(digits):\n    # Convert the list of digits to a string\n    digits_str = ''.join(map(str, digits))\n    # Sort the string in descending order\n    sorted_digits_str = sorted(digits_str, reverse=True)\n    # Join the sorted string to form the largest number\n    largest_num = int(''.join(sorted_digits_str))\n    return largest_num\n\n# Test the function with the provided test case\nassert find_Max_Num([1,2,3]) == 321\n```"
+    },
+    {
+      "index": 18,
+      "task_id": 58,
+      "prompt": "Write a python function to check whether the given two integers have opposite sign or not.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert opposite_Signs(1,-2) == True",
+        "assert opposite_Signs(3,2) == False",
+        "assert opposite_Signs(-10,-10) == False",
+        "assert opposite_Signs(-2,2) == True"
+      ],
+      "latency_seconds": 1.132749080657959,
+      "extracted_code": "def opposite_Signs(x, y):\n    # Check if the product of x and y is less than 0\n    return (x * y) < 0\n\n# Test the function with the provided assertion\nassert opposite_Signs(1, -2) == True",
+      "raw_response": "```python\ndef opposite_Signs(x, y):\n    # Check if the product of x and y is less than 0\n    return (x * y) < 0\n\n# Test the function with the provided assertion\nassert opposite_Signs(1, -2) == True\n```"
+    },
+    {
+      "index": 19,
+      "task_id": 59,
+      "prompt": "Write a function to find the nth octagonal number.",
+      "passed": false,
+      "test_message": "Traceback (most recent call last):\n  File \"<string>\", line 11, in <module>\n    assert is_octagonal(5) == 65\n           ^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+      "test_list": [
+        "assert is_octagonal(5) == 65",
+        "assert is_octagonal(10) == 280",
+        "assert is_octagonal(15) == 645"
+      ],
+      "latency_seconds": 1.1980438232421875,
+      "extracted_code": "def is_octagonal(n):\n    # Calculate the nth octagonal number using the formula\n    octagonal_number = (3 * n * n - n) // 2\n    return octagonal_number\n\n# Test the function with the provided assertion\nassert is_octagonal(5) == 65",
+      "raw_response": "```python\ndef is_octagonal(n):\n    # Calculate the nth octagonal number using the formula\n    octagonal_number = (3 * n * n - n) // 2\n    return octagonal_number\n\n# Test the function with the provided assertion\nassert is_octagonal(5) == 65\n```"
+    },
+    {
+      "index": 20,
+      "task_id": 61,
+      "prompt": "Write a python function to count the number of substrings with the sum of digits equal to their length.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert count_Substrings('112112') == 6",
+        "assert count_Substrings('111') == 6",
+        "assert count_Substrings('1101112') == 12"
+      ],
+      "latency_seconds": 1.7868385314941406,
+      "extracted_code": "def count_Substrings(s):\n    n = len(s)\n    count = 0\n    for i in range(n):\n        sum_digits = 0\n        for j in range(i, n):\n            sum_digits += int(s[j])\n            if sum_digits == j - i + 1:\n                count += 1\n    return count\n\n# Test the function with the provided test case\nassert count_Substrings('112112') == 6",
+      "raw_response": "```python\ndef count_Substrings(s):\n    n = len(s)\n    count = 0\n    for i in range(n):\n        sum_digits = 0\n        for j in range(i, n):\n            sum_digits += int(s[j])\n            if sum_digits == j - i + 1:\n                count += 1\n    return count\n\n# Test the function with the provided test case\nassert count_Substrings('112112') == 6\n```"
+    },
+    {
+      "index": 21,
+      "task_id": 62,
+      "prompt": "Write a python function to find smallest number in a list.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert smallest_num([10, 20, 1, 45, 99]) == 1",
+        "assert smallest_num([1, 2, 3]) == 1",
+        "assert smallest_num([45, 46, 50, 60]) == 45"
+      ],
+      "latency_seconds": 1.734619140625,
+      "extracted_code": "def smallest_num(nums):\n    # Initialize the smallest number with the first element of the list\n    smallest = nums[0]\n    # Iterate through the list to find the smallest number\n    for num in nums:\n        if num < smallest:\n            smallest = num\n    return smallest\n\n# Test the function with the provided assertion\nassert smallest_num([10, 20, 1, 45, 99]) == 1",
+      "raw_response": "```python\ndef smallest_num(nums):\n    # Initialize the smallest number with the first element of the list\n    smallest = nums[0]\n    # Iterate through the list to find the smallest number\n    for num in nums:\n        if num < smallest:\n            smallest = num\n    return smallest\n\n# Test the function with the provided assertion\nassert smallest_num([10, 20, 1, 45, 99]) == 1\n```"
+    },
+    {
+      "index": 22,
+      "task_id": 63,
+      "prompt": "Write a function to find the maximum difference between available pairs in the given tuple list.",
+      "passed": false,
+      "test_message": "Traceback (most recent call last):\n  File \"<string>\", line 18, in <module>\n    assert max_difference([(3, 5), (1, 7), (10, 3), (1, 2)]) == 7\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+      "test_list": [
+        "assert max_difference([(3, 5), (1, 7), (10, 3), (1, 2)]) == 7",
+        "assert max_difference([(4, 6), (2, 17), (9, 13), (11, 12)]) == 15",
+        "assert max_difference([(12, 35), (21, 27), (13, 23), (41, 22)]) == 23"
+      ],
+      "latency_seconds": 2.9536726474761963,
+      "extracted_code": "def max_difference(lst):\n    # Initialize the maximum difference to a very small number\n    max_diff = float('-inf')\n    # Iterate through each pair in the list\n    for i in range(len(lst)):\n        for j in range(i + 1, len(lst)):\n            # Calculate the difference between the two pairs\n            diff = abs(lst[i][0] - lst[j][0]) + abs(lst[i][1] - lst[j][1])\n            # Update the maximum difference if the current difference is larger\n            max_diff = max(max_diff, diff)\n    return max_diff\n\n# Test the function with the provided test case\nassert max_difference([(3, 5), (1, 7), (10, 3), (1, 2)]) == 7",
+      "raw_response": "```python\ndef max_difference(lst):\n    # Initialize the maximum difference to a very small number\n    max_diff = float('-inf')\n    # Iterate through each pair in the list\n    for i in range(len(lst)):\n        for j in range(i + 1, len(lst)):\n            # Calculate the difference between the two pairs\n            diff = abs(lst[i][0] - lst[j][0]) + abs(lst[i][1] - lst[j][1])\n            # Update the maximum difference if the current difference is larger\n            max_diff = max(max_diff, diff)\n    return max_diff\n\n# Test the function with the provided test case\nassert max_difference([(3, 5), (1, 7), (10, 3), (1, 2)]) == 7\n```"
+    },
+    {
+      "index": 23,
+      "task_id": 64,
+      "prompt": "Write a function to sort a list of tuples using the second value of each tuple.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert subject_marks([('English', 88), ('Science', 90), ('Maths', 97), ('Social sciences', 82)])==[('Social sciences', 82), ('English', 88), ('Science', 90), ('Maths', 97)]",
+        "assert subject_marks([('Telugu',49),('Hindhi',54),('Social',33)])==([('Social',33),('Telugu',49),('Hindhi',54)])",
+        "assert subject_marks([('Physics',96),('Chemistry',97),('Biology',45)])==([('Biology',45),('Physics',96),('Chemistry',97)])"
+      ],
+      "latency_seconds": 2.102886199951172,
+      "extracted_code": "def subject_marks(test_list):\n    # Sort the list of tuples based on the second element of each tuple\n    res = sorted(test_list, key=lambda x: x[1])\n    return res\n\n# Test the function with the provided assertion\nassert subject_marks([('English', 88), ('Science', 90), ('Maths', 97), ('Social sciences', 82)]) == [('Social sciences', 82), ('English', 88), ('Science', 90), ('Maths', 97)]",
+      "raw_response": "```python\ndef subject_marks(test_list):\n    # Sort the list of tuples based on the second element of each tuple\n    res = sorted(test_list, key=lambda x: x[1])\n    return res\n\n# Test the function with the provided assertion\nassert subject_marks([('English', 88), ('Science', 90), ('Maths', 97), ('Social sciences', 82)]) == [('Social sciences', 82), ('English', 88), ('Science', 90), ('Maths', 97)]\n```"
+    },
+    {
+      "index": 24,
+      "task_id": 65,
+      "prompt": "Write a function to flatten a list and sum all of its elements.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert recursive_list_sum(([1, 2, [3,4],[5,6]]))==21",
+        "assert recursive_list_sum(([7, 10, [15,14],[19,41]]))==106",
+        "assert recursive_list_sum(([10, 20, [30,40],[50,60]]))==210"
+      ],
+      "latency_seconds": 1.443876028060913,
+      "extracted_code": "def recursive_list_sum(lst):\n    total = 0\n    for item in lst:\n        if isinstance(item, list):\n            total += recursive_list_sum(item)\n        else:\n            total += item\n    return total\n\n# Test the function with the provided assertion\nassert recursive_list_sum(([1, 2, [3,4],[5,6]]))==21",
+      "raw_response": "```python\ndef recursive_list_sum(lst):\n    total = 0\n    for item in lst:\n        if isinstance(item, list):\n            total += recursive_list_sum(item)\n        else:\n            total += item\n    return total\n\n# Test the function with the provided assertion\nassert recursive_list_sum(([1, 2, [3,4],[5,6]]))==21\n```"
+    },
+    {
+      "index": 25,
+      "task_id": 66,
+      "prompt": "Write a python function to count the number of positive numbers in a list.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert pos_count([1,-2,3,-4]) == 2",
+        "assert pos_count([3,4,5,-1]) == 3",
+        "assert pos_count([1,2,3,4]) == 4"
+      ],
+      "latency_seconds": 1.5476772785186768,
+      "extracted_code": "def pos_count(lst):\n    # Initialize a counter for positive numbers\n    count = 0\n    # Iterate through each element in the list\n    for num in lst:\n        # Check if the number is positive\n        if num > 0:\n            # Increment the counter if the number is positive\n            count += 1\n    # Return the total count of positive numbers\n    return count",
+      "raw_response": "```python\ndef pos_count(lst):\n    # Initialize a counter for positive numbers\n    count = 0\n    # Iterate through each element in the list\n    for num in lst:\n        # Check if the number is positive\n        if num > 0:\n            # Increment the counter if the number is positive\n            count += 1\n    # Return the total count of positive numbers\n    return count\n```"
+    },
+    {
+      "index": 26,
+      "task_id": 67,
+      "prompt": "Write a function to find the number of ways to partition a set of Bell numbers.",
+      "passed": false,
+      "test_message": "AssertionError:",
+      "test_list": [
+        "assert bell_number(2)==2",
+        "assert bell_number(10)==115975",
+        "assert bell_number(56)==6775685320645824322581483068371419745979053216268760300"
+      ],
+      "latency_seconds": 2.503185987472534,
+      "extracted_code": "from math import factorial\n\ndef bell_number(n):\n    # Initialize a list to store Bell numbers\n    bell = [0] * (n + 1)\n    bell[0] = 1  # Base case: There is one way to partition an empty set\n\n    # Calculate Bell numbers using the recursive formula\n    for i in range(1, n + 1):\n        for j in range(i):\n            bell[i] += bell[j] * factorial(i - 1) // factorial(j) * factorial(i - j - 1)\n\n    return bell[n]\n\n# Test the function with the provided test case\nassert bell_number(2) == 2",
+      "raw_response": "```python\nfrom math import factorial\n\ndef bell_number(n):\n    # Initialize a list to store Bell numbers\n    bell = [0] * (n + 1)\n    bell[0] = 1  # Base case: There is one way to partition an empty set\n\n    # Calculate Bell numbers using the recursive formula\n    for i in range(1, n + 1):\n        for j in range(i):\n            bell[i] += bell[j] * factorial(i - 1) // factorial(j) * factorial(i - j - 1)\n\n    return bell[n]\n\n# Test the function with the provided test case\nassert bell_number(2) == 2\n```"
+    },
+    {
+      "index": 27,
+      "task_id": 68,
+      "prompt": "Write a python function to check whether the given array is monotonic or not.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert is_Monotonic([6, 5, 4, 4]) == True",
+        "assert is_Monotonic([1, 2, 2, 3]) == True",
+        "assert is_Monotonic([1, 3, 2]) == False"
+      ],
+      "latency_seconds": 1.8549389839172363,
+      "extracted_code": "def is_Monotonic(arr):\n    # Check if the array is either non-increasing or non-decreasing\n    return all(arr[i] <= arr[i + 1] for i in range(len(arr) - 1)) or all(arr[i] >= arr[i + 1] for i in range(len(arr) - 1))\n\n# Test the function with the provided assertion\nassert is_Monotonic([6, 5, 4, 4]) == True",
+      "raw_response": "```python\ndef is_Monotonic(arr):\n    # Check if the array is either non-increasing or non-decreasing\n    return all(arr[i] <= arr[i + 1] for i in range(len(arr) - 1)) or all(arr[i] >= arr[i + 1] for i in range(len(arr) - 1))\n\n# Test the function with the provided assertion\nassert is_Monotonic([6, 5, 4, 4]) == True\n```"
+    },
+    {
+      "index": 28,
+      "task_id": 69,
+      "prompt": "Write a function to check whether a list contains the given sublist or not.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert is_sublist([2,4,3,5,7],[3,7])==False",
+        "assert is_sublist([2,4,3,5,7],[4,3])==True",
+        "assert is_sublist([2,4,3,5,7],[1,6])==False"
+      ],
+      "latency_seconds": 2.512178659439087,
+      "extracted_code": "def is_sublist(main_list, sub_list):\n    # Check if the sub_list is empty\n    if not sub_list:\n        return True\n    # Check if the sub_list is longer than the main_list\n    if len(sub_list) > len(main_list):\n        return False\n    # Iterate through the main_list to find the sub_list\n    for i in range(len(main_list) - len(sub_list) + 1):\n        # Check if the sub_list matches the current slice of the main_list\n        if main_list[i:i+len(sub_list)] == sub_list:\n            return True\n    # If no match is found, return False\n    return False",
+      "raw_response": "```python\ndef is_sublist(main_list, sub_list):\n    # Check if the sub_list is empty\n    if not sub_list:\n        return True\n    # Check if the sub_list is longer than the main_list\n    if len(sub_list) > len(main_list):\n        return False\n    # Iterate through the main_list to find the sub_list\n    for i in range(len(main_list) - len(sub_list) + 1):\n        # Check if the sub_list matches the current slice of the main_list\n        if main_list[i:i+len(sub_list)] == sub_list:\n            return True\n    # If no match is found, return False\n    return False\n```"
+    },
+    {
+      "index": 29,
+      "task_id": 70,
+      "prompt": "Write a function to find whether all the given tuples have equal length or not.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert get_equal([(11, 22, 33), (44, 55, 66)]) == True",
+        "assert get_equal([(1, 2, 3), (4, 5, 6, 7)]) == False",
+        "assert get_equal([(1, 2), (3, 4)]) == True"
+      ],
+      "latency_seconds": 1.5279872417449951,
+      "extracted_code": "def get_equal(test_tup):\n    # Check if all tuples in the list have the same length\n    return all(len(tup) == len(test_tup[0]) for tup in test_tup)\n\n# Test the function with the provided assertion\nassert get_equal([(11, 22, 33), (44, 55, 66)]) == True",
+      "raw_response": "```python\ndef get_equal(test_tup):\n    # Check if all tuples in the list have the same length\n    return all(len(tup) == len(test_tup[0]) for tup in test_tup)\n\n# Test the function with the provided assertion\nassert get_equal([(11, 22, 33), (44, 55, 66)]) == True\n```"
+    },
+    {
+      "index": 30,
+      "task_id": 71,
+      "prompt": "Write a function to sort a list of elements.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert comb_sort([5, 15, 37, 25, 79]) == [5, 15, 25, 37, 79]",
+        "assert comb_sort([41, 32, 15, 19, 22]) == [15, 19, 22, 32, 41]",
+        "assert comb_sort([99, 15, 13, 47]) == [13, 15, 47, 99]"
+      ],
+      "latency_seconds": 1.6885933876037598,
+      "extracted_code": "def comb_sort(arr):\n    gap = len(arr)\n    swapped = True\n    while gap > 1 or swapped:\n        gap = int(gap / 1.3)\n        swapped = False\n        for i in range(len(arr) - gap):\n            if arr[i] > arr[i + gap]:\n                arr[i], arr[i + gap] = arr[i + gap], arr[i]\n                swapped = True\n    return arr",
+      "raw_response": "```python\ndef comb_sort(arr):\n    gap = len(arr)\n    swapped = True\n    while gap > 1 or swapped:\n        gap = int(gap / 1.3)\n        swapped = False\n        for i in range(len(arr) - gap):\n            if arr[i] > arr[i + gap]:\n                arr[i], arr[i + gap] = arr[i + gap], arr[i]\n                swapped = True\n    return arr\n```"
+    },
+    {
+      "index": 31,
+      "task_id": 72,
+      "prompt": "Write a python function to check whether the given number can be represented as the difference of two squares or not.",
+      "passed": false,
+      "test_message": "AssertionError:",
+      "test_list": [
+        "assert dif_Square(5) == True",
+        "assert dif_Square(10) == False",
+        "assert dif_Square(15) == True"
+      ],
+      "latency_seconds": 2.317411184310913,
+      "extracted_code": "def dif_Square(n):\n    # Check if n is less than 2, which cannot be represented as the difference of two squares\n    if n < 2:\n        return False\n    # Iterate through possible values of a\n    for a in range(1, int(n**0.5) + 1):\n        # Calculate the corresponding b\n        b = n - a**2\n        # Check if b is a perfect square\n        if int(b**0.5)**2 == b:\n            return True\n    # If no such a and b are found, return False\n    return False",
+      "raw_response": "```python\ndef dif_Square(n):\n    # Check if n is less than 2, which cannot be represented as the difference of two squares\n    if n < 2:\n        return False\n    # Iterate through possible values of a\n    for a in range(1, int(n**0.5) + 1):\n        # Calculate the corresponding b\n        b = n - a**2\n        # Check if b is a perfect square\n        if int(b**0.5)**2 == b:\n            return True\n    # If no such a and b are found, return False\n    return False\n```"
+    },
+    {
+      "index": 32,
+      "task_id": 74,
+      "prompt": "Write a function to check whether it follows the sequence given in the patterns array.",
+      "passed": false,
+      "test_message": "AssertionError:",
+      "test_list": [
+        "assert is_samepatterns([\"red\",\"green\",\"green\"], [\"a\", \"b\", \"b\"])==True",
+        "assert is_samepatterns([\"red\",\"green\",\"greenn\"], [\"a\",\"b\",\"b\"])==False",
+        "assert is_samepatterns([\"red\",\"green\",\"greenn\"], [\"a\",\"b\"])==False"
+      ],
+      "latency_seconds": 3.1203694343566895,
+      "extracted_code": "def is_samepatterns(patterns, colors):\n    # Check if the lengths of patterns and colors are the same\n    if len(patterns) != len(colors):\n        return False\n    \n    # Create a dictionary to map patterns to colors\n    pattern_to_color = {}\n    \n    # Iterate through patterns and colors to populate the dictionary\n    for pattern, color in zip(patterns, colors):\n        if pattern in pattern_to_color:\n            # If the pattern is already in the dictionary, check if it maps to the same color\n            if pattern_to_color[pattern] != color:\n                return False\n        else:\n            # If the pattern is not in the dictionary, add it with the current color\n            pattern_to_color[pattern] = color\n    \n    # If all patterns are unique and map to the correct colors, return True\n    return True",
+      "raw_response": "```python\ndef is_samepatterns(patterns, colors):\n    # Check if the lengths of patterns and colors are the same\n    if len(patterns) != len(colors):\n        return False\n    \n    # Create a dictionary to map patterns to colors\n    pattern_to_color = {}\n    \n    # Iterate through patterns and colors to populate the dictionary\n    for pattern, color in zip(patterns, colors):\n        if pattern in pattern_to_color:\n            # If the pattern is already in the dictionary, check if it maps to the same color\n            if pattern_to_color[pattern] != color:\n                return False\n        else:\n            # If the pattern is not in the dictionary, add it with the current color\n            pattern_to_color[pattern] = color\n    \n    # If all patterns are unique and map to the correct colors, return True\n    return True\n```"
+    },
+    {
+      "index": 33,
+      "task_id": 75,
+      "prompt": "Write a function to find tuples which have all elements divisible by k from the given list of tuples.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert find_tuples([(6, 24, 12), (7, 9, 6), (12, 18, 21)], 6) == [(6, 24, 12)]",
+        "assert find_tuples([(5, 25, 30), (4, 2, 3), (7, 8, 9)], 5) == [(5, 25, 30)]",
+        "assert find_tuples([(7, 9, 16), (8, 16, 4), (19, 17, 18)], 4) == [(8, 16, 4)]"
+      ],
+      "latency_seconds": 2.069056510925293,
+      "extracted_code": "def find_tuples(tuples_list, k):\n    # Use list comprehension to filter tuples where all elements are divisible by k\n    result = [t for t in tuples_list if all(x % k == 0 for x in t)]\n    return result\n\n# Test the function with the provided test case\nassert find_tuples([(6, 24, 12), (7, 9, 6), (12, 18, 21)], 6) == [(6, 24, 12)]",
+      "raw_response": "```python\ndef find_tuples(tuples_list, k):\n    # Use list comprehension to filter tuples where all elements are divisible by k\n    result = [t for t in tuples_list if all(x % k == 0 for x in t)]\n    return result\n\n# Test the function with the provided test case\nassert find_tuples([(6, 24, 12), (7, 9, 6), (12, 18, 21)], 6) == [(6, 24, 12)]\n```"
+    },
+    {
+      "index": 34,
+      "task_id": 77,
+      "prompt": "Write a python function to find whether a number is divisible by 11.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert is_Diff (12345) == False",
+        "assert is_Diff(1212112) == True",
+        "assert is_Diff(1212) == False"
+      ],
+      "latency_seconds": 0.6355302333831787,
+      "extracted_code": "def is_Diff(n):\n    # Check if the number is divisible by 11\n    return n % 11 == 0",
+      "raw_response": "```python\ndef is_Diff(n):\n    # Check if the number is divisible by 11\n    return n % 11 == 0\n```"
+    },
+    {
+      "index": 35,
+      "task_id": 79,
+      "prompt": "Write a python function to check whether the length of the word is odd or not.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert word_len(\"Hadoop\") == False",
+        "assert word_len(\"great\") == True",
+        "assert word_len(\"structure\") == True"
+      ],
+      "latency_seconds": 0.6115703582763672,
+      "extracted_code": "def word_len(word):\n    # Check if the length of the word is odd\n    return len(word) % 2 != 0",
+      "raw_response": "```python\ndef word_len(word):\n    # Check if the length of the word is odd\n    return len(word) % 2 != 0\n```"
+    },
+    {
+      "index": 36,
+      "task_id": 80,
+      "prompt": "Write a function to find the nth tetrahedral number.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert tetrahedral_number(5) == 35",
+        "assert tetrahedral_number(6) == 56",
+        "assert tetrahedral_number(7) == 84"
+      ],
+      "latency_seconds": 1.1991822719573975,
+      "extracted_code": "def tetrahedral_number(n):\n    # Calculate the nth tetrahedral number using the formula\n    return n * (n + 1) * (n + 2) // 6\n\n# Test the function with the provided assertion\nassert tetrahedral_number(5) == 35",
+      "raw_response": "```python\ndef tetrahedral_number(n):\n    # Calculate the nth tetrahedral number using the formula\n    return n * (n + 1) * (n + 2) // 6\n\n# Test the function with the provided assertion\nassert tetrahedral_number(5) == 35\n```"
+    },
+    {
+      "index": 37,
+      "task_id": 82,
+      "prompt": "Write a function to find the volume of a sphere.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert math.isclose(volume_sphere(10), 4188.790204786391, rel_tol=0.001)",
+        "assert math.isclose(volume_sphere(25), 65449.84694978735, rel_tol=0.001)",
+        "assert math.isclose(volume_sphere(20), 33510.32163829113, rel_tol=0.001)"
+      ],
+      "latency_seconds": 1.737030029296875,
+      "extracted_code": "import math\n\ndef volume_sphere(radius):\n    # Calculate the volume of a sphere using the formula (4/3) * π * r^3\n    return (4/3) * math.pi * radius ** 3\n\n# Test the function with the provided assertion\nassert math.isclose(volume_sphere(10), 4188.790204786391, rel_tol=0.001)",
+      "raw_response": "```python\nimport math\n\ndef volume_sphere(radius):\n    # Calculate the volume of a sphere using the formula (4/3) * π * r^3\n    return (4/3) * math.pi * radius ** 3\n\n# Test the function with the provided assertion\nassert math.isclose(volume_sphere(10), 4188.790204786391, rel_tol=0.001)\n```"
+    },
+    {
+      "index": 38,
+      "task_id": 84,
+      "prompt": "Write a function to find the nth number in the newman conway sequence.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert sequence(10) == 6",
+        "assert sequence(2) == 1",
+        "assert sequence(3) == 2"
+      ],
+      "latency_seconds": 2.0956573486328125,
+      "extracted_code": "def sequence(n):\n    # Initialize the sequence with the first two numbers\n    seq = [1, 1]\n    \n    # Generate the sequence up to the nth number\n    for i in range(2, n):\n        # Calculate the next number in the sequence\n        seq.append(seq[seq[i-1]-1] + seq[i-seq[i-1]])\n    \n    # Return the nth number in the sequence\n    return seq[n-1]\n\n# Test the function with the provided test case\nassert sequence(10) == 6",
+      "raw_response": "```python\ndef sequence(n):\n    # Initialize the sequence with the first two numbers\n    seq = [1, 1]\n    \n    # Generate the sequence up to the nth number\n    for i in range(2, n):\n        # Calculate the next number in the sequence\n        seq.append(seq[seq[i-1]-1] + seq[i-seq[i-1]])\n    \n    # Return the nth number in the sequence\n    return seq[n-1]\n\n# Test the function with the provided test case\nassert sequence(10) == 6\n```"
+    },
+    {
+      "index": 39,
+      "task_id": 85,
+      "prompt": "Write a function to find the surface area of a sphere.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert math.isclose(surfacearea_sphere(10), 1256.6370614359173, rel_tol=0.001)",
+        "assert math.isclose(surfacearea_sphere(15), 2827.4333882308138, rel_tol=0.001)",
+        "assert math.isclose(surfacearea_sphere(20), 5026.548245743669, rel_tol=0.001)"
+      ],
+      "latency_seconds": 1.7075433731079102,
+      "extracted_code": "import math\n\ndef surfacearea_sphere(radius):\n    # Calculate the surface area of a sphere using the formula 4 * pi * r^2\n    return 4 * math.pi * radius ** 2\n\n# Test the function with the provided assertion\nassert math.isclose(surfacearea_sphere(10), 1256.6370614359173, rel_tol=0.001)",
+      "raw_response": "```python\nimport math\n\ndef surfacearea_sphere(radius):\n    # Calculate the surface area of a sphere using the formula 4 * pi * r^2\n    return 4 * math.pi * radius ** 2\n\n# Test the function with the provided assertion\nassert math.isclose(surfacearea_sphere(10), 1256.6370614359173, rel_tol=0.001)\n```"
+    },
+    {
+      "index": 40,
+      "task_id": 86,
+      "prompt": "Write a function to find nth centered hexagonal number.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert centered_hexagonal_number(10) == 271",
+        "assert centered_hexagonal_number(2) == 7",
+        "assert centered_hexagonal_number(9) == 217"
+      ],
+      "latency_seconds": 1.165998935699463,
+      "extracted_code": "def centered_hexagonal_number(n):\n    # Calculate the nth centered hexagonal number using the formula\n    return 3 * n * (n - 1) + 1\n\n# Test the function with the provided assertion\nassert centered_hexagonal_number(10) == 271",
+      "raw_response": "```python\ndef centered_hexagonal_number(n):\n    # Calculate the nth centered hexagonal number using the formula\n    return 3 * n * (n - 1) + 1\n\n# Test the function with the provided assertion\nassert centered_hexagonal_number(10) == 271\n```"
+    },
+    {
+      "index": 41,
+      "task_id": 87,
+      "prompt": "Write a function to merge three dictionaries into a single dictionary.",
+      "passed": false,
+      "test_message": "AssertionError:",
+      "test_list": [
+        "assert merge_dictionaries_three({ \"R\": \"Red\", \"B\": \"Black\", \"P\": \"Pink\" }, { \"G\": \"Green\", \"W\": \"White\" },{ \"O\": \"Orange\", \"W\": \"White\", \"B\": \"Black\" })=={'B': 'Black', 'R': 'Red', 'P': 'Pink', 'G': 'Green', 'W': 'White', 'O': 'Orange'}",
+        "assert merge_dictionaries_three({ \"R\": \"Red\", \"B\": \"Black\", \"P\": \"Pink\" }, { \"G\": \"Green\", \"W\": \"White\" },{\"L\":\"lavender\",\"B\":\"Blue\"})=={'W': 'White', 'P': 'Pink', 'B': 'Black', 'R': 'Red', 'G': 'Green', 'L': 'lavender'}",
+        "assert merge_dictionaries_three({ \"R\": \"Red\", \"B\": \"Black\", \"P\": \"Pink\" },{\"L\":\"lavender\",\"B\":\"Blue\"},{ \"G\": \"Green\", \"W\": \"White\" })=={'B': 'Black', 'P': 'Pink', 'R': 'Red', 'G': 'Green', 'L': 'lavender', 'W': 'White'}"
+      ],
+      "latency_seconds": 0.8837337493896484,
+      "extracted_code": "def merge_dictionaries_three(dict1, dict2, dict3):\n    # Merge the dictionaries using the update method\n    dict1.update(dict2)\n    dict1.update(dict3)\n    return dict1",
+      "raw_response": "```python\ndef merge_dictionaries_three(dict1, dict2, dict3):\n    # Merge the dictionaries using the update method\n    dict1.update(dict2)\n    dict1.update(dict3)\n    return dict1\n```"
+    },
+    {
+      "index": 42,
+      "task_id": 88,
+      "prompt": "Write a function to get the frequency of all the elements in a list, returned as a dictionary.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert freq_count([10,10,10,10,20,20,20,20,40,40,50,50,30])==({10: 4, 20: 4, 40: 2, 50: 2, 30: 1})",
+        "assert freq_count([1,2,3,4,3,2,4,1,3,1,4])==({1:3, 2:2,3:3,4:3})",
+        "assert freq_count([5,6,7,4,9,10,4,5,6,7,9,5])==({10:1,5:3,6:2,7:2,4:2,9:2})"
+      ],
+      "latency_seconds": 2.2127525806427,
+      "extracted_code": "def freq_count(lst):\n    # Initialize an empty dictionary to store the frequency of each element\n    freq_dict = {}\n    # Iterate through each element in the list\n    for element in lst:\n        # If the element is already in the dictionary, increment its count\n        if element in freq_dict:\n            freq_dict[element] += 1\n        # If the element is not in the dictionary, add it with a count of 1\n        else:\n            freq_dict[element] = 1\n    # Return the dictionary containing the frequency of each element\n    return freq_dict",
+      "raw_response": "```python\ndef freq_count(lst):\n    # Initialize an empty dictionary to store the frequency of each element\n    freq_dict = {}\n    # Iterate through each element in the list\n    for element in lst:\n        # If the element is already in the dictionary, increment its count\n        if element in freq_dict:\n            freq_dict[element] += 1\n        # If the element is not in the dictionary, add it with a count of 1\n        else:\n            freq_dict[element] = 1\n    # Return the dictionary containing the frequency of each element\n    return freq_dict\n```"
+    },
+    {
+      "index": 43,
+      "task_id": 89,
+      "prompt": "Write a function to find the closest smaller number than n.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert closest_num(11) == 10",
+        "assert closest_num(7) == 6",
+        "assert closest_num(12) == 11"
+      ],
+      "latency_seconds": 0.5702700614929199,
+      "extracted_code": "def closest_num(n):\n    # Subtract 1 from n to find the closest smaller number\n    return n - 1",
+      "raw_response": "```python\ndef closest_num(n):\n    # Subtract 1 from n to find the closest smaller number\n    return n - 1\n```"
+    },
+    {
+      "index": 44,
+      "task_id": 90,
+      "prompt": "Write a python function to find the length of the longest word.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert len_log([\"python\",\"PHP\",\"bigdata\"]) == 7",
+        "assert len_log([\"a\",\"ab\",\"abc\"]) == 3",
+        "assert len_log([\"small\",\"big\",\"tall\"]) == 5"
+      ],
+      "latency_seconds": 1.5223288536071777,
+      "extracted_code": "def len_log(words):\n    # Initialize the maximum length to 0\n    max_length = 0\n    \n    # Iterate through each word in the list\n    for word in words:\n        # Update max_length if the current word's length is greater\n        if len(word) > max_length:\n            max_length = len(word)\n    \n    # Return the maximum length found\n    return max_length",
+      "raw_response": "```python\ndef len_log(words):\n    # Initialize the maximum length to 0\n    max_length = 0\n    \n    # Iterate through each word in the list\n    for word in words:\n        # Update max_length if the current word's length is greater\n        if len(word) > max_length:\n            max_length = len(word)\n    \n    # Return the maximum length found\n    return max_length\n```"
+    },
+    {
+      "index": 45,
+      "task_id": 91,
+      "prompt": "Write a function to check if a string is present as a substring in a given list of string values.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert find_substring([\"red\", \"black\", \"white\", \"green\", \"orange\"],\"ack\")==True",
+        "assert find_substring([\"red\", \"black\", \"white\", \"green\", \"orange\"],\"abc\")==False",
+        "assert find_substring([\"red\", \"black\", \"white\", \"green\", \"orange\"],\"ange\")==True"
+      ],
+      "latency_seconds": 1.331432580947876,
+      "extracted_code": "def find_substring(list_of_strings, substring):\n    # Iterate through each string in the list\n    for string in list_of_strings:\n        # Check if the substring is present in the current string\n        if substring in string:\n            return True\n    # If the substring is not found in any string, return False\n    return False",
+      "raw_response": "```python\ndef find_substring(list_of_strings, substring):\n    # Iterate through each string in the list\n    for string in list_of_strings:\n        # Check if the substring is present in the current string\n        if substring in string:\n            return True\n    # If the substring is not found in any string, return False\n    return False\n```"
+    },
+    {
+      "index": 46,
+      "task_id": 92,
+      "prompt": "Write a function to check whether the given number is undulating or not.",
+      "passed": false,
+      "test_message": "Traceback (most recent call last):\n  File \"<string>\", line 15, in <module>\n    assert is_undulating(1212121) == True\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+      "test_list": [
+        "assert is_undulating(1212121) == True",
+        "assert is_undulating(1991) == False",
+        "assert is_undulating(121) == True"
+      ],
+      "latency_seconds": 2.089932441711426,
+      "extracted_code": "def is_undulating(n):\n    # Convert the number to a string to easily access digits\n    s = str(n)\n    # Check if the string is undulating by comparing each pair of adjacent digits\n    for i in range(1, len(s) - 1):\n        if s[i] != s[i - 1] and s[i] != s[i + 1]:\n            return False\n    return True\n\n# Test the function with the provided assertion\nassert is_undulating(1212121) == True",
+      "raw_response": "```python\ndef is_undulating(n):\n    # Convert the number to a string to easily access digits\n    s = str(n)\n    # Check if the string is undulating by comparing each pair of adjacent digits\n    for i in range(1, len(s) - 1):\n        if s[i] != s[i - 1] and s[i] != s[i + 1]:\n            return False\n    return True\n\n# Test the function with the provided assertion\nassert is_undulating(1212121) == True\n```"
+    },
+    {
+      "index": 47,
+      "task_id": 93,
+      "prompt": "Write a function to calculate the value of 'a' to the power 'b'.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert power(3,4) == 81",
+        "assert power(2,3) == 8",
+        "assert power(5,5) == 3125"
+      ],
+      "latency_seconds": 1.6364338397979736,
+      "extracted_code": "def power(a, b):\n    # Base case: if b is 0, return 1\n    if b == 0:\n        return 1\n    # Recursive case: multiply a by the result of power(a, b-1)\n    else:\n        return a * power(a, b - 1)\n\n# Test the function with the provided assertion\nassert power(3, 4) == 81",
+      "raw_response": "```python\ndef power(a, b):\n    # Base case: if b is 0, return 1\n    if b == 0:\n        return 1\n    # Recursive case: multiply a by the result of power(a, b-1)\n    else:\n        return a * power(a, b - 1)\n\n# Test the function with the provided assertion\nassert power(3, 4) == 81\n```"
+    },
+    {
+      "index": 48,
+      "task_id": 94,
+      "prompt": "Given a list of tuples, write a function that returns the first value of the tuple with the smallest second value.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert index_minimum([('Rash', 143), ('Manjeet', 200), ('Varsha', 100)]) == 'Varsha'",
+        "assert index_minimum([('Yash', 185), ('Dawood', 125), ('Sanya', 175)]) == 'Dawood'",
+        "assert index_minimum([('Sai', 345), ('Salman', 145), ('Ayesha', 96)]) == 'Ayesha'"
+      ],
+      "latency_seconds": 1.896496057510376,
+      "extracted_code": "def index_minimum(test_list):\n    # Sort the list of tuples based on the second element of each tuple\n    test_list.sort(key=lambda x: x[1])\n    # Return the first element of the first tuple in the sorted list\n    return test_list[0][0]\n\n# Test the function with the provided assertion\nassert index_minimum([('Rash', 143), ('Manjeet', 200), ('Varsha', 100)]) == 'Varsha'",
+      "raw_response": "```python\ndef index_minimum(test_list):\n    # Sort the list of tuples based on the second element of each tuple\n    test_list.sort(key=lambda x: x[1])\n    # Return the first element of the first tuple in the sorted list\n    return test_list[0][0]\n\n# Test the function with the provided assertion\nassert index_minimum([('Rash', 143), ('Manjeet', 200), ('Varsha', 100)]) == 'Varsha'\n```"
+    },
+    {
+      "index": 49,
+      "task_id": 95,
+      "prompt": "Write a python function to find the length of the smallest list in a list of lists.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert Find_Min_Length([[1],[1,2]]) == 1",
+        "assert Find_Min_Length([[1,2],[1,2,3],[1,2,3,4]]) == 2",
+        "assert Find_Min_Length([[3,3,3],[4,4,4,4]]) == 3"
+      ],
+      "latency_seconds": 2.099985361099243,
+      "extracted_code": "def Find_Min_Length(list_of_lists):\n    # Initialize the minimum length to a large number\n    min_length = float('inf')\n    \n    # Iterate through each list in the list of lists\n    for lst in list_of_lists:\n        # Update the minimum length if the current list is shorter\n        if len(lst) < min_length:\n            min_length = len(lst)\n    \n    # Return the minimum length found\n    return min_length\n\n# Test the function with the provided assertion\nassert Find_Min_Length([[1],[1,2]]) == 1",
+      "raw_response": "```python\ndef Find_Min_Length(list_of_lists):\n    # Initialize the minimum length to a large number\n    min_length = float('inf')\n    \n    # Iterate through each list in the list of lists\n    for lst in list_of_lists:\n        # Update the minimum length if the current list is shorter\n        if len(lst) < min_length:\n            min_length = len(lst)\n    \n    # Return the minimum length found\n    return min_length\n\n# Test the function with the provided assertion\nassert Find_Min_Length([[1],[1,2]]) == 1\n```"
+    },
+    {
+      "index": 50,
+      "task_id": 96,
+      "prompt": "Write a python function to find the number of divisors of a given integer.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert divisor(15) == 4",
+        "assert divisor(12) == 6",
+        "assert divisor(9) == 3"
+      ],
+      "latency_seconds": 1.7479040622711182,
+      "extracted_code": "def divisor(n):\n    # Initialize the divisor count to 0\n    count = 0\n    # Iterate through all numbers from 1 to n\n    for i in range(1, n + 1):\n        # Check if i is a divisor of n\n        if n % i == 0:\n            # Increment the divisor count\n            count += 1\n    # Return the total count of divisors\n    return count",
+      "raw_response": "```python\ndef divisor(n):\n    # Initialize the divisor count to 0\n    count = 0\n    # Iterate through all numbers from 1 to n\n    for i in range(1, n + 1):\n        # Check if i is a divisor of n\n        if n % i == 0:\n            # Increment the divisor count\n            count += 1\n    # Return the total count of divisors\n    return count\n```"
+    },
+    {
+      "index": 51,
+      "task_id": 97,
+      "prompt": "Write a function to find frequency of each element in a flattened list of lists, returned in a dictionary.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert frequency_lists([[1, 2, 3, 2], [4, 5, 6, 2], [7, 8, 9, 5]])=={1: 1, 2: 3, 3: 1, 4: 1, 5: 2, 6: 1, 7: 1, 8: 1, 9: 1}",
+        "assert frequency_lists([[1,2,3,4],[5,6,7,8],[9,10,11,12]])=={1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1,10:1,11:1,12:1}",
+        "assert frequency_lists([[20,30,40,17],[18,16,14,13],[10,20,30,40]])=={20:2,30:2,40:2,17: 1,18:1, 16: 1,14: 1,13: 1, 10: 1}"
+      ],
+      "latency_seconds": 4.378965854644775,
+      "extracted_code": "def frequency_lists(lists):\n    # Initialize an empty dictionary to store the frequency of each element\n    frequency = {}\n    # Iterate over each sublist in the input list\n    for sublist in lists:\n        # Iterate over each element in the sublist\n        for element in sublist:\n            # If the element is already in the dictionary, increment its count\n            if element in frequency:\n                frequency[element] += 1\n            # If the element is not in the dictionary, add it with a count of 1\n            else:\n                frequency[element] = 1\n    # Return the dictionary containing the frequency of each element\n    return frequency\n\n# Test the function with the provided assertion\nassert frequency_lists([[1, 2, 3, 2], [4, 5, 6, 2], [7, 8, 9, 5]]) == {1: 1, 2: 3, 3: 1, 4: 1, 5: 2, 6: 1, 7: 1, 8: 1, 9: 1}",
+      "raw_response": "```python\ndef frequency_lists(lists):\n    # Initialize an empty dictionary to store the frequency of each element\n    frequency = {}\n    # Iterate over each sublist in the input list\n    for sublist in lists:\n        # Iterate over each element in the sublist\n        for element in sublist:\n            # If the element is already in the dictionary, increment its count\n            if element in frequency:\n                frequency[element] += 1\n            # If the element is not in the dictionary, add it with a count of 1\n            else:\n                frequency[element] = 1\n    # Return the dictionary containing the frequency of each element\n    return frequency\n\n# Test the function with the provided assertion\nassert frequency_lists([[1, 2, 3, 2], [4, 5, 6, 2], [7, 8, 9, 5]]) == {1: 1, 2: 3, 3: 1, 4: 1, 5: 2, 6: 1, 7: 1, 8: 1, 9: 1}\n```"
+    },
+    {
+      "index": 52,
+      "task_id": 98,
+      "prompt": "Write a function to multiply all the numbers in a list and divide with the length of the list.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert math.isclose(multiply_num((8, 2, 3, -1, 7)), -67.2, rel_tol=0.001)",
+        "assert math.isclose(multiply_num((-10,-20,-30)), -2000.0, rel_tol=0.001)",
+        "assert math.isclose(multiply_num((19,15,18)), 1710.0, rel_tol=0.001)"
+      ],
+      "latency_seconds": 1.1643877029418945,
+      "extracted_code": "import math\n\ndef multiply_num(numbers):\n    # Multiply all numbers in the list\n    product = 1\n    for num in numbers:\n        product *= num\n    # Divide the product by the length of the list\n    result = product / len(numbers)\n    return result",
+      "raw_response": "```python\nimport math\n\ndef multiply_num(numbers):\n    # Multiply all numbers in the list\n    product = 1\n    for num in numbers:\n        product *= num\n    # Divide the product by the length of the list\n    result = product / len(numbers)\n    return result\n```"
+    },
+    {
+      "index": 53,
+      "task_id": 99,
+      "prompt": "Write a function to convert the given decimal number to its binary equivalent, represented as a string with no leading zeros.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert decimal_to_binary(8) == '1000'",
+        "assert decimal_to_binary(18) == '10010'",
+        "assert decimal_to_binary(7) == '111'"
+      ],
+      "latency_seconds": 1.174086093902588,
+      "extracted_code": "def decimal_to_binary(decimal_number):\n    # Convert the decimal number to binary using bin() function\n    binary_representation = bin(decimal_number)[2:]\n    return binary_representation\n\n# Test the function with the provided test case\nassert decimal_to_binary(8) == '1000'",
+      "raw_response": "```python\ndef decimal_to_binary(decimal_number):\n    # Convert the decimal number to binary using bin() function\n    binary_representation = bin(decimal_number)[2:]\n    return binary_representation\n\n# Test the function with the provided test case\nassert decimal_to_binary(8) == '1000'\n```"
+    },
+    {
+      "index": 54,
+      "task_id": 100,
+      "prompt": "Write a function to find the next smallest palindrome of a specified integer, returned as an integer.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert next_smallest_palindrome(99)==101",
+        "assert next_smallest_palindrome(1221)==1331",
+        "assert next_smallest_palindrome(120)==121"
+      ],
+      "latency_seconds": 1.1983168125152588,
+      "extracted_code": "def next_smallest_palindrome(n):\n    # Increment the number to find the next palindrome\n    n += 1\n    # Loop until a palindrome is found\n    while str(n) != str(n)[::-1]:\n        n += 1\n    # Return the next palindrome\n    return n",
+      "raw_response": "```python\ndef next_smallest_palindrome(n):\n    # Increment the number to find the next palindrome\n    n += 1\n    # Loop until a palindrome is found\n    while str(n) != str(n)[::-1]:\n        n += 1\n    # Return the next palindrome\n    return n\n```"
+    },
+    {
+      "index": 55,
+      "task_id": 101,
+      "prompt": "Write a function to find the kth element in the given array using 1-based indexing.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert kth_element([12,3,5,7,19], 2) == 3",
+        "assert kth_element([17,24,8,23], 3) == 8",
+        "assert kth_element([16,21,25,36,4], 4) == 36"
+      ],
+      "latency_seconds": 1.2358481884002686,
+      "extracted_code": "def kth_element(arr, k):\n    # Return the kth element of the array using 1-based indexing\n    return arr[k - 1]\n\n# Test the function with the provided assertion\nassert kth_element([12,3,5,7,19], 2) == 3",
+      "raw_response": "```python\ndef kth_element(arr, k):\n    # Return the kth element of the array using 1-based indexing\n    return arr[k - 1]\n\n# Test the function with the provided assertion\nassert kth_element([12,3,5,7,19], 2) == 3\n```"
+    },
+    {
+      "index": 56,
+      "task_id": 102,
+      "prompt": "Write a function to convert a snake case string to camel case string.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert snake_to_camel('python_program')=='PythonProgram'",
+        "assert snake_to_camel('python_language')==('PythonLanguage')",
+        "assert snake_to_camel('programming_language')==('ProgrammingLanguage')"
+      ],
+      "latency_seconds": 1.3913564682006836,
+      "extracted_code": "def snake_to_camel(snake_str):\n    # Split the snake case string by underscore and capitalize each word\n    # Then join them together to form the camel case string\n    return ''.join(word.capitalize() for word in snake_str.split('_'))\n\n# Test the function with the provided assertion\nassert snake_to_camel('python_program') == 'PythonProgram'",
+      "raw_response": "```python\ndef snake_to_camel(snake_str):\n    # Split the snake case string by underscore and capitalize each word\n    # Then join them together to form the camel case string\n    return ''.join(word.capitalize() for word in snake_str.split('_'))\n\n# Test the function with the provided assertion\nassert snake_to_camel('python_program') == 'PythonProgram'\n```"
+    },
+    {
+      "index": 57,
+      "task_id": 103,
+      "prompt": "Write a function to find the Eulerian number a(n, m).",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert eulerian_num(3, 1) == 4",
+        "assert eulerian_num(4, 1) == 11",
+        "assert eulerian_num(5, 3) == 26"
+      ],
+      "latency_seconds": 2.4929280281066895,
+      "extracted_code": "def eulerian_num(n, m):\n    # Base case: if m is 0, return 1\n    if m == 0:\n        return 1\n    # Base case: if n is 1, return 0\n    if n == 1:\n        return 0\n    # Recursive case: use the formula to calculate Eulerian number\n    return (n - m) * eulerian_num(n - 1, m - 1) + (m + 1) * eulerian_num(n - 1, m)\n\n# Test the function with the provided assertion\nassert eulerian_num(3, 1) == 4",
+      "raw_response": "```python\ndef eulerian_num(n, m):\n    # Base case: if m is 0, return 1\n    if m == 0:\n        return 1\n    # Base case: if n is 1, return 0\n    if n == 1:\n        return 0\n    # Recursive case: use the formula to calculate Eulerian number\n    return (n - m) * eulerian_num(n - 1, m - 1) + (m + 1) * eulerian_num(n - 1, m)\n\n# Test the function with the provided assertion\nassert eulerian_num(3, 1) == 4\n```"
+    },
+    {
+      "index": 58,
+      "task_id": 104,
+      "prompt": "Write a function to sort each sublist of strings in a given list of lists.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert sort_sublists(([\"green\", \"orange\"], [\"black\", \"white\"], [\"white\", \"black\", \"orange\"]))==[['green', 'orange'], ['black', 'white'], ['black', 'orange', 'white']]",
+        "assert sort_sublists(([\" red \",\"green\" ],[\"blue \",\" black\"],[\" orange\",\"brown\"]))==[[' red ', 'green'], [' black', 'blue '], [' orange', 'brown']]",
+        "assert sort_sublists(([\"zilver\",\"gold\"], [\"magnesium\",\"aluminium\"], [\"steel\", \"bronze\"]))==[['gold', 'zilver'],['aluminium', 'magnesium'], ['bronze', 'steel']]"
+      ],
+      "latency_seconds": 1.8761851787567139,
+      "extracted_code": "def sort_sublists(list_of_lists):\n    # Sort each sublist in the list of lists\n    sorted_list_of_lists = [sorted(sublist) for sublist in list_of_lists]\n    return sorted_list_of_lists\n\n# Test the function with the provided test case\nassert sort_sublists(([\"green\", \"orange\"], [\"black\", \"white\"], [\"white\", \"black\", \"orange\"])) == [['green', 'orange'], ['black', 'white'], ['black', 'orange', 'white']]",
+      "raw_response": "```python\ndef sort_sublists(list_of_lists):\n    # Sort each sublist in the list of lists\n    sorted_list_of_lists = [sorted(sublist) for sublist in list_of_lists]\n    return sorted_list_of_lists\n\n# Test the function with the provided test case\nassert sort_sublists(([\"green\", \"orange\"], [\"black\", \"white\"], [\"white\", \"black\", \"orange\"])) == [['green', 'orange'], ['black', 'white'], ['black', 'orange', 'white']]\n```"
+    },
+    {
+      "index": 59,
+      "task_id": 105,
+      "prompt": "Write a python function to count true booleans in the given list.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert count([True,False,True]) == 2",
+        "assert count([False,False]) == 0",
+        "assert count([True,True,True]) == 3"
+      ],
+      "latency_seconds": 1.3024165630340576,
+      "extracted_code": "def count(lst):\n    # Initialize a counter to zero\n    count = 0\n    # Iterate through each element in the list\n    for element in lst:\n        # Increment the counter if the element is True\n        if element:\n            count += 1\n    # Return the total count of True elements\n    return count",
+      "raw_response": "```python\ndef count(lst):\n    # Initialize a counter to zero\n    count = 0\n    # Iterate through each element in the list\n    for element in lst:\n        # Increment the counter if the element is True\n        if element:\n            count += 1\n    # Return the total count of True elements\n    return count\n```"
+    },
+    {
+      "index": 60,
+      "task_id": 106,
+      "prompt": "Write a function to append the given list to the given tuples.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert add_lists([5, 6, 7], (9, 10)) == (9, 10, 5, 6, 7)",
+        "assert add_lists([6, 7, 8], (10, 11)) == (10, 11, 6, 7, 8)",
+        "assert add_lists([7, 8, 9], (11, 12)) == (11, 12, 7, 8, 9)"
+      ],
+      "latency_seconds": 1.4797422885894775,
+      "extracted_code": "def add_lists(list1, tuple1):\n    # Convert the list to a tuple and concatenate it with the given tuple\n    return tuple1 + tuple(list1)\n\n# Test the function with the provided assertions\nassert add_lists([5, 6, 7], (9, 10)) == (9, 10, 5, 6, 7)",
+      "raw_response": "```python\ndef add_lists(list1, tuple1):\n    # Convert the list to a tuple and concatenate it with the given tuple\n    return tuple1 + tuple(list1)\n\n# Test the function with the provided assertions\nassert add_lists([5, 6, 7], (9, 10)) == (9, 10, 5, 6, 7)\n```"
+    },
+    {
+      "index": 61,
+      "task_id": 108,
+      "prompt": "Write a function to merge three lists into a single sorted list.",
+      "passed": false,
+      "test_message": "Traceback (most recent call last):\n  File \"<string>\", line 29, in <module>\n    assert merge_sorted_list([25, 24, 15, 4, 5, 29, 110],[19, 20, 11, 56, 25, 233, 154],[24, 26, 54, 48])==[4, 5, 11, 15, 19, 20, 24, 24, 25, 25, 26, 29, 48, 54, 56, 110, 154, 233]\n           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<string>\", line 23, in merge_sorted_list\n    list3.remove(min_element)\n    ~~~~~~~~~~~~^^^^^^^^^^^^^\nValueError: list.remove(x): x not in list",
+      "test_list": [
+        "assert merge_sorted_list([25, 24, 15, 4, 5, 29, 110],[19, 20, 11, 56, 25, 233, 154],[24, 26, 54, 48])==[4, 5, 11, 15, 19, 20, 24, 24, 25, 25, 26, 29, 48, 54, 56, 110, 154, 233]",
+        "assert merge_sorted_list([1, 3, 5, 6, 8, 9], [2, 5, 7, 11], [1, 4, 7, 8, 12])==[1, 1, 2, 3, 4, 5, 5, 6, 7, 7, 8, 8, 9, 11, 12]",
+        "assert merge_sorted_list([18, 14, 10, 9, 8, 7, 9, 3, 2, 4, 1],[25, 35, 22, 85, 14, 65, 75, 25, 58],[12, 74, 9, 50, 61, 41])==[1, 2, 3, 4, 7, 8, 9, 9, 9, 10, 12, 14, 14, 18, 22, 25, 25, 35, 41, 50, 58, 61, 65, 74, 75, 85]"
+      ],
+      "latency_seconds": 5.840885639190674,
+      "extracted_code": "def merge_sorted_list(list1, list2, list3):\n    # Initialize an empty list to store the merged and sorted elements\n    merged_list = []\n    \n    # Use a while loop to iterate through all three lists\n    while list1 or list2 or list3:\n        # Find the smallest element among the three lists\n        min_element = min(list1 or [], list2 or [], list3 or [])\n        \n        # Add the smallest element to the merged list\n        merged_list.append(min_element)\n        \n        # Remove the smallest element from its original list\n        if min_element in list1:\n            list1.remove(min_element)\n        elif min_element in list2:\n            list2.remove(min_element)\n        else:\n            list3.remove(min_element)\n    \n    # Return the merged and sorted list\n    return merged_list\n\n# Test the function with the provided assertions\nassert merge_sorted_list([25, 24, 15, 4, 5, 29, 110],[19, 20, 11, 56, 25, 233, 154],[24, 26, 54, 48])==[4, 5, 11, 15, 19, 20, 24, 24, 25, 25, 26, 29, 48, 54, 56, 110, 154, 233]",
+      "raw_response": "```python\ndef merge_sorted_list(list1, list2, list3):\n    # Initialize an empty list to store the merged and sorted elements\n    merged_list = []\n    \n    # Use a while loop to iterate through all three lists\n    while list1 or list2 or list3:\n        # Find the smallest element among the three lists\n        min_element = min(list1 or [], list2 or [], list3 or [])\n        \n        # Add the smallest element to the merged list\n        merged_list.append(min_element)\n        \n        # Remove the smallest element from its original list\n        if min_element in list1:\n            list1.remove(min_element)\n        elif min_element in list2:\n            list2.remove(min_element)\n        else:\n            list3.remove(min_element)\n    \n    # Return the merged and sorted list\n    return merged_list\n\n# Test the function with the provided assertions\nassert merge_sorted_list([25, 24, 15, 4, 5, 29, 110],[19, 20, 11, 56, 25, 233, 154],[24, 26, 54, 48])==[4, 5, 11, 15, 19, 20, 24, 24, 25, 25, 26, 29, 48, 54, 56, 110, 154, 233]\n```"
+    },
+    {
+      "index": 62,
+      "task_id": 109,
+      "prompt": "Write a python function to find the number of numbers with an odd value when rotating a binary string the given number of times.",
+      "passed": false,
+      "test_message": "Traceback (most recent call last):\n  File \"<string>\", line 20, in <module>\n    assert odd_Equivalent(\"011001\", 6) == 3\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+      "test_list": [
+        "assert odd_Equivalent(\"011001\",6) == 3",
+        "assert odd_Equivalent(\"11011\",5) == 4",
+        "assert odd_Equivalent(\"1010\",4) == 2"
+      ],
+      "latency_seconds": 2.5434319972991943,
+      "extracted_code": "def odd_Equivalent(s, n):\n    # Initialize the count of numbers with odd value\n    count = 0\n    \n    # Iterate through each rotation of the string\n    for i in range(n):\n        # Check if the current rotation has an odd number of '1's\n        if s.count('1') % 2 != 0:\n            count += 1\n        # Rotate the string by moving the first character to the end\n        s = s[1:] + s[0]\n    \n    return count\n\n# Test the function with the provided test case\nassert odd_Equivalent(\"011001\", 6) == 3",
+      "raw_response": "```python\ndef odd_Equivalent(s, n):\n    # Initialize the count of numbers with odd value\n    count = 0\n    \n    # Iterate through each rotation of the string\n    for i in range(n):\n        # Check if the current rotation has an odd number of '1's\n        if s.count('1') % 2 != 0:\n            count += 1\n        # Rotate the string by moving the first character to the end\n        s = s[1:] + s[0]\n    \n    return count\n\n# Test the function with the provided test case\nassert odd_Equivalent(\"011001\", 6) == 3\n```"
+    },
+    {
+      "index": 63,
+      "task_id": 111,
+      "prompt": "Write a function to find the common elements in given nested lists.",
+      "passed": false,
+      "test_message": "Traceback (most recent call last):\n  File \"<string>\", line 18, in <module>\n    assert set(common_in_nested_lists([[12, 18, 23, 25, 45], [7, 12, 18, 24, 28], [1, 5, 8, 12, 15, 16, 18]]))==set([18, 12])\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+      "test_list": [
+        "assert set(common_in_nested_lists([[12, 18, 23, 25, 45], [7, 12, 18, 24, 28], [1, 5, 8, 12, 15, 16, 18]]))==set([18, 12])",
+        "assert set(common_in_nested_lists([[12, 5, 23, 25, 45], [7, 11, 5, 23, 28], [1, 5, 8, 18, 23, 16]]))==set([5,23])",
+        "assert set(common_in_nested_lists([[2, 3,4, 1], [4, 5], [6,4, 8],[4, 5], [6, 8,4]]))==set([4])"
+      ],
+      "latency_seconds": 3.177271604537964,
+      "extracted_code": "def common_in_nested_lists(lists):\n    # Initialize an empty set to store common elements\n    common_elements = set()\n    \n    # Iterate over each list in the nested lists\n    for lst in lists:\n        # Update the common_elements set with the intersection of the current list and the common_elements set\n        common_elements = common_elements.intersection(lst)\n    \n    # Return the set of common elements\n    return common_elements\n\n# Test the function with the provided assertions\nassert set(common_in_nested_lists([[12, 18, 23, 25, 45], [7, 12, 18, 24, 28], [1, 5, 8, 12, 15, 16, 18]]))==set([18, 12])",
+      "raw_response": "```python\ndef common_in_nested_lists(lists):\n    # Initialize an empty set to store common elements\n    common_elements = set()\n    \n    # Iterate over each list in the nested lists\n    for lst in lists:\n        # Update the common_elements set with the intersection of the current list and the common_elements set\n        common_elements = common_elements.intersection(lst)\n    \n    # Return the set of common elements\n    return common_elements\n\n# Test the function with the provided assertions\nassert set(common_in_nested_lists([[12, 18, 23, 25, 45], [7, 12, 18, 24, 28], [1, 5, 8, 12, 15, 16, 18]]))==set([18, 12])\n```"
+    },
+    {
+      "index": 64,
+      "task_id": 113,
+      "prompt": "Write a function to check if a string represents an integer or not.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert check_integer(\"python\")==False",
+        "assert check_integer(\"1\")==True",
+        "assert check_integer(\"12345\")==True"
+      ],
+      "latency_seconds": 1.0260162353515625,
+      "extracted_code": "def check_integer(s):\n    # Check if the string is empty\n    if not s:\n        return False\n    \n    # Check if the string is a valid integer\n    try:\n        int(s)\n        return True\n    except ValueError:\n        return False",
+      "raw_response": "```python\ndef check_integer(s):\n    # Check if the string is empty\n    if not s:\n        return False\n    \n    # Check if the string is a valid integer\n    try:\n        int(s)\n        return True\n    except ValueError:\n        return False\n```"
+    },
+    {
+      "index": 65,
+      "task_id": 116,
+      "prompt": "Write a function to convert a given tuple of positive integers into a single integer.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert tuple_to_int((1,2,3))==123",
+        "assert tuple_to_int((4,5,6))==456",
+        "assert tuple_to_int((5,6,7))==567"
+      ],
+      "latency_seconds": 1.2832050323486328,
+      "extracted_code": "def tuple_to_int(tuple_nums):\n    # Convert each element in the tuple to a string, join them, and then convert the result back to an integer\n    return int(''.join(map(str, tuple_nums)))\n\n# Test the function with the provided assertion\nassert tuple_to_int((1,2,3))==123",
+      "raw_response": "```python\ndef tuple_to_int(tuple_nums):\n    # Convert each element in the tuple to a string, join them, and then convert the result back to an integer\n    return int(''.join(map(str, tuple_nums)))\n\n# Test the function with the provided assertion\nassert tuple_to_int((1,2,3))==123\n```"
+    },
+    {
+      "index": 66,
+      "task_id": 118,
+      "prompt": "Write a function to convert a string to a list of strings split on the space character.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert string_to_list(\"python programming\")==['python','programming']",
+        "assert string_to_list(\"lists tuples strings\")==['lists','tuples','strings']",
+        "assert string_to_list(\"write a program\")==['write','a','program']"
+      ],
+      "latency_seconds": 0.96044921875,
+      "extracted_code": "def string_to_list(string):\n    # Split the string by spaces and return the resulting list\n    return string.split(' ')\n\n# Test the function with the provided assertion\nassert string_to_list(\"python programming\") == ['python', 'programming']",
+      "raw_response": "```python\ndef string_to_list(string):\n    # Split the string by spaces and return the resulting list\n    return string.split(' ')\n\n# Test the function with the provided assertion\nassert string_to_list(\"python programming\") == ['python', 'programming']\n```"
+    },
+    {
+      "index": 67,
+      "task_id": 119,
+      "prompt": "Write a python function to find the element that appears only once in a sorted array.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert search([1,1,2,2,3]) == 3",
+        "assert search([1,1,3,3,4,4,5,5,7,7,8]) == 8",
+        "assert search([1,2,2,3,3,4,4]) == 1"
+      ],
+      "latency_seconds": 3.2948784828186035,
+      "extracted_code": "def search(nums):\n    # Initialize pointers for the two halves of the array\n    left, right = 0, len(nums) - 1\n    \n    # Use binary search to find the unique element\n    while left < right:\n        mid = (left + right) // 2\n        \n        # If the middle element is even, the unique element must be in the right half\n        if mid % 2 == 0:\n            if nums[mid] == nums[mid + 1]:\n                left = mid + 2\n            else:\n                right = mid\n        # If the middle element is odd, the unique element must be in the left half\n        else:\n            if nums[mid] == nums[mid - 1]:\n                left = mid + 1\n            else:\n                right = mid\n    \n    # The unique element is found at the left pointer\n    return nums[left]",
+      "raw_response": "```python\ndef search(nums):\n    # Initialize pointers for the two halves of the array\n    left, right = 0, len(nums) - 1\n    \n    # Use binary search to find the unique element\n    while left < right:\n        mid = (left + right) // 2\n        \n        # If the middle element is even, the unique element must be in the right half\n        if mid % 2 == 0:\n            if nums[mid] == nums[mid + 1]:\n                left = mid + 2\n            else:\n                right = mid\n        # If the middle element is odd, the unique element must be in the left half\n        else:\n            if nums[mid] == nums[mid - 1]:\n                left = mid + 1\n            else:\n                right = mid\n    \n    # The unique element is found at the left pointer\n    return nums[left]\n```"
+    },
+    {
+      "index": 68,
+      "task_id": 120,
+      "prompt": "Write a function to find the maximum absolute product between numbers in pairs of tuples within a given list.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert max_product_tuple([(2, 7), (2, 6), (1, 8), (4, 9)] )==36",
+        "assert max_product_tuple([(10,20), (15,2), (5,10)] )==200",
+        "assert max_product_tuple([(11,44), (10,15), (20,5), (12, 9)] )==484"
+      ],
+      "latency_seconds": 2.4947052001953125,
+      "extracted_code": "def max_product_tuple(test_list):\n    # Initialize the maximum product to a very small number\n    max_product = float('-inf')\n    # Iterate through each tuple in the list\n    for tup in test_list:\n        # Calculate the product of the tuple elements\n        product = tup[0] * tup[1]\n        # Update the maximum product if the current product is greater\n        max_product = max(max_product, product)\n    return max_product\n\n# Test the function with the provided test case\nassert max_product_tuple([(2, 7), (2, 6), (1, 8), (4, 9)]) == 36",
+      "raw_response": "```python\ndef max_product_tuple(test_list):\n    # Initialize the maximum product to a very small number\n    max_product = float('-inf')\n    # Iterate through each tuple in the list\n    for tup in test_list:\n        # Calculate the product of the tuple elements\n        product = tup[0] * tup[1]\n        # Update the maximum product if the current product is greater\n        max_product = max(max_product, product)\n    return max_product\n\n# Test the function with the provided test case\nassert max_product_tuple([(2, 7), (2, 6), (1, 8), (4, 9)]) == 36\n```"
+    },
+    {
+      "index": 69,
+      "task_id": 123,
+      "prompt": "Write a function to sum all amicable numbers from 1 to a specified number.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert amicable_numbers_sum(999)==504",
+        "assert amicable_numbers_sum(9999)==31626",
+        "assert amicable_numbers_sum(99)==0"
+      ],
+      "latency_seconds": 2.2801578044891357,
+      "extracted_code": "def amicable_numbers_sum(n):\n    def sum_of_divisors(num):\n        return sum(i for i in range(1, num) if num % i == 0)\n\n    amicable_sum = 0\n    for i in range(2, n + 1):\n        if sum_of_divisors(i) == i:\n            continue\n        if sum_of_divisors(sum_of_divisors(i)) == i:\n            amicable_sum += i\n    return amicable_sum\n\n# Test the function with the provided test case\nassert amicable_numbers_sum(999) == 504",
+      "raw_response": "```python\ndef amicable_numbers_sum(n):\n    def sum_of_divisors(num):\n        return sum(i for i in range(1, num) if num % i == 0)\n\n    amicable_sum = 0\n    for i in range(2, n + 1):\n        if sum_of_divisors(i) == i:\n            continue\n        if sum_of_divisors(sum_of_divisors(i)) == i:\n            amicable_sum += i\n    return amicable_sum\n\n# Test the function with the provided test case\nassert amicable_numbers_sum(999) == 504\n```"
+    },
+    {
+      "index": 70,
+      "task_id": 124,
+      "prompt": "Write a function to get the angle of a complex number.",
+      "passed": false,
+      "test_message": "<string>:9: DeprecationWarning: complex() argument 'imag' must be a real number, not complex\nTraceback (most recent call last):\n  File \"<string>\", line 15, in <module>\n    assert math.isclose(angle_complex(0,1j), 1.5707963267948966, rel_tol=0.001)\n           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+      "test_list": [
+        "assert math.isclose(angle_complex(0,1j), 1.5707963267948966, rel_tol=0.001)",
+        "assert math.isclose(angle_complex(2,1j), 0.4636476090008061, rel_tol=0.001)",
+        "assert math.isclose(angle_complex(0,2j), 1.5707963267948966, rel_tol=0.001)"
+      ],
+      "latency_seconds": 1.9699721336364746,
+      "extracted_code": "import cmath\n\ndef angle_complex(real, imag):\n    # Create a complex number from the real and imaginary parts\n    complex_num = complex(real, imag)\n    # Calculate the angle of the complex number\n    angle = cmath.phase(complex_num)\n    return angle\n\n# Test the function with the provided assertion\nassert math.isclose(angle_complex(0,1j), 1.5707963267948966, rel_tol=0.001)",
+      "raw_response": "```python\nimport cmath\n\ndef angle_complex(real, imag):\n    # Create a complex number from the real and imaginary parts\n    complex_num = complex(real, imag)\n    # Calculate the angle of the complex number\n    angle = cmath.phase(complex_num)\n    return angle\n\n# Test the function with the provided assertion\nassert math.isclose(angle_complex(0,1j), 1.5707963267948966, rel_tol=0.001)\n```"
+    },
+    {
+      "index": 71,
+      "task_id": 125,
+      "prompt": "Write a function to find the maximum difference between the number of 0s and number of 1s in any sub-string of the given binary string.",
+      "passed": false,
+      "test_message": "Traceback (most recent call last):\n  File \"<string>\", line 23, in <module>\n    assert find_length(\"11000010001\") == 6\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError",
+      "test_list": [
+        "assert find_length(\"11000010001\") == 6",
+        "assert find_length(\"10111\") == 1",
+        "assert find_length(\"11011101100101\") == 2"
+      ],
+      "latency_seconds": 2.5696330070495605,
+      "extracted_code": "def find_length(s):\n    # Initialize variables to store the maximum difference and the current difference\n    max_diff = 0\n    current_diff = 0\n    \n    # Iterate through the string to calculate the difference between 0s and 1s\n    for char in s:\n        if char == '0':\n            current_diff += 1\n        else:\n            current_diff -= 1\n        \n        # Update the maximum difference if the current difference is greater\n        max_diff = max(max_diff, current_diff)\n    \n    return max_diff\n\n# Test the function with the provided test case\nassert find_length(\"11000010001\") == 6",
+      "raw_response": "```python\ndef find_length(s):\n    # Initialize variables to store the maximum difference and the current difference\n    max_diff = 0\n    current_diff = 0\n    \n    # Iterate through the string to calculate the difference between 0s and 1s\n    for char in s:\n        if char == '0':\n            current_diff += 1\n        else:\n            current_diff -= 1\n        \n        # Update the maximum difference if the current difference is greater\n        max_diff = max(max_diff, current_diff)\n    \n    return max_diff\n\n# Test the function with the provided test case\nassert find_length(\"11000010001\") == 6\n```"
+    },
+    {
+      "index": 72,
+      "task_id": 126,
+      "prompt": "Write a python function to find the sum of common divisors of two given numbers.",
+      "passed": false,
+      "test_message": "RuntimeError: TypeError: 'int' object is not iterable",
+      "test_list": [
+        "assert sum(10,15) == 6",
+        "assert sum(100,150) == 93",
+        "assert sum(4,6) == 3"
+      ],
+      "latency_seconds": 2.754258871078491,
+      "extracted_code": "def sum_common_divisors(a, b):\n    # Initialize the sum of common divisors\n    sum_divisors = 0\n    \n    # Iterate through all numbers from 1 to the minimum of a and b\n    for i in range(1, min(a, b) + 1):\n        # Check if i is a divisor of both a and b\n        if a % i == 0 and b % i == 0:\n            # Add i to the sum of common divisors\n            sum_divisors += i\n    \n    # Return the sum of common divisors\n    return sum_divisors\n\n# Test the function with the provided test case\nassert sum_common_divisors(10, 15) == 6",
+      "raw_response": "```python\ndef sum_common_divisors(a, b):\n    # Initialize the sum of common divisors\n    sum_divisors = 0\n    \n    # Iterate through all numbers from 1 to the minimum of a and b\n    for i in range(1, min(a, b) + 1):\n        # Check if i is a divisor of both a and b\n        if a % i == 0 and b % i == 0:\n            # Add i to the sum of common divisors\n            sum_divisors += i\n    \n    # Return the sum of common divisors\n    return sum_divisors\n\n# Test the function with the provided test case\nassert sum_common_divisors(10, 15) == 6\n```"
+    },
+    {
+      "index": 73,
+      "task_id": 127,
+      "prompt": "Write a function to multiply two integers.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert multiply_int(10,20)==200",
+        "assert multiply_int(5,10)==50",
+        "assert multiply_int(4,8)==32"
+      ],
+      "latency_seconds": 0.3483545780181885,
+      "extracted_code": "def multiply_int(a, b):\n    return a * b",
+      "raw_response": "```python\ndef multiply_int(a, b):\n    return a * b\n```"
+    },
+    {
+      "index": 74,
+      "task_id": 128,
+      "prompt": "Write a function to find words that are longer than n characters from a given list of words.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert long_words(3,\"python is a programming language\")==['python','programming','language']",
+        "assert long_words(2,\"writing a program\")==['writing','program']",
+        "assert long_words(5,\"sorting list\")==['sorting']"
+      ],
+      "latency_seconds": 1.1649198532104492,
+      "extracted_code": "def long_words(n, str1):\n    # Split the input string into a list of words\n    words = str1.split()\n    # Use a list comprehension to filter words longer than n characters\n    result = [word for word in words if len(word) > n]\n    return result",
+      "raw_response": "```python\ndef long_words(n, str1):\n    # Split the input string into a list of words\n    words = str1.split()\n    # Use a list comprehension to filter words longer than n characters\n    result = [word for word in words if len(word) > n]\n    return result\n```"
+    },
+    {
+      "index": 75,
+      "task_id": 129,
+      "prompt": "Write a function to calculate whether the matrix is a magic square.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert magic_square_test([[7, 12, 1, 14], [2, 13, 8, 11], [16, 3, 10, 5], [9, 6, 15, 4]])==True",
+        "assert magic_square_test([[2, 7, 6], [9, 5, 1], [4, 3, 8]])==True",
+        "assert magic_square_test([[2, 7, 6], [9, 5, 1], [4, 3, 7]])==False"
+      ],
+      "latency_seconds": 2.593841791152954,
+      "extracted_code": "def magic_square_test(matrix):\n    n = len(matrix)\n    if n == 0:\n        return False\n    \n    # Calculate the sum of the first row to use as a reference\n    magic_sum = sum(matrix[0])\n    \n    # Check rows and columns\n    for i in range(n):\n        if sum(matrix[i]) != magic_sum or sum(matrix[j][i] for j in range(n)) != magic_sum:\n            return False\n    \n    # Check diagonals\n    if sum(matrix[i][i] for i in range(n)) != magic_sum or sum(matrix[i][n-i-1] for i in range(n)) != magic_sum:\n        return False\n    \n    return True",
+      "raw_response": "```python\ndef magic_square_test(matrix):\n    n = len(matrix)\n    if n == 0:\n        return False\n    \n    # Calculate the sum of the first row to use as a reference\n    magic_sum = sum(matrix[0])\n    \n    # Check rows and columns\n    for i in range(n):\n        if sum(matrix[i]) != magic_sum or sum(matrix[j][i] for j in range(n)) != magic_sum:\n            return False\n    \n    # Check diagonals\n    if sum(matrix[i][i] for i in range(n)) != magic_sum or sum(matrix[i][n-i-1] for i in range(n)) != magic_sum:\n        return False\n    \n    return True\n```"
+    },
+    {
+      "index": 76,
+      "task_id": 130,
+      "prompt": "Write a function to find the item with maximum frequency in a given list.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert max_occurrences([2,3,8,4,7,9,8,2,6,5,1,6,1,2,3,2,4,6,9,1,2])==2",
+        "assert max_occurrences([2,3,8,4,7,9,8,7,9,15,14,10,12,13,16,18])==8",
+        "assert max_occurrences([10,20,20,30,40,90,80,50,30,20,50,10])==20"
+      ],
+      "latency_seconds": 2.1098060607910156,
+      "extracted_code": "from collections import Counter\n\ndef max_occurrences(lst):\n    # Count the frequency of each item in the list\n    frequency = Counter(lst)\n    # Find the item with the maximum frequency\n    max_item = max(frequency, key=frequency.get)\n    return max_item\n\n# Test the function with the provided assertion\nassert max_occurrences([2,3,8,4,7,9,8,2,6,5,1,6,1,2,3,2,4,6,9,1,2])==2",
+      "raw_response": "```python\nfrom collections import Counter\n\ndef max_occurrences(lst):\n    # Count the frequency of each item in the list\n    frequency = Counter(lst)\n    # Find the item with the maximum frequency\n    max_item = max(frequency, key=frequency.get)\n    return max_item\n\n# Test the function with the provided assertion\nassert max_occurrences([2,3,8,4,7,9,8,2,6,5,1,6,1,2,3,2,4,6,9,1,2])==2\n```"
+    },
+    {
+      "index": 77,
+      "task_id": 131,
+      "prompt": "Write a python function to reverse only the vowels of a given string (where y is not a vowel).",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert reverse_vowels(\"Python\") == \"Python\"",
+        "assert reverse_vowels(\"USA\") == \"ASU\"",
+        "assert reverse_vowels(\"ab\") == \"ab\""
+      ],
+      "latency_seconds": 4.470655679702759,
+      "extracted_code": "def reverse_vowels(s):\n    # Define a set of vowels for easy checking\n    vowels = set('aeiouAEIOU')\n    # Initialize two pointers, one at the start and one at the end of the string\n    left, right = 0, len(s) - 1\n    # Convert the string to a list to allow in-place modification\n    s = list(s)\n    \n    # Swap vowels from the start and end until the pointers meet in the middle\n    while left < right:\n        # Move the left pointer to the next vowel\n        while left < right and s[left] not in vowels:\n            left += 1\n        # Move the right pointer to the previous vowel\n        while left < right and s[right] not in vowels:\n            right -= 1\n        # Swap the vowels found by the pointers\n        s[left], s[right] = s[right], s[left]\n        # Move the pointers towards the center\n        left += 1\n        right -= 1\n    \n    # Convert the list back to a string and return it\n    return ''.join(s)\n\n# Test the function with the provided assertion\nassert reverse_vowels(\"Python\") == \"Python\"",
+      "raw_response": "```python\ndef reverse_vowels(s):\n    # Define a set of vowels for easy checking\n    vowels = set('aeiouAEIOU')\n    # Initialize two pointers, one at the start and one at the end of the string\n    left, right = 0, len(s) - 1\n    # Convert the string to a list to allow in-place modification\n    s = list(s)\n    \n    # Swap vowels from the start and end until the pointers meet in the middle\n    while left < right:\n        # Move the left pointer to the next vowel\n        while left < right and s[left] not in vowels:\n            left += 1\n        # Move the right pointer to the previous vowel\n        while left < right and s[right] not in vowels:\n            right -= 1\n        # Swap the vowels found by the pointers\n        s[left], s[right] = s[right], s[left]\n        # Move the pointers towards the center\n        left += 1\n        right -= 1\n    \n    # Convert the list back to a string and return it\n    return ''.join(s)\n\n# Test the function with the provided assertion\nassert reverse_vowels(\"Python\") == \"Python\"\n```"
+    },
+    {
+      "index": 78,
+      "task_id": 132,
+      "prompt": "Write a function to convert a tuple to a string.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert tup_string(('e', 'x', 'e', 'r', 'c', 'i', 's', 'e', 's'))==(\"exercises\")",
+        "assert tup_string(('p','y','t','h','o','n'))==(\"python\")",
+        "assert tup_string(('p','r','o','g','r','a','m'))==(\"program\")"
+      ],
+      "latency_seconds": 0.5678279399871826,
+      "extracted_code": "def tup_string(tup):\n    # Convert the tuple to a string using the join method\n    return ''.join(tup)",
+      "raw_response": "```python\ndef tup_string(tup):\n    # Convert the tuple to a string using the join method\n    return ''.join(tup)\n```"
+    },
+    {
+      "index": 79,
+      "task_id": 133,
+      "prompt": "Write a function to calculate the sum of the negative numbers of a given list of numbers.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert sum_negativenum([2, 4, -6, -9, 11, -12, 14, -5, 17])==-32",
+        "assert sum_negativenum([10,15,-14,13,-18,12,-20])==-52",
+        "assert sum_negativenum([19, -65, 57, 39, 152,-639, 121, 44, 90, -190])==-894"
+      ],
+      "latency_seconds": 2.5335752964019775,
+      "extracted_code": "def sum_negativenum(numbers):\n    # Initialize the sum to 0\n    total_sum = 0\n    # Iterate through each number in the list\n    for num in numbers:\n        # Check if the number is negative\n        if num < 0:\n            # Add the negative number to the total sum\n            total_sum += num\n    # Return the total sum of negative numbers\n    return total_sum\n\n# Test the function with the provided test case\nassert sum_negativenum([2, 4, -6, -9, 11, -12, 14, -5, 17]) == -32",
+      "raw_response": "```python\ndef sum_negativenum(numbers):\n    # Initialize the sum to 0\n    total_sum = 0\n    # Iterate through each number in the list\n    for num in numbers:\n        # Check if the number is negative\n        if num < 0:\n            # Add the negative number to the total sum\n            total_sum += num\n    # Return the total sum of negative numbers\n    return total_sum\n\n# Test the function with the provided test case\nassert sum_negativenum([2, 4, -6, -9, 11, -12, 14, -5, 17]) == -32\n```"
+    },
+    {
+      "index": 80,
+      "task_id": 135,
+      "prompt": "Write a function to find the nth hexagonal number.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert hexagonal_num(10) == 190",
+        "assert hexagonal_num(5) == 45",
+        "assert hexagonal_num(7) == 91"
+      ],
+      "latency_seconds": 1.0305836200714111,
+      "extracted_code": "def hexagonal_num(n):\n    # Calculate the nth hexagonal number using the formula\n    return n * (2 * n - 1)\n\n# Test the function with the provided assertion\nassert hexagonal_num(10) == 190",
+      "raw_response": "```python\ndef hexagonal_num(n):\n    # Calculate the nth hexagonal number using the formula\n    return n * (2 * n - 1)\n\n# Test the function with the provided assertion\nassert hexagonal_num(10) == 190\n```"
+    },
+    {
+      "index": 81,
+      "task_id": 137,
+      "prompt": "Write a function to find the ratio of zeroes to non-zeroes in an array of integers.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert math.isclose(zero_count([0, 1, 2, -1, -5, 6, 0, -3, -2, 3, 4, 6, 8]), 0.181818, rel_tol=0.001)",
+        "assert math.isclose(zero_count([2, 1, 2, -1, -5, 6, 4, -3, -2, 3, 4, 6, 8]), 0.00, rel_tol=0.001)",
+        "assert math.isclose(zero_count([2, 4, -6, -9, 11, -12, 14, -5, 17]), 0.00, rel_tol=0.001)"
+      ],
+      "latency_seconds": 2.6177549362182617,
+      "extracted_code": "import math\n\ndef zero_count(arr):\n    # Count the number of zeroes and non-zeroes in the array\n    zero_count = arr.count(0)\n    non_zero_count = len(arr) - zero_count\n    \n    # Calculate the ratio of zeroes to non-zeroes\n    ratio = zero_count / non_zero_count\n    \n    return ratio\n\n# Test the function with the provided assertion\nassert math.isclose(zero_count([0, 1, 2, -1, -5, 6, 0, -3, -2, 3, 4, 6, 8]), 0.181818, rel_tol=0.001)",
+      "raw_response": "```python\nimport math\n\ndef zero_count(arr):\n    # Count the number of zeroes and non-zeroes in the array\n    zero_count = arr.count(0)\n    non_zero_count = len(arr) - zero_count\n    \n    # Calculate the ratio of zeroes to non-zeroes\n    ratio = zero_count / non_zero_count\n    \n    return ratio\n\n# Test the function with the provided assertion\nassert math.isclose(zero_count([0, 1, 2, -1, -5, 6, 0, -3, -2, 3, 4, 6, 8]), 0.181818, rel_tol=0.001)\n```"
+    },
+    {
+      "index": 82,
+      "task_id": 138,
+      "prompt": "Write a python function to check whether the given number can be represented as sum of non-zero powers of 2 or not.",
+      "passed": false,
+      "test_message": "AssertionError:",
+      "test_list": [
+        "assert is_Sum_Of_Powers_Of_Two(10) == True",
+        "assert is_Sum_Of_Powers_Of_Two(7) == False",
+        "assert is_Sum_Of_Powers_Of_Two(14) == True"
+      ],
+      "latency_seconds": 3.1567132472991943,
+      "extracted_code": "def is_Sum_Of_Powers_Of_Two(n):\n    # Check if n is 0, which is not a valid representation\n    if n == 0:\n        return False\n    # Iterate through all powers of 2 less than or equal to n\n    for i in range(31):\n        # Check if the current power of 2 is less than or equal to n\n        if (1 << i) <= n:\n            # Subtract the power of 2 from n\n            n -= (1 << i)\n            # If n becomes 0, it means n can be represented as sum of non-zero powers of 2\n            if n == 0:\n                return True\n    # If n is not reduced to 0, it means n cannot be represented as sum of non-zero powers of 2\n    return False",
+      "raw_response": "```python\ndef is_Sum_Of_Powers_Of_Two(n):\n    # Check if n is 0, which is not a valid representation\n    if n == 0:\n        return False\n    # Iterate through all powers of 2 less than or equal to n\n    for i in range(31):\n        # Check if the current power of 2 is less than or equal to n\n        if (1 << i) <= n:\n            # Subtract the power of 2 from n\n            n -= (1 << i)\n            # If n becomes 0, it means n can be represented as sum of non-zero powers of 2\n            if n == 0:\n                return True\n    # If n is not reduced to 0, it means n cannot be represented as sum of non-zero powers of 2\n    return False\n```"
+    },
+    {
+      "index": 83,
+      "task_id": 139,
+      "prompt": "Write a function to find the circumference of a circle.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert math.isclose(circle_circumference(10), 62.830000000000005, rel_tol=0.001)",
+        "assert math.isclose(circle_circumference(5), 31.415000000000003, rel_tol=0.001)",
+        "assert math.isclose(circle_circumference(4), 25.132, rel_tol=0.001)"
+      ],
+      "latency_seconds": 1.6767258644104004,
+      "extracted_code": "import math\n\ndef circle_circumference(radius):\n    # Calculate the circumference of a circle using the formula 2 * pi * radius\n    return 2 * math.pi * radius\n\n# Test the function with the provided assertion\nassert math.isclose(circle_circumference(10), 62.830000000000005, rel_tol=0.001)",
+      "raw_response": "```python\nimport math\n\ndef circle_circumference(radius):\n    # Calculate the circumference of a circle using the formula 2 * pi * radius\n    return 2 * math.pi * radius\n\n# Test the function with the provided assertion\nassert math.isclose(circle_circumference(10), 62.830000000000005, rel_tol=0.001)\n```"
+    },
+    {
+      "index": 84,
+      "task_id": 140,
+      "prompt": "Write a function to flatten the list of lists into a single set of numbers.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert set(extract_singly([(3, 4, 5), (4, 5, 7), (1, 4)])) == set([3, 4, 5, 7, 1])",
+        "assert set(extract_singly([(1, 2, 3), (4, 2, 3), (7, 8)])) == set([1, 2, 3, 4, 7, 8])",
+        "assert set(extract_singly([(7, 8, 9), (10, 11, 12), (10, 11)])) == set([7, 8, 9, 10, 11, 12])"
+      ],
+      "latency_seconds": 1.758209228515625,
+      "extracted_code": "def extract_singly(list_of_lists):\n    # Flatten the list of lists and convert it to a set\n    return set([item for sublist in list_of_lists for item in sublist])\n\n# Test the function with the provided assertion\nassert set(extract_singly([(3, 4, 5), (4, 5, 7), (1, 4)])) == set([3, 4, 5, 7, 1])",
+      "raw_response": "```python\ndef extract_singly(list_of_lists):\n    # Flatten the list of lists and convert it to a set\n    return set([item for sublist in list_of_lists for item in sublist])\n\n# Test the function with the provided assertion\nassert set(extract_singly([(3, 4, 5), (4, 5, 7), (1, 4)])) == set([3, 4, 5, 7, 1])\n```"
+    },
+    {
+      "index": 85,
+      "task_id": 141,
+      "prompt": "Write a function to sort a list of elements.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert pancake_sort([15, 79, 25, 38, 69]) == [15, 25, 38, 69, 79]",
+        "assert pancake_sort([98, 12, 54, 36, 85]) == [12, 36, 54, 85, 98]",
+        "assert pancake_sort([41, 42, 32, 12, 23]) == [12, 23, 32, 41, 42]"
+      ],
+      "latency_seconds": 3.142685651779175,
+      "extracted_code": "def pancake_sort(arr):\n    n = len(arr)\n    for i in range(n, 1, -1):\n        # Find the index of the maximum element in the unsorted part\n        max_index = arr.index(max(arr[:i]))\n        # Flip the unsorted part to bring the maximum element to the front\n        arr[:max_index+1] = arr[:max_index+1][::-1]\n        # Flip the entire unsorted part to move the maximum element to its correct position\n        arr[:i] = arr[:i][::-1]\n    return arr\n\n# Test the function with the provided assertion\nassert pancake_sort([15, 79, 25, 38, 69]) == [15, 25, 38, 69, 79]",
+      "raw_response": "```python\ndef pancake_sort(arr):\n    n = len(arr)\n    for i in range(n, 1, -1):\n        # Find the index of the maximum element in the unsorted part\n        max_index = arr.index(max(arr[:i]))\n        # Flip the unsorted part to bring the maximum element to the front\n        arr[:max_index+1] = arr[:max_index+1][::-1]\n        # Flip the entire unsorted part to move the maximum element to its correct position\n        arr[:i] = arr[:i][::-1]\n    return arr\n\n# Test the function with the provided assertion\nassert pancake_sort([15, 79, 25, 38, 69]) == [15, 25, 38, 69, 79]\n```"
+    },
+    {
+      "index": 86,
+      "task_id": 142,
+      "prompt": "Write a function to count number items that are identical in the same position of three given lists.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert count_samepair([1,2,3,4,5,6,7,8],[2,2,3,1,2,6,7,9],[2,1,3,1,2,6,7,9])==3",
+        "assert count_samepair([1,2,3,4,5,6,7,8],[2,2,3,1,2,6,7,8],[2,1,3,1,2,6,7,8])==4",
+        "assert count_samepair([1,2,3,4,2,6,7,8],[2,2,3,1,2,6,7,8],[2,1,3,1,2,6,7,8])==5"
+      ],
+      "latency_seconds": 3.1168196201324463,
+      "extracted_code": "def count_samepair(list1, list2, list3):\n    # Initialize a counter to zero\n    count = 0\n    # Iterate through the lists using a for loop\n    for i in range(len(list1)):\n        # Check if the elements at the current index in all three lists are the same\n        if list1[i] == list2[i] == list3[i]:\n            # Increment the counter if the condition is met\n            count += 1\n    # Return the final count\n    return count\n\n# Test the function with the provided assertion\nassert count_samepair([1,2,3,4,5,6,7,8],[2,2,3,1,2,6,7,9],[2,1,3,1,2,6,7,9])==3",
+      "raw_response": "```python\ndef count_samepair(list1, list2, list3):\n    # Initialize a counter to zero\n    count = 0\n    # Iterate through the lists using a for loop\n    for i in range(len(list1)):\n        # Check if the elements at the current index in all three lists are the same\n        if list1[i] == list2[i] == list3[i]:\n            # Increment the counter if the condition is met\n            count += 1\n    # Return the final count\n    return count\n\n# Test the function with the provided assertion\nassert count_samepair([1,2,3,4,5,6,7,8],[2,2,3,1,2,6,7,9],[2,1,3,1,2,6,7,9])==3\n```"
+    },
+    {
+      "index": 87,
+      "task_id": 145,
+      "prompt": "Write a python function to find the maximum difference between any two elements in a given array.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert max_Abs_Diff((2,1,5,3)) == 4",
+        "assert max_Abs_Diff((9,3,2,5,1)) == 8",
+        "assert max_Abs_Diff((3,2,1)) == 2"
+      ],
+      "latency_seconds": 2.4645626544952393,
+      "extracted_code": "def max_Abs_Diff(arr):\n    # Initialize the minimum and maximum elements to the first element of the array\n    min_element = arr[0]\n    max_element = arr[0]\n    \n    # Iterate through the array to find the minimum and maximum elements\n    for num in arr:\n        if num < min_element:\n            min_element = num\n        if num > max_element:\n            max_element = num\n    \n    # Return the maximum difference between the maximum and minimum elements\n    return max_element - min_element\n\n# Test the function with the provided assertion\nassert max_Abs_Diff((2,1,5,3)) == 4",
+      "raw_response": "```python\ndef max_Abs_Diff(arr):\n    # Initialize the minimum and maximum elements to the first element of the array\n    min_element = arr[0]\n    max_element = arr[0]\n    \n    # Iterate through the array to find the minimum and maximum elements\n    for num in arr:\n        if num < min_element:\n            min_element = num\n        if num > max_element:\n            max_element = num\n    \n    # Return the maximum difference between the maximum and minimum elements\n    return max_element - min_element\n\n# Test the function with the provided assertion\nassert max_Abs_Diff((2,1,5,3)) == 4\n```"
+    },
+    {
+      "index": 88,
+      "task_id": 160,
+      "prompt": "Write a function that returns integers x and y that satisfy ax + by = n as a tuple, or return None if no solution exists.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert find_solution(2, 3, 7) == (2, 1)",
+        "assert find_solution(4, 2, 7) == None",
+        "assert find_solution(1, 13, 17) == (4, 1)"
+      ],
+      "latency_seconds": 2.986144781112671,
+      "extracted_code": "def find_solution(a, b, n):\n    # Check if a and b are coprime\n    if gcd(a, b) != 1:\n        return None\n    \n    # Calculate the modular inverse of a modulo b\n    inv_a = pow(a, -1, b)\n    \n    # Calculate x and y using the formula\n    x = (n * inv_a) % b\n    y = (n - a * x) // b\n    \n    return (x, y)\n\n# Helper function to calculate the greatest common divisor\ndef gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a\n\n# Test the function with the provided test case\nassert find_solution(2, 3, 7) == (2, 1)",
+      "raw_response": "```python\ndef find_solution(a, b, n):\n    # Check if a and b are coprime\n    if gcd(a, b) != 1:\n        return None\n    \n    # Calculate the modular inverse of a modulo b\n    inv_a = pow(a, -1, b)\n    \n    # Calculate x and y using the formula\n    x = (n * inv_a) % b\n    y = (n - a * x) // b\n    \n    return (x, y)\n\n# Helper function to calculate the greatest common divisor\ndef gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a\n\n# Test the function with the provided test case\nassert find_solution(2, 3, 7) == (2, 1)\n```"
+    },
+    {
+      "index": 89,
+      "task_id": 161,
+      "prompt": "Write a function to remove all elements from a given list present in another list.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert remove_elements([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [2, 4, 6, 8]) == [1, 3, 5, 7, 9, 10]",
+        "assert remove_elements([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 3, 5, 7]) == [2, 4, 6, 8, 9, 10]",
+        "assert remove_elements([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [5, 7]) == [1, 2, 3, 4, 6, 8, 9, 10]"
+      ],
+      "latency_seconds": 2.228093385696411,
+      "extracted_code": "def remove_elements(list1, list2):\n    # Use list comprehension to filter out elements in list2 from list1\n    result = [element for element in list1 if element not in list2]\n    return result\n\n# Test the function with the provided assertion\nassert remove_elements([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [2, 4, 6, 8]) == [1, 3, 5, 7, 9, 10]",
+      "raw_response": "```python\ndef remove_elements(list1, list2):\n    # Use list comprehension to filter out elements in list2 from list1\n    result = [element for element in list1 if element not in list2]\n    return result\n\n# Test the function with the provided assertion\nassert remove_elements([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [2, 4, 6, 8]) == [1, 3, 5, 7, 9, 10]\n```"
+    },
+    {
+      "index": 90,
+      "task_id": 162,
+      "prompt": "Write a function to calculate the sum (n - 2*i) from i=0 to n // 2, for instance n + (n-2) + (n-4)... (until n-x =< 0).",
+      "passed": false,
+      "test_message": "AssertionError:",
+      "test_list": [
+        "assert sum_series(6) == 12",
+        "assert sum_series(10) == 30",
+        "assert sum_series(9) == 25"
+      ],
+      "latency_seconds": 1.8671679496765137,
+      "extracted_code": "def sum_series(n):\n    # Initialize the sum to 0\n    total_sum = 0\n    # Loop from 0 to n // 2\n    for i in range(n // 2):\n        # Add (n - 2*i) to the total sum\n        total_sum += n - 2 * i\n    # Return the total sum\n    return total_sum\n\n# Test the function with the provided assertion\nassert sum_series(6) == 12",
+      "raw_response": "```python\ndef sum_series(n):\n    # Initialize the sum to 0\n    total_sum = 0\n    # Loop from 0 to n // 2\n    for i in range(n // 2):\n        # Add (n - 2*i) to the total sum\n        total_sum += n - 2 * i\n    # Return the total sum\n    return total_sum\n\n# Test the function with the provided assertion\nassert sum_series(6) == 12\n```"
+    },
+    {
+      "index": 91,
+      "task_id": 165,
+      "prompt": "Write a function to count the number of characters in a string that occur at the same position in the string as in the English alphabet (case insensitive).",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert count_char_position(\"xbcefg\") == 2",
+        "assert count_char_position(\"ABcED\") == 3",
+        "assert count_char_position(\"AbgdeF\") == 5"
+      ],
+      "latency_seconds": 2.0255126953125,
+      "extracted_code": "def count_char_position(s):\n    # Initialize the count to 0\n    count = 0\n    # Iterate over each character in the string\n    for i in range(len(s)):\n        # Check if the character is in the English alphabet and at the same position\n        if s[i].isalpha() and (s[i].lower() == chr(97 + i)):\n            count += 1\n    return count\n\n# Test the function with the provided assertion\nassert count_char_position(\"xbcefg\") == 2",
+      "raw_response": "```python\ndef count_char_position(s):\n    # Initialize the count to 0\n    count = 0\n    # Iterate over each character in the string\n    for i in range(len(s)):\n        # Check if the character is in the English alphabet and at the same position\n        if s[i].isalpha() and (s[i].lower() == chr(97 + i)):\n            count += 1\n    return count\n\n# Test the function with the provided assertion\nassert count_char_position(\"xbcefg\") == 2\n```"
+    },
+    {
+      "index": 92,
+      "task_id": 166,
+      "prompt": "Write a function that counts the number of pairs of integers in a list that xor to an even number.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert find_even_pair([5, 4, 7, 2, 1]) == 4",
+        "assert find_even_pair([7, 2, 8, 1, 0, 5, 11]) == 9",
+        "assert find_even_pair([1, 2, 3]) == 1"
+      ],
+      "latency_seconds": 2.782106399536133,
+      "extracted_code": "def find_even_pair(arr):\n    # Initialize the count of pairs\n    count = 0\n    # Iterate through the array\n    for i in range(len(arr)):\n        # Iterate through the array again to find pairs\n        for j in range(i + 1, len(arr)):\n            # Check if the xor of the pair is even\n            if (arr[i] ^ arr[j]) % 2 == 0:\n                # Increment the count if the condition is met\n                count += 1\n    # Return the total count of pairs\n    return count\n\n# Test the function with the provided test case\nassert find_even_pair([5, 4, 7, 2, 1]) == 4",
+      "raw_response": "```python\ndef find_even_pair(arr):\n    # Initialize the count of pairs\n    count = 0\n    # Iterate through the array\n    for i in range(len(arr)):\n        # Iterate through the array again to find pairs\n        for j in range(i + 1, len(arr)):\n            # Check if the xor of the pair is even\n            if (arr[i] ^ arr[j]) % 2 == 0:\n                # Increment the count if the condition is met\n                count += 1\n    # Return the total count of pairs\n    return count\n\n# Test the function with the provided test case\nassert find_even_pair([5, 4, 7, 2, 1]) == 4\n```"
+    },
+    {
+      "index": 93,
+      "task_id": 167,
+      "prompt": "Write a python function to find the smallest power of 2 greater than or equal to n.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert next_power_of_2(0) == 1",
+        "assert next_power_of_2(5) == 8",
+        "assert next_power_of_2(17) == 32"
+      ],
+      "latency_seconds": 2.170088768005371,
+      "extracted_code": "import math\n\ndef next_power_of_2(n):\n    \"\"\"\n    Find the smallest power of 2 greater than or equal to n.\n    \n    :param n: Integer, the number to find the next power of 2 for.\n    :return: Integer, the smallest power of 2 greater than or equal to n.\n    \"\"\"\n    if n == 0:\n        return 1\n    return 2 ** math.ceil(math.log2(n))\n\n# Test the function with the provided assertions\nassert next_power_of_2(0) == 1",
+      "raw_response": "```python\nimport math\n\ndef next_power_of_2(n):\n    \"\"\"\n    Find the smallest power of 2 greater than or equal to n.\n    \n    :param n: Integer, the number to find the next power of 2 for.\n    :return: Integer, the smallest power of 2 greater than or equal to n.\n    \"\"\"\n    if n == 0:\n        return 1\n    return 2 ** math.ceil(math.log2(n))\n\n# Test the function with the provided assertions\nassert next_power_of_2(0) == 1\n```"
+    },
+    {
+      "index": 94,
+      "task_id": 168,
+      "prompt": "Write a function to count the number of occurrences of a number in a given list.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert frequency([1,2,3], 4) == 0",
+        "assert frequency([1,2,2,3,3,3,4], 3) == 3",
+        "assert frequency([0,1,2,3,1,2], 1) == 2"
+      ],
+      "latency_seconds": 1.4336574077606201,
+      "extracted_code": "def frequency(lst, x):\n    # Initialize a counter to zero\n    count = 0\n    # Iterate through each element in the list\n    for element in lst:\n        # If the current element matches x, increment the counter\n        if element == x:\n            count += 1\n    # Return the total count of occurrences\n    return count",
+      "raw_response": "```python\ndef frequency(lst, x):\n    # Initialize a counter to zero\n    count = 0\n    # Iterate through each element in the list\n    for element in lst:\n        # If the current element matches x, increment the counter\n        if element == x:\n            count += 1\n    # Return the total count of occurrences\n    return count\n```"
+    },
+    {
+      "index": 95,
+      "task_id": 170,
+      "prompt": "Write a function to find the sum of numbers in a list within a range specified by two indices.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert sum_range_list([2,1,5,6,8,3,4,9,10,11,8,12], 8, 10) == 29",
+        "assert sum_range_list([2,1,5,6,8,3,4,9,10,11,8,12], 5, 7) == 16",
+        "assert sum_range_list([2,1,5,6,8,3,4,9,10,11,8,12], 7, 10) == 38"
+      ],
+      "latency_seconds": 1.568080186843872,
+      "extracted_code": "def sum_range_list(lst, start, end):\n    # Initialize the sum to 0\n    total_sum = 0\n    # Iterate through the list from start to end (inclusive)\n    for i in range(start, end + 1):\n        # Add the current element to the total sum\n        total_sum += lst[i]\n    # Return the total sum\n    return total_sum",
+      "raw_response": "```python\ndef sum_range_list(lst, start, end):\n    # Initialize the sum to 0\n    total_sum = 0\n    # Iterate through the list from start to end (inclusive)\n    for i in range(start, end + 1):\n        # Add the current element to the total sum\n        total_sum += lst[i]\n    # Return the total sum\n    return total_sum\n```"
+    },
+    {
+      "index": 96,
+      "task_id": 171,
+      "prompt": "Write a function to find the perimeter of a regular pentagon from the length of its sides.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert perimeter_pentagon(5) == 25",
+        "assert perimeter_pentagon(10) == 50",
+        "assert perimeter_pentagon(15) == 75"
+      ],
+      "latency_seconds": 0.6835064888000488,
+      "extracted_code": "def perimeter_pentagon(side_length):\n    # Calculate the perimeter of a regular pentagon\n    perimeter = 5 * side_length\n    return perimeter",
+      "raw_response": "```python\ndef perimeter_pentagon(side_length):\n    # Calculate the perimeter of a regular pentagon\n    perimeter = 5 * side_length\n    return perimeter\n```"
+    },
+    {
+      "index": 97,
+      "task_id": 172,
+      "prompt": "Write a function to count the number of occurence of the string 'std' in a given string.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert count_occurance(\"letstdlenstdporstd\") == 3",
+        "assert count_occurance(\"truststdsolensporsd\") == 1",
+        "assert count_occurance(\"makestdsostdworthit\") == 2",
+        "assert count_occurance(\"stds\") == 1",
+        "assert count_occurance(\"\") == 0"
+      ],
+      "latency_seconds": 1.8387460708618164,
+      "extracted_code": "def count_occurance(s):\n    # Initialize a counter to zero\n    count = 0\n    # Iterate over the string\n    for i in range(len(s)):\n        # Check if the substring 'std' is found at the current position\n        if s[i:i+3] == 'std':\n            # Increment the counter if 'std' is found\n            count += 1\n    # Return the total count of 'std' occurrences\n    return count",
+      "raw_response": "```python\ndef count_occurance(s):\n    # Initialize a counter to zero\n    count = 0\n    # Iterate over the string\n    for i in range(len(s)):\n        # Check if the substring 'std' is found at the current position\n        if s[i:i+3] == 'std':\n            # Increment the counter if 'std' is found\n            count += 1\n    # Return the total count of 'std' occurrences\n    return count\n```"
+    },
+    {
+      "index": 98,
+      "task_id": 222,
+      "prompt": "Write a function to check if all the elements in tuple have same data type or not.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert check_type((5, 6, 7, 3, 5, 6) ) == True",
+        "assert check_type((1, 2, \"4\") ) == False",
+        "assert check_type((3, 2, 1, 4, 5) ) == True"
+      ],
+      "latency_seconds": 1.409853458404541,
+      "extracted_code": "def check_type(test_tup):\n    # Check if all elements in the tuple are of the same type\n    return all(isinstance(i, type(test_tup[0])) for i in test_tup)\n\n# Test the function with the provided assertion\nassert check_type((5, 6, 7, 3, 5, 6)) == True",
+      "raw_response": "```python\ndef check_type(test_tup):\n    # Check if all elements in the tuple are of the same type\n    return all(isinstance(i, type(test_tup[0])) for i in test_tup)\n\n# Test the function with the provided assertion\nassert check_type((5, 6, 7, 3, 5, 6)) == True\n```"
+    },
+    {
+      "index": 99,
+      "task_id": 223,
+      "prompt": "Write a function that takes in a sorted array, its length (n), and an element and returns whether the element is the majority element in the given sorted array. (The majority element is the element that occurs more than n/2 times.)",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert is_majority([1, 2, 3, 3, 3, 3, 10], 7, 3) == True",
+        "assert is_majority([1, 1, 2, 4, 4, 4, 6, 6], 8, 4) == False",
+        "assert is_majority([1, 1, 1, 2, 2], 5, 1) == True",
+        "assert is_majority([1, 1, 2, 2], 5, 1) == False"
+      ],
+      "latency_seconds": 1.7313334941864014,
+      "extracted_code": "def is_majority(arr, n, x):\n    # Check if the element x appears more than n/2 times\n    if arr.count(x) > n // 2:\n        return True\n    else:\n        return False\n\n# Test the function with the provided test case\nassert is_majority([1, 2, 3, 3, 3, 3, 10], 7, 3) == True",
+      "raw_response": "```python\ndef is_majority(arr, n, x):\n    # Check if the element x appears more than n/2 times\n    if arr.count(x) > n // 2:\n        return True\n    else:\n        return False\n\n# Test the function with the provided test case\nassert is_majority([1, 2, 3, 3, 3, 3, 10], 7, 3) == True\n```"
+    },
+    {
+      "index": 100,
+      "task_id": 224,
+      "prompt": "Write a python function to count the number of set bits (binary digits with value 1) in a given number.",
+      "passed": true,
+      "test_message": "PASSED",
+      "test_list": [
+        "assert count_Set_Bits(2) == 1",
+        "assert count_Set_Bits(4) == 1",
+        "assert count_Set_Bits(6) == 2"
+      ],
+      "latency_seconds": 1.0994858741760254,
+      "extracted_code": "def count_Set_Bits(n):\n    count = 0\n    while n:\n        count += n & 1\n        n >>= 1\n    return count\n\n# Test the function with the provided test case\nassert count_Set_Bits(2) == 1",
+      "raw_response": "```python\ndef count_Set_Bits(n):\n    count = 0\n    while n:\n        count += n & 1\n        n >>= 1\n    return count\n\n# Test the function with the provided test case\nassert count_Set_Bits(2) == 1\n```"
+    }
+  ]
+}
