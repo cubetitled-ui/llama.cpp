@@ -39,6 +39,13 @@ struct llama_cparams {
     bool flash_attn;
     bool auto_fa;
     bool fused_gate_up = false;  // fuse MoE gate and up projections
+
+    int32_t recurrent_t       = 1;    // weight-tied recurrent core passes per token (1 = vanilla)
+    int32_t recurrent_layer   = -1;   // core layer A index (resolved at context creation), -1 = disabled
+    int32_t recurrent_layer_b = -1;   // core layer B index for A->B->A alternation, -1 = single-layer core (if set, must satisfy |A-B| == 1)
+    float   recurrent_a       = 0.90f; // LTI decay scalar
+    float   recurrent_b       = 0.10f; // LTI anchor injection scalar
+    float   recurrent_gate    = 1.00f; // block-output scale per loop (use <1 with RMSNorm to bound growth)
     bool fused_gdn_ar;       // use fused gated delta net (autoregressive)
     bool fused_gdn_ch;       // use fused gated delta net (chunked)
     bool auto_fgdn;

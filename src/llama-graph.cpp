@@ -18,6 +18,7 @@
 #include <cstring>
 #include <numeric>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 
@@ -3539,4 +3540,87 @@ int32_t llama_relative_position_bucket(llama_pos x, llama_pos y, uint64_t n_buck
     relative_bucket += (relative_position < max_exact ? relative_position : relative_position_if_large);
 
     return relative_bucket;
+}
+
+ggml_tensor * build_recurrent_core(
+        llm_graph_context & gf,
+        ggml_tensor * inpL,
+        const std::function<ggml_tensor * (int il, ggml_tensor * input)> & decoder,
+        const std::function<void (int il, ggml_tensor * input)> & on_entry) {
+    const int32_t recurrent_t       = gf.cparams.recurrent_t;
+    const int32_t recurrent_layer   = gf.cparams.recurrent_layer;
+    const int32_t recurrent_layer_b = gf.cparams.recurrent_layer_b;
+    const float   recurrent_a       = gf.cparams.recurrent_a;
+    const float   recurrent_b       = gf.cparams.recurrent_b;
+    const float   recurrent_gate    = gf.cparams.recurrent_gate;
+    const int32_t n_layer           = gf.n_layer;
+
+    // recurrent_t has already been validated at context creation (>= 1), and recurrent_layer is
+    // either resolved to [0, n_layer) or left disabled. T == 1 => exact vanilla graph.
+    // recurrent_layer_b == -1 (or == recurrent_layer) => single-layer core, exact legacy behavior.
+    // The alternating A->B->A core requires adjacent A/B (see context-creation validation): the loop
+    // executes only A and B, so a wider gap would silently drop the layers between them. Re-check here
+    // defensively because cparams can also be populated without going through the context ctor.
+    const bool has_b = recurrent_layer_b >= 0 && recurrent_layer_b != recurrent_layer;
+    if (recurrent_t <= 1 || recurrent_layer < 0) {
+        for (int il = 0; il < n_layer; ++il) {
+            if (on_entry) on_entry(il, inpL);
+            inpL = decoder(il, inpL);
+        }
+        return inpL;
+    }
+    if (has_b) {
+        const int32_t ab_gap = recurrent_layer > recurrent_layer_b
+            ? recurrent_layer - recurrent_layer_b
+            : recurrent_layer_b - recurrent_layer;
+        if (ab_gap != 1) {
+            throw std::logic_error(
+                "build_recurrent_core: non-adjacent recurrent layers A=" + std::to_string(recurrent_layer) +
+                " B=" + std::to_string(recurrent_layer_b) + " would silently skip intervening layer(s); " +
+                "this minimal experiment requires adjacent A/B (|A-B| == 1) so every layer is either in " +
+                "the prelude [0, lo), in the A/B loop, or in the coda (hi, n_layer)");
+        }
+    }
+
+    const int32_t lo = has_b ? std::min(recurrent_layer, recurrent_layer_b) : recurrent_layer;
+    const int32_t hi = has_b ? std::max(recurrent_layer, recurrent_layer_b) : recurrent_layer;
+
+    // 1. prelude: layers [0, lo) straight through
+    for (int il = 0; il < lo; ++il) {
+        if (on_entry) on_entry(il, inpL);
+        inpL = decoder(il, inpL);
+    }
+
+    // 2. frozen anchor = prelude output (injected every loop step)
+    ggml_tensor * anchor_e = inpL;
+
+    // 3. weight-tied loop with LTI injection; single-layer: core applied T times,
+    //    alternating: A->B->A... for T passes starting at recurrent_layer (A).
+    //    Adjacency (|A-B| == 1, enforced above) guarantees no layer in [lo, hi] is skipped:
+    //    the interval contains exactly {A, B}.
+    //    Update: combined = RMSNorm(h + e) keeps the block input on-distribution;
+    //    h = A*h + B*e + gate*block_out preserves the natural residual-stream scale
+    //    for the coda (an output RMSNorm would re-scale the whole stream and break
+    //    all upper layers on pretrained checkpoints).
+    ggml_tensor * h = inpL;
+    for (int t = 0; t < recurrent_t; ++t) {
+        const int il = has_b ? (t % 2 == 0 ? recurrent_layer : recurrent_layer_b) : recurrent_layer;
+        if (on_entry) on_entry(il, h);
+        ggml_tensor * combined  = ggml_rms_norm(gf.ctx0,
+                ggml_add(gf.ctx0, h, anchor_e), gf.hparams.f_norm_rms_eps);
+        ggml_tensor * block_out = decoder(il, combined);
+        h = ggml_add(gf.ctx0,
+                ggml_add(gf.ctx0, ggml_scale(gf.ctx0, h, recurrent_a), ggml_scale(gf.ctx0, anchor_e, recurrent_b)),
+                ggml_scale(gf.ctx0, block_out, recurrent_gate));
+    }
+    inpL = h;
+
+    // 4. coda: layers (hi, n_layer) straight through. Together: every layer 0..n_layer-1
+    //    executes exactly once outside the loop except A/B, which execute T times inside it.
+    for (int il = hi + 1; il < n_layer; ++il) {
+        if (on_entry) on_entry(il, inpL);
+        inpL = decoder(il, inpL);
+    }
+
+    return inpL;
 }

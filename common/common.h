@@ -535,6 +535,14 @@ struct common_params {
     bool    offline                    = false;
     bool    fuse_gate_up               = false;
 
+    // weight-tied recurrent core (llamar.cpp)
+    int32_t recurrent_t                = 1;     // passes through the recurrent core layer per token (1 = vanilla)
+    int32_t recurrent_layer            = -1;    // core layer A index; -1 = 38% of model depth when recurrent_t > 1
+    int32_t recurrent_layer_b          = -1;    // core layer B for A->B->A; -1 = single-layer core (if set, must be adjacent to A)
+    float   recurrent_a                = 0.90f; // LTI decay scalar (|a| < 1)
+    float   recurrent_b                = 0.10f; // LTI anchor injection scalar
+    float   recurrent_gate             = 1.00f; // block-output scale per loop
+
     int32_t ppl_stride      = 0;     // stride for perplexity calculations. If left at 0, the pre-existing approach will be used.
     int32_t ppl_output_type = 0;     // = 0 -> ppl output is as usual, = 1 -> ppl output is num_tokens, ppl, one per line
                                      //                                       (which is more convenient to use for plotting)

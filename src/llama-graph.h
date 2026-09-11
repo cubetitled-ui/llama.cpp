@@ -1254,3 +1254,21 @@ struct llm_graph_context {
 
 // TODO: better name
 int32_t llama_relative_position_bucket(llama_pos x, llama_pos y, uint64_t n_buckets, bool bidirectional);
+
+// Weight-tied recurrent core (OpenMythos-style, llamar.cpp).
+// Follows the resolved cparams (recurrent_t / recurrent_layer / recurrent_layer_b / recurrent_a /
+// recurrent_b / recurrent_gate) set at context creation. With recurrent_t == 1 this is a plain straight loop over all
+// layers and an exact no-op on the graph. Otherwise the graph is split into a prelude [0, lo), a
+// weight-tied loop of the core layer(s) with LTI injection h_{t+1} = A*h_t + B*e + decoder(h_t + e),
+// and a coda (hi, n_layer). Single-layer core (recurrent_layer_b == -1): the core layer is applied T
+// times. Alternating core (recurrent_layer_b >= 0): layers A and B alternate A->B->A... for T passes
+// (lo = min(A,B), hi = max(A,B)). A and B must be adjacent (|A-B| == 1, enforced at context creation
+// and re-checked here): the loop executes only A and B, so adjacency is what guarantees no layer in
+// [lo, hi] is silently skipped -- every layer runs either once in the prelude/coda or T times in the
+// loop. `on_entry(il, inpL)` (may be null) fires before each layer decode so callers can snapshot
+// per-layer inputs (e.g. embeddings_nextn extraction). Throws std::logic_error on a non-adjacent pair.
+ggml_tensor * build_recurrent_core(
+        llm_graph_context & gf,
+        ggml_tensor * inpL,
+        const std::function<ggml_tensor * (int il, ggml_tensor * input)> & decoder,
+        const std::function<void (int il, ggml_tensor * input)> & on_entry);

@@ -246,6 +246,67 @@ llama_context::llama_context(
     cparams.flash_attn = params.flash_attn_type != LLAMA_FLASH_ATTN_TYPE_DISABLED;
     cparams.auto_fa    = params.flash_attn_type == LLAMA_FLASH_ATTN_TYPE_AUTO;
 
+    // weight-tied recurrent core (llamar.cpp)
+    cparams.recurrent_t       = params.recurrent_t;
+    cparams.recurrent_layer   = params.recurrent_layer;
+    cparams.recurrent_layer_b = params.recurrent_layer_b;
+    cparams.recurrent_a       = params.recurrent_a;
+    cparams.recurrent_b       = params.recurrent_b;
+    cparams.recurrent_gate    = params.recurrent_gate;
+
+    if (cparams.recurrent_t > 1) {
+        // resolve a negative core layer to the empirical 38% reasoning-centroid heuristic
+        if (cparams.recurrent_layer < 0) {
+            cparams.recurrent_layer = (int32_t) (0.38f * hparams.n_layer());
+        }
+        if (cparams.recurrent_layer < 0 || cparams.recurrent_layer >= (int32_t) hparams.n_layer()) {
+            throw std::runtime_error("recurrent layer index out of range: " +
+                    std::to_string(cparams.recurrent_layer) + " (n_layer=" + std::to_string(hparams.n_layer()) + ")");
+        }
+        // optional second core layer B: -1 = single-layer core; otherwise must be a distinct valid layer
+        // Minimal-experiment constraint: A and B must be adjacent (|A-B| == 1). The alternating core
+        // only ever executes layers A and B inside the loop, with prelude [0, lo) and coda (hi, n_layer).
+        // A non-adjacent pair would therefore silently skip every layer strictly between A and B, so we
+        // reject it here instead of building a graph with missing layers.
+        if (cparams.recurrent_layer_b != -1) {
+            if (cparams.recurrent_layer_b < 0 || cparams.recurrent_layer_b >= (int32_t) hparams.n_layer()) {
+                throw std::runtime_error("recurrent layer B index out of range: " +
+                        std::to_string(cparams.recurrent_layer_b) + " (n_layer=" + std::to_string(hparams.n_layer()) + ")");
+            }
+            if (cparams.recurrent_layer_b == cparams.recurrent_layer) {
+                throw std::runtime_error("recurrent layer B must differ from recurrent layer A (or leave -1 for single-layer core)");
+            }
+            const int32_t ab_gap = cparams.recurrent_layer > cparams.recurrent_layer_b
+                ? cparams.recurrent_layer - cparams.recurrent_layer_b
+                : cparams.recurrent_layer_b - cparams.recurrent_layer;
+            if (ab_gap != 1) {
+                throw std::runtime_error("recurrent layers A=" + std::to_string(cparams.recurrent_layer) +
+                        " and B=" + std::to_string(cparams.recurrent_layer_b) + " must be adjacent (|A-B| == 1): " +
+                        "the A->B->A core only executes A and B in the loop, so a wider gap would silently skip " +
+                        "layer(s) between them (no intervening layers are executed inside the loop)");
+            }
+        }
+        if (!(cparams.recurrent_a >= -1.0f && cparams.recurrent_a < 1.0f)) {
+            throw std::runtime_error("recurrent_a must satisfy -1 <= a < 1 for the iteration to be contractive, got " +
+                    std::to_string(cparams.recurrent_a));
+        }
+        if (!(cparams.recurrent_gate >= 0.0f && cparams.recurrent_gate <= 1.0f)) {
+            throw std::runtime_error("recurrent_gate must satisfy 0 <= gate <= 1, got " +
+                    std::to_string(cparams.recurrent_gate));
+        }
+        if (cparams.recurrent_layer_b != -1) {
+            LLAMA_LOG_INFO("%s: llamar.cpp: alternating recurrent core enabled: T=%d layers A=%d B=%d (n_layer=%d) A=%g B=%g gate=%g\n",
+                    __func__, cparams.recurrent_t, cparams.recurrent_layer, cparams.recurrent_layer_b,
+                    hparams.n_layer(), cparams.recurrent_a, cparams.recurrent_b, cparams.recurrent_gate);
+        } else {
+            LLAMA_LOG_INFO("%s: llamar.cpp: recurrent core enabled: T=%d layer=%d (n_layer=%d) A=%g B=%g gate=%g\n",
+                    __func__, cparams.recurrent_t, cparams.recurrent_layer, hparams.n_layer(),
+                    cparams.recurrent_a, cparams.recurrent_b, cparams.recurrent_gate);
+        }
+    } else if (cparams.recurrent_t != 1) {
+        throw std::runtime_error("recurrent_t must be >= 1, got " + std::to_string(cparams.recurrent_t));
+    }
+
     cparams.fused_gdn_ar = true;
     cparams.fused_gdn_ch = true;
     cparams.auto_fgdn    = true;
@@ -3506,6 +3567,12 @@ llama_context_params llama_context_default_params() {
     result.attention_type              = LLAMA_ATTENTION_TYPE_UNSPECIFIED;
     result.flash_attn_type             = LLAMA_FLASH_ATTN_TYPE_AUTO;
     result.fuse_gate_up                = false;
+    result.recurrent_t                 = 1;
+    result.recurrent_layer             = -1;
+    result.recurrent_layer_b           = -1;
+    result.recurrent_a                 = 0.90f;
+    result.recurrent_b                 = 0.10f;
+    result.recurrent_gate              = 1.00f;
     result.rope_freq_base              = 0.0f;
     result.rope_freq_scale             = 0.0f;
     result.yarn_ext_factor             = -1.0f;

@@ -2652,6 +2652,48 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
             params.fuse_gate_up = true;
         }
     ).set_env("LLAMA_ARG_FUSE_GATE_UP"));
+    add_opt(common_arg(
+        {"--recurrent-t"}, "N",
+        "weight-tied recurrent core passes per token (1 = vanilla single-pass graph, default)",
+        [](common_params & params, const std::string & value) {
+            params.recurrent_t = std::stoi(value);
+        }
+    ).set_env("LLAMA_ARG_RECURRENT_T"));
+    add_opt(common_arg(
+        {"--recurrent-layer"}, "N",
+        "0-indexed recurrent core layer A; defaults to 38% of model depth when --recurrent-t > 1",
+        [](common_params & params, const std::string & value) {
+            params.recurrent_layer = std::stoi(value);
+        }
+    ).set_env("LLAMA_ARG_RECURRENT_LAYER"));
+    add_opt(common_arg(
+        {"--recurrent-layer-b"}, "N",
+        "0-indexed recurrent core layer B for A->B->A alternation; -1 (default) = single-layer core (if set, must be adjacent to A, |A-B| == 1, else rejected so no layers are skipped)",
+        [](common_params & params, const std::string & value) {
+            params.recurrent_layer_b = std::stoi(value);
+        }
+    ).set_env("LLAMA_ARG_RECURRENT_LAYER_B"));
+    add_opt(common_arg(
+        {"-ra", "--recurrent-a"}, "FLOAT",
+        "recurrent core LTI decay scalar (must satisfy |a| < 1; default 0.90)",
+        [](common_params & params, const std::string & value) {
+            params.recurrent_a = std::stof(value);
+        }
+    ).set_env("LLAMA_ARG_RECURRENT_A"));
+    add_opt(common_arg(
+        {"-rb", "--recurrent-b"}, "FLOAT",
+        "recurrent core LTI anchor injection scalar (default 0.10)",
+        [](common_params & params, const std::string & value) {
+            params.recurrent_b = std::stof(value);
+        }
+    ).set_env("LLAMA_ARG_RECURRENT_B"));
+    add_opt(common_arg(
+        {"--recurrent-gate"}, "FLOAT",
+        "recurrent core block-output scale per loop, 0..1 (default 1.0 = legacy; use <1 with RMSNorm to bound growth)",
+        [](common_params & params, const std::string & value) {
+            params.recurrent_gate = std::stof(value);
+        }
+    ).set_env("LLAMA_ARG_RECURRENT_GATE"));
     GGML_ASSERT(params.n_gpu_layers < 0); // string_format would need to be extended for a default >= 0
     add_opt(common_arg(
         {"-ngl", "--gpu-layers", "--n-gpu-layers"}, "N",
