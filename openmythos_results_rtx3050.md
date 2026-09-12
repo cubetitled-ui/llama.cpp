@@ -61,6 +61,24 @@ intermediate passes is still open (overwrite semantics observed, dedicated scrat
 - Branching/rollback/verifier: designed, not yet implemented or measured.
 - A->B->A alternating core: implemented behind flags, NOT yet benchmarked for quality.
 
+## 6. MMLU generative via lm-eval harness (local-completions -> llama-server)
+
+Method: `lm_eval 0.4.12 --model local-completions` against llama-server, temp 0,
+`--reasoning-budget 0`, same model, limit 3 per subject (tiny-n pilot, NOT powered).
+T=1 server vs T=3 + gate=0.2 server. Server T=3 activation proven by differing
+temp=0 outputs on identical prompts.
+
+| group | T=1 | T=3/g0.2 | n |
+|---|---:|---:|---:|
+| mmlu_stem_generative | 0.611 | 0.593 | 54 |
+| mmlu humanities+social+other | 0.595 | 0.550 | 111 |
+| MMLU-gen total | 0.600 | 0.564 | 165 |
+
+Difference (-3.6pp) is inside noise (SE ~ 0.038): no claim either way. Consistent with the
+theory: MMLU is dominated by factual recall, which extra latent compute cannot create
+(see toy fact-recovery result). Reasoning-heavy suites (gsm8k, bbh) are the discriminative
+tests; gsm8k runs are in progress.
+
 ## Reproduce
 
 ```bash

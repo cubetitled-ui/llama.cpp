@@ -3599,9 +3599,9 @@ ggml_tensor * build_recurrent_core(
     //    Adjacency (|A-B| == 1, enforced above) guarantees no layer in [lo, hi] is skipped:
     //    the interval contains exactly {A, B}.
     //    Update: combined = RMSNorm(h + e) keeps the block input on-distribution;
-    //    h = A*h + B*e + gate*block_out preserves the natural residual-stream scale
-    //    for the coda (an output RMSNorm would re-scale the whole stream and break
-    //    all upper layers on pretrained checkpoints).
+    //    delta_thought = decoder(il, combined) - combined extracts the pure transformation delta;
+    //    h = A*h + B*e + gate*delta_thought preserves the natural residual-stream scale
+    //    for the coda without double-adding the combined state.
     ggml_tensor * h = inpL;
     for (int t = 0; t < recurrent_t; ++t) {
         const int il = has_b ? (t % 2 == 0 ? recurrent_layer : recurrent_layer_b) : recurrent_layer;
@@ -3609,9 +3609,10 @@ ggml_tensor * build_recurrent_core(
         ggml_tensor * combined  = ggml_rms_norm(gf.ctx0,
                 ggml_add(gf.ctx0, h, anchor_e), gf.hparams.f_norm_rms_eps);
         ggml_tensor * block_out = decoder(il, combined);
+        ggml_tensor * delta_thought = ggml_sub(gf.ctx0, block_out, combined);
         h = ggml_add(gf.ctx0,
                 ggml_add(gf.ctx0, ggml_scale(gf.ctx0, h, recurrent_a), ggml_scale(gf.ctx0, anchor_e, recurrent_b)),
-                ggml_scale(gf.ctx0, block_out, recurrent_gate));
+                ggml_scale(gf.ctx0, delta_thought, recurrent_gate));
     }
     inpL = h;
 

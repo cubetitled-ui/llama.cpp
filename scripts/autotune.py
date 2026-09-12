@@ -143,15 +143,13 @@ def sweep(src_dir, models, compiled_builds, args_threads, args_ngl, args_fa, rec
                 # Clean processes and check memory usage
                 run_cmd("pkill -9 -f llama-cli; pkill -9 -f llama-server; pkill -9 -f llama-bench; sleep 1")
                 
-                env = os.environ.copy()
-                env["RECURRENT_T"] = str(recurrent_t)
-                if recurrent_layer >= 0:
-                    env["RECURRENT_LAYER"] = str(recurrent_layer)
-                
                 cmd = f"{bench_bin} -m {model_path} -p 16 -n 32 -r 1 --no-warmup -ngl {ngl} -ncmoe 36 -fa {fa} -t {t}"
-                
+                if recurrent_layer >= 0:
+                    cmd += f" --recurrent-t {recurrent_t} --recurrent-layer {recurrent_layer}"
+                else:
+                    cmd += f" --recurrent-t {recurrent_t}"
                 print(f"  Test: Build={build_name}, NGL={ngl}, Threads={t}, FA={fa} -> ", end="", flush=True)
-                ret, out, err = run_cmd(cmd, env=env, timeout=120)
+                ret, out, err = run_cmd(cmd, timeout=120)
                 
                 if ret != 0:
                     print("FAILED / OOM")

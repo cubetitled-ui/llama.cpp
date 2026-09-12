@@ -177,7 +177,7 @@ struct llama_vocab {
                   llama_token   token,
                          char * buf,
                       int32_t   length,
-                      int32_t   lstrip,
+                      int32_t   lsip,
                          bool   special) const;
 
     // use cached data

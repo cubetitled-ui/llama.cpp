@@ -31,7 +31,7 @@ Let `F_l(h)` be the forward function of layer `l`. For the architectures involve
 F_l(h) = h + FFN(RMSNorm( Attn(RMSNorm(h)) + SSM(RMSNorm(h)) ))
 ```
 
-where the SSM term is present only for hybrid architectures (Falcon-H1, Qwen3.5 DeltaNet). Define `L = RECURRENT_LAYER` and `T = RECURRENT_T`.
+where the SSM term is present only for hybrid architectures (Falcon-H1, Qwen3.5 DeltaNet). Define `L` = resolved recurrent core layer and `T` = `recurrent_t`. The parameters `L`, `A`, `B` come from `llama_context_params` (CLI `--recurrent-layer/--recurrent-a/--recurrent-b`, validated at context creation), never from per-builder environment reads; a single builder entry point `build_recurrent_core()` consumes them.
 
 ### 3.1 Prelude
 
@@ -50,7 +50,7 @@ block_out = F_L(combined)                       // weight-tied pass through core
 h         = A·h + B·e + block_out               // LTI state update
 ```
 
-With `A = RECURRENT_A` and `B = RECURRENT_B`. The same tensor `F_L` (attention weights, SSM, FFN) is reused for every pass — hence *weight-tied*.
+With `A` = `recurrent_a` and `B` = `recurrent_b`. The same tensor `F_L` (attention weights, SSM, FFN) is reused for every pass — hence *weight-tied*.
 
 ### 3.3 Coda and output
 
@@ -110,55 +110,84 @@ h* = A·h* + B·e + F_L(h* + e)   ⟺   F_L(h* + e) = (1-A)·h* - B·e
 
 For `B = 1 - A` this becomes `F_L(h* + e) = (1-A)·(h* - e)`: the layer output at a fixed point compensates the decaying residual exactly. The contraction bound above guarantees the iteration approaches a neighbourhood of such a point.
 
+### 4.5 Why the coda input stays near-distribution
+
+The most common objection to training-free recurrence is distributional: the coda layers were trained to consume a single-pass activation, yet receive `h_T`. The following structural argument bounds that deviation, and does not rely on the contraction alone.
+
+For a residual block with pre-norm and scale-invariant attention/SSM substages,
+
+```
+F_l(h) = h + G(RMSNorm(h))           (G = attention + SSM + FFN path)
+```
+
+RMSNorm is invariant to positive scaling of its input, `RMSNorm(c·h) = RMSNorm(h)`. On the first loop pass the core receives `combined = h_0 + e = 2e`, hence, up to the FFN substage,
+
+```
+F_L(2e) - 2e = G(RMSNorm(2e)) = G(RMSNorm(e)) = F_L(e) - e
+    ⟹  F_L(2e) = F_L(e) + e
+```
+
+The first recurrent pass therefore coincides with the vanilla application of `F_L` to `e` plus an exact `+e` residual term; the attention and SSM branches are scale-invariant under pre-norm, so their contribution is unchanged. The coda input is then
+
+```
+h_1 = A·e + B·e + F_L(2e) = (A+B)·e + F_L(e) + e
+```
+
+and with the anchor-conserving choice `A + B = 1`,
+
+```
+h_1 = F_L(e) + 2e        ⟹        h_T = F_L(e) + 2e + (decaying corrections)
+```
+
+The perturbation of the coda input relative to the vanilla path is therefore *bounded by construction*, not by postulate: subsequent passes only add geometrically decaying corrections of norm `O(A^t)`. The residual caveat is that the FFN substage normalises a *mixed* input `2e + attn_out` whose scale has been perturbed additively, so the identity is exact up to the FFN. A numeric confirmation (`cos(F_L(2e) - 2e, F_L(e) - e) ≈ 1`) is part of the evaluation pass.
+
 ## 5. Graph construction (exact code path)
 
-The canonical implementation is `src/models/falcon-h1.cpp`; `src/models/qwen2.cpp`, `src/models/qwen2vl.cpp` and `src/models/qwen35.cpp` follow the identical structure.
+The canonical implementation is `src/models/falcon-h1.cpp`; `src/models/qwen2.cpp`, `src/models/qwen2vl.cpp` and `src/models/qwen35.cpp` invoke the same shared entry point.
 
-### 5.1 Configuration (per builder)
+### 5.1 Configuration (context level)
 
-```cpp
-const int   RECURRENT_T   = [] { const char * v = std::getenv("RECURRENT_T");   return v ? std::atoi(v) : 1; }();
-const float RECURRENT_A   = [] { const char * v = std::getenv("RECURRENT_A");   return v ? std::atof(v) : 0.90f; }();
-const float RECURRENT_B   = [] { const char * v = std::getenv("RECURRENT_B");   return v ? std::atof(v) : 0.10f; }();
-const int   n_rec_layer   = [] { const char * v = std::getenv("RECURRENT_LAYER"); return v ? std::atoi(v) : -1; }();
-```
+The recurrence parameters live in `llama_context_params` (`recurrent_t`, `recurrent_layer`, `recurrent_a`, `recurrent_b`); the CLI tools expose them as `--recurrent-*` flags with `LLAMA_ARG_RECURRENT_*` environment fallback. They are resolved and validated once in the `llama_context` constructor (`src/llama-context.cpp`): a negative `recurrent_layer` with `recurrent_t > 1` resolves to `0.38 · n_layer`, an out-of-range layer or a non-contractive `|A| >= 1` aborts with a diagnostic, and one `llamar.cpp: recurrent core enabled` line reports the resolved configuration. Builders never touch the environment.
 
 ### 5.2 Decoder lambda
 
 A single decoder closure takes a layer index and an input tensor and returns the layer output (SSM, attention, aggregation, FFN). For the recurrent core this closure is invoked `T` times with the *same* `il`, which is exactly what makes the layer weight-tied in the compute graph. The SSM cache entry for the core layer is reset before each pass so the native recurrent state does not carry stale activations across passes.
 
-### 5.3 Control flow
+### 5.3 Shared control flow
 
 ```cpp
-if (RECURRENT_T > 1 && n_rec_layer >= 0 && n_rec_layer < n_layer) {
-    // 1. Prelude
-    for (int il = 0; il < n_rec_layer; ++il) inpL = falcon_decoder(il, inpL);
-
-    // 2. Freeze anchor
-    ggml_tensor * anchor_e = inpL;
-
-    // 3. Weight-tied loop (LTI update)
-    ggml_tensor * h = inpL;
-    for (int t = 0; t < RECURRENT_T; ++t) {
-        ggml_tensor * combined  = ggml_add(ctx0, h, anchor_e);
-        ggml_tensor * block_out = falcon_decoder(n_rec_layer, combined);
-        h = ggml_add(ctx0,
-                     ggml_add(ctx0,
-                              ggml_scale(ctx0, h, RECURRENT_A),
-                              ggml_scale(ctx0, anchor_e, RECURRENT_B)),
-                     block_out);
-    }
-    inpL = h;
-
-    // 4. Coda
-    for (int il = n_rec_layer + 1; il < n_layer; ++il) inpL = falcon_decoder(il, inpL);
-} else {
-    // Vanilla: single pass over all layers (exact upstream behavior)
-    for (int il = 0; il < n_layer; ++il) inpL = falcon_decoder(il, inpL);
-}
+inpL = build_recurrent_core(*this, inpL, falcon_decoder, nullptr);
 ```
 
-The vanilla branch is taken whenever `RECURRENT_T = 1` (the default) or `RECURRENT_LAYER` is unset, so default inference is graph-identical to upstream.
+`build_recurrent_core()` (src/llama-graph.cpp) reads the resolved `llama_cparams`, and for each of the four builders produces:
+
+```cpp
+if (recurrent_t <= 1 || recurrent_layer < 0) {
+    // Vanilla: single pass over all layers (exact upstream behavior)
+    for (int il = 0; il < n_layer; ++il) inpL = decoder(il, inpL);
+    return inpL;
+}
+// 1. Prelude
+for (int il = 0; il < recurrent_layer; ++il) inpL = decoder(il, inpL);
+// 2. Freeze anchor
+ggml_tensor * anchor_e = inpL;
+// 3. Weight-tied loop (LTI update)
+ggml_tensor * h = inpL;
+for (int t = 0; t < recurrent_t; ++t) {
+    ggml_tensor * combined  = ggml_add(ctx0, h, anchor_e);
+    ggml_tensor * block_out = decoder(recurrent_layer, combined);
+    h = ggml_add(ctx0,
+                 ggml_add(ctx0,
+                          ggml_scale(ctx0, h, recurrent_a),
+                          ggml_scale(ctx0, anchor_e, recurrent_b)),
+                 block_out);
+}
+inpL = h;
+// 4. Coda
+for (int il = recurrent_layer + 1; il < n_layer; ++il) inpL = decoder(il, inpL);
+```
+
+The wrapper also takes an optional `on_entry(il, inpL)` hook fired before each layer decode; `qwen35.cpp` uses it to record `res->t_layer_inp[il]` for `embeddings_nextn` extraction, which the vanilla loop also performed. The vanilla branch is taken whenever `recurrent_t = 1` (the default) or the layer did not resolve, so default inference is graph-identical to upstream.
 
 ## 6. Empirical status
 
@@ -166,13 +195,16 @@ Measured on Falcon-H1R-7B-IQ4_XS with `llama-cli`:
 
 | Configuration | Prompt evaluation (t/s) | Generation (t/s) |
 |---------------|-------------------------|------------------|
-| Baseline (`RECURRENT_T=1`) | 149.5 | 18.5 |
-| `RECURRENT_T=3 RECURRENT_LAYER=16` | 111.4 | 15.6 |
+| Baseline (`--recurrent-t 1`) | 149.5 | 18.5 |
+| `--recurrent-t 3 --recurrent-layer 16` | 111.4 | 15.6 |
 
 The recurrent path runs without crash or numerical divergence at `T = 3`; throughput drops in proportion to the extra core passes. Accuracy evaluation (GSM8K chain-of-thought, MBPP unit tests) against an unmodified upstream baseline is pending and will be published in a separate benchmark report.
 
+**Effective T.** An operational definition of where the loop stops paying is `Δppl(T+1) < ε` for a fixed input distribution: the smallest `T` beyond which the output distribution no longer moves measurably. Because factual recall and serial reasoning are expected to exhibit *different* convergence profiles (monotone degradation vs. dip-then-saturate), the eval run measures two curves — perplexity on held-out text and task accuracy — on the same sweep of `T`.
+
 ## 7. Known limitations
 
-- **Latency vs. reasoning trade-off.** Each pass adds a full layer execution; total cost scales linearly with `T`.
+- **Latency vs. reasoning trade-off.** Each pass adds a full layer execution; total cost scales linearly with `T`. Since `T=1` is always the fastest configuration, the product claim is conditional on measured quality at a constrained latency/KV budget.
 - **Single layer core.** The current scheme recurses one layer. Recurring a contiguous *block* of layers would multiply compute proportionally and is deliberately avoided in this build.
 - **SSM hybrid layers.** For architectures with native SSM state, only the LTI scalar state `h` carries memory across passes; the native SSM is re-evaluated per pass. This is a deliberate, documented choice, not a latent bug.
+- **Fixed `T` per graph.** Per-token adaptive depth is not possible on a static scheduled graph; per-*chunk* adaptive `T` (graph rebuilt at chunk boundaries, `T` chosen from a rolling convergence estimate) is the follow-on design.

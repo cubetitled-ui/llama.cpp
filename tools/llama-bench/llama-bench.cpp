@@ -331,6 +331,10 @@ struct cmd_params {
     std::vector<int>                 n_depth;
     std::vector<int>                 n_batch;
     std::vector<int>                 n_ubatch;
+    std::vector<int>                 recurrent_t;
+    std::vector<int>                 recurrent_layer;
+    std::vector<float>               recurrent_a;
+    std::vector<float>               recurrent_b;
     std::vector<ggml_type>           type_k;
     std::vector<ggml_type>           type_v;
     std::vector<int>                 n_threads;
@@ -375,6 +379,10 @@ static const cmd_params cmd_params_defaults = {
     /* n_depth              */ { 0 },
     /* n_batch              */ { 2048 },
     /* n_ubatch             */ { 512 },
+    /* recurrent_t          */ { 1 },
+    /* recurrent_layer      */ { -1 },
+    /* recurrent_a          */ { 0.90f },
+    /* recurrent_b          */ { 0.10f },
     /* type_k               */ { GGML_TYPE_F16 },
     /* type_v               */ { GGML_TYPE_F16 },
     /* n_threads            */ { common_cpu_get_num_math() },
@@ -446,6 +454,10 @@ static void print_usage(int /* argc */, char ** argv) {
     printf("  -d, --n-depth <n>                                 (default: %s)\n", join(cmd_params_defaults.n_depth, ",").c_str());
     printf("  -b, --batch-size <n>                              (default: %s)\n", join(cmd_params_defaults.n_batch, ",").c_str());
     printf("  -ub, --ubatch-size <n>                            (default: %s)\n", join(cmd_params_defaults.n_ubatch, ",").c_str());
+    printf("  --recurrent-t <n>                                 weight-tied recurrent core passes per token (default: %s; 1 = vanilla)\n", join(cmd_params_defaults.recurrent_t, ",").c_str());
+    printf("  --recurrent-layer <n>                             recurrent core layer index (default: %s; -1 = 38%% of depth)\n", join(cmd_params_defaults.recurrent_layer, ",").c_str());
+    printf("  --recurrent-a <float>                             recurrent core LTI decay scalar (default: %s)\n", join(cmd_params_defaults.recurrent_a, ",").c_str());
+    printf("  --recurrent-b <float>                             recurrent core LTI anchor injection scalar (default: %s)\n", join(cmd_params_defaults.recurrent_b, ",").c_str());
     printf("  -ctk, --cache-type-k <t>                          (default: %s)\n", join(transform_to_str(cmd_params_defaults.type_k, ggml_type_name), ",").c_str());
     printf("  -ctv, --cache-type-v <t>                          (default: %s)\n", join(transform_to_str(cmd_params_defaults.type_v, ggml_type_name), ",").c_str());
     printf("  -t, --threads <n>                                 (default: %s)\n", join(cmd_params_defaults.n_threads, ",").c_str());
@@ -611,6 +623,34 @@ static cmd_params parse_cmd_params(int argc, char ** argv) {
                 }
                 auto p = parse_int_range(argv[i]);
                 params.n_ubatch.insert(params.n_ubatch.end(), p.begin(), p.end());
+            } else if (arg == "--recurrent-t") {
+                if (++i >= argc) {
+                    invalid_param = true;
+                    break;
+                }
+                auto p = parse_int_range(argv[i]);
+                params.recurrent_t.insert(params.recurrent_t.end(), p.begin(), p.end());
+            } else if (arg == "--recurrent-layer") {
+                if (++i >= argc) {
+                    invalid_param = true;
+                    break;
+                }
+                auto p = parse_int_range(argv[i], /*allow_negative=*/true);
+                params.recurrent_layer.insert(params.recurrent_layer.end(), p.begin(), p.end());
+            } else if (arg == "--recurrent-a") {
+                if (++i >= argc) {
+                    invalid_param = true;
+                    break;
+                }
+                auto p = string_split<float>(argv[i], split_delim);
+                params.recurrent_a.insert(params.recurrent_a.end(), p.begin(), p.end());
+            } else if (arg == "--recurrent-b") {
+                if (++i >= argc) {
+                    invalid_param = true;
+                    break;
+                }
+                auto p = string_split<float>(argv[i], split_delim);
+                params.recurrent_b.insert(params.recurrent_b.end(), p.begin(), p.end());
             } else if (arg == "-ctk" || arg == "--cache-type-k") {
                 if (++i >= argc) {
                     invalid_param = true;
@@ -1180,6 +1220,18 @@ static cmd_params parse_cmd_params(int argc, char ** argv) {
     if (params.fit_params_min_ctx.empty()) {
         params.fit_params_min_ctx = cmd_params_defaults.fit_params_min_ctx;
     }
+    if (params.recurrent_t.empty()) {
+        params.recurrent_t = cmd_params_defaults.recurrent_t;
+    }
+    if (params.recurrent_layer.empty()) {
+        params.recurrent_layer = cmd_params_defaults.recurrent_layer;
+    }
+    if (params.recurrent_a.empty()) {
+        params.recurrent_a = cmd_params_defaults.recurrent_a;
+    }
+    if (params.recurrent_b.empty()) {
+        params.recurrent_b = cmd_params_defaults.recurrent_b;
+    }
 
     return params;
 }
@@ -1191,6 +1243,10 @@ struct cmd_params_instance {
     int                n_depth;
     int                n_batch;
     int                n_ubatch;
+    int                recurrent_t;
+    int                recurrent_layer;
+    float              recurrent_a;
+    float              recurrent_b;
     ggml_type          type_k;
     ggml_type          type_v;
     int                n_threads;
@@ -1286,6 +1342,10 @@ struct cmd_params_instance {
         cparams.embeddings      = embeddings;
         cparams.op_offload      = !no_op_offload;
         cparams.swa_full        = false;
+        cparams.recurrent_t     = recurrent_t;
+        cparams.recurrent_layer = recurrent_layer;
+        cparams.recurrent_a     = recurrent_a;
+        cparams.recurrent_b     = recurrent_b;
 
         return cparams;
     }
@@ -1312,6 +1372,10 @@ static std::vector<cmd_params_instance> get_cmd_params_instances(const cmd_param
     for (const auto & nopo : params.no_op_offload)
     for (const auto & nb : params.n_batch)
     for (const auto & nub : params.n_ubatch)
+    for (const auto & rt : params.recurrent_t)
+    for (const auto & rl : params.recurrent_layer)
+    for (const auto & ra : params.recurrent_a)
+    for (const auto & rb : params.recurrent_b)
     for (const auto & tk : params.type_k)
     for (const auto & tv : params.type_v)
     for (const auto & nkvo : params.no_kv_offload)
@@ -1332,6 +1396,10 @@ static std::vector<cmd_params_instance> get_cmd_params_instances(const cmd_param
                 /* .n_depth               = */ nd,
                 /* .n_batch               = */ nb,
                 /* .n_ubatch              = */ nub,
+                /* .recurrent_t           = */ rt,
+                /* .recurrent_layer       = */ rl,
+                /* .recurrent_a           = */ ra,
+                /* .recurrent_b           = */ rb,
                 /* .type_k                = */ tk,
                 /* .type_v                = */ tv,
                 /* .n_threads             = */ nt,
@@ -1368,6 +1436,10 @@ static std::vector<cmd_params_instance> get_cmd_params_instances(const cmd_param
                 /* .n_depth               = */ nd,
                 /* .n_batch               = */ nb,
                 /* .n_ubatch              = */ nub,
+                /* .recurrent_t           = */ rt,
+                /* .recurrent_layer       = */ rl,
+                /* .recurrent_a           = */ ra,
+                /* .recurrent_b           = */ rb,
                 /* .type_k                = */ tk,
                 /* .type_v                = */ tv,
                 /* .n_threads             = */ nt,
@@ -1404,6 +1476,10 @@ static std::vector<cmd_params_instance> get_cmd_params_instances(const cmd_param
                 /* .n_depth               = */ nd,
                 /* .n_batch               = */ nb,
                 /* .n_ubatch              = */ nub,
+                /* .recurrent_t           = */ rt,
+                /* .recurrent_layer       = */ rl,
+                /* .recurrent_a           = */ ra,
+                /* .recurrent_b           = */ rb,
                 /* .type_k                = */ tk,
                 /* .type_v                = */ tv,
                 /* .n_threads             = */ nt,

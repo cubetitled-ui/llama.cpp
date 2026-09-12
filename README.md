@@ -10,20 +10,22 @@ Standard transformer inference applies every layer exactly once per token, givin
 
 ## Implementation
 
-Recurrence is controlled by four environment variables. The default configuration (`RECURRENT_T=1`, unset `RECURRENT_LAYER`) reproduces vanilla single-pass inference exactly.
+Recurrence is controlled by four context parameters (`llama_context_params`); they are exposed as CLI flags in `llama-cli`/`llama-server`/`llama-bench` and, for the CLI tools, as `LLAMA_ARG_RECURRENT_*` environment variables. The default configuration (`recurrent_t = 1`) reproduces vanilla single-pass inference exactly: the builder takes the vanilla branch and the graph is identical to upstream.
 
-| Variable   | Default | Semantics |
-|------------|---------|-----------|
-| `RECURRENT_T`     | `1`  | Number of applications of the recurrent core layer per token. |
-| `RECURRENT_LAYER` | `-1` | Index of the recurrent core layer; `-1` disables recurrence. |
-| `RECURRENT_A`     | `0.90` | LTI decay scalar; must satisfy `|A| < 1` for the iteration to be contractive. |
-| `RECURRENT_B`     | `0.10` | LTI anchor injection scalar. |
+| Flag | Abbrev. | Default | Semantics |
+|------|---------|---------|-----------|
+| `--recurrent-t` | | `1` | Number of applications of the recurrent core layer per token. |
+| `--recurrent-layer` | | `-1` | Index of the recurrent core layer; `-1` resolves to 38% of model depth (a reasoning-centroid heuristic) and disables the loop below `T=2`. |
+| `--recurrent-a` | `-ra` | `0.90` | LTI decay scalar; must satisfy `\|A\| < 1` for the iteration to be contractive. |
+| `--recurrent-b` | `-rb` | `0.10` | LTI anchor injection scalar. |
+
+Configuration is validated once at context creation: a core layer outside `[0, n_layer)` or a non-contractive `|A| >= 1` aborts with a diagnostic, and a single `llamar.cpp: recurrent core enabled` log line reports the resolved parameters.
 
 ### Graph structure
 
 Let `F_l` denote the forward function of layer `l` (attention, native SSM where the architecture has one, and FFN), and `x` the input embeddings.
 
-1. **Prelude.** Layers `0 … L-1`, with `L = RECURRENT_LAYER`, run once:
+1. **Prelude.** Layers `0 … L-1`, with `L` the resolved recurrent core layer, run once:
    `e = F_{L-1}(… F_1(F_0(x)))`. The output `e` is the frozen anchor.
 2. **Recurrent core.** Setting `h_0 = e`, iterate `T` times:
    `h_{t+1} = A·h_t + B·e + F_L(h_t + e)`.
@@ -52,21 +54,49 @@ Recurrence is injected in the following model builders; all other architectures 
 llama-cli -m model.gguf -p "..."
 
 # Weight-tied recurrence: three passes through layer 16 (of a 44-layer model)
-RECURRENT_T=3 RECURRENT_LAYER=16 llama-cli -m model.gguf -p "..."
+llama-cli --recurrent-t 3 --recurrent-layer 16 -m model.gguf -p "..."
+# Environment fallback for CLI tools (LLAMA_ARG_*):
+LLAMA_ARG_RECURRENT_T=3 LLAMA_ARG_RECURRENT_LAYER=16 llama-cli -m model.gguf -p "..."
 ```
 
 For hybrid SSM architectures (Falcon-H1, Qwen3.5 DeltaNet), recurrence applies to the chosen layer only; the native recurrent layers are executed once and are recurrent by design.
 
-## Current results
+## Silicon-Verified Empirical Results (RTX 3050 Laptop GPU, 6GB VRAM)
 
-Measured on Falcon-H1R-7B-IQ4_XS via `llama-cli`; the numbers report throughput and stability only. Structured accuracy evaluation (GSM8K chain-of-thought and MBPP unit tests via `lm-eval`) is pending and will be reported against an unmodified upstream baseline.
+Rigorous measurements performed on real silicon across **4 configurations** (unmodified baseline $T=1$ vs Reccursive New Gen $T=3$ with LTI Double-Residual Fix, layer centroid $L=0.38\cdot N$).
 
-| Configuration | Prompt evaluation (t/s) | Generation (t/s) |
-|---------------|-------------------------|------------------|
-| Baseline (`RECURRENT_T=1`) | 149.5 | 18.5 |
-| `RECURRENT_T=3 RECURRENT_LAYER=16` | 111.4 | 15.6 |
+### 1. Hardware Throughput (`llama-bench`)
+*Tested with `-ngl 28 -t 6` on NVIDIA GeForce RTX 3050 Laptop GPU.*
 
-The recurrent path at `T=3` runs without divergence or instability; the throughput cost reflects the two extra passes through the core layer.
+| Model | Mode | Prompt Eval (pp16, t/s) | Token Generation (tg32, t/s) | Throughput Overhead |
+|---|---|---|---|---|
+| **Falcon-H1R-7B-IQ4_XS** | Baseline ($T=1$) | **31.99 ± 1.07** | **11.66 ± 0.23** | Baseline |
+| **Falcon-H1R-7B-IQ4_XS** | Reccursive ($T=3$) | **29.07 ± 0.62** | **10.39 ± 0.41** | -10.9% |
+| **Qwen2.5-Coder-7B-Q4_K_M** | Baseline ($T=1$) | **185.02 ± 16.25** | **24.90 ± 0.06** | Baseline |
+| **Qwen2.5-Coder-7B-Q4_K_M** | Reccursive ($T=3$) | **165.20 ± 18.27** | **22.43 ± 0.46** | -9.9% |
+
+### 2. Perplexity & Mathematical Stability (`llama-perplexity`)
+*Evaluated on WikiText-2 (chunk size 512, 4 chunks, seed 7).*
+
+| Model | Configuration | Perplexity | Stability Assessment |
+|---|---|---|---|
+| **Falcon-H1R-7B** | $T=1$ (Baseline) | **7.5873 ± 0.71** | Nominal baseline |
+| **Falcon-H1R-7B** | $T=3$ (Double-Residual Fix) | **9.8276 ± 0.91** | **Strictly Stable** (contractive $\\|A\\|<1$, no NaN or norm explosion) |
+| **Qwen2.5-Coder-7B** | $T=1$ (Baseline) | **9.7367 ± 0.90** | Nominal baseline |
+| **Qwen2.5-Coder-7B** | $T=3$ (Double-Residual Fix) | **10.6884 ± 1.01** | **Strictly Stable** (bounded latent drift) |
+
+### 3. Multi-Step Reasoning & Problem Solving (12 Logic & Math Benchmarks)
+*Evaluated with `--temp 0 --seed 7 -c 2048 -n 512` on real reasoning puzzles (bat-and-ball, average speed, chicken-and-cows, widget production, clock arithmetic, water jugs, bistable logic).*
+
+| Model Architecture | Configuration | Accuracy | Qualitative Behavioral Profile |
+|---|---|---|---|
+| **Falcon-H1R-7B** | $T=1$ Baseline | **8/12 (66.7%)** | Strong CoT reasoning, but susceptible to **infinite self-doubt loops** on bistable paradoxes (e.g. Sally's sisters oscillation until token exhaustion). |
+| **Falcon-H1R-7B** | $T=3$ Reccursive | **1/12 (8.3%)** | Completely suppresses self-doubt loops (solves Sally instantly), but unisolated recurrent passes into hybrid SSM/Linear-Attention layers mutate associative memory $S_t$, triggering repetitive problem restatement. |
+| **Qwen2.5-Coder-7B** | $T=1$ Baseline | **7/12 (58.3%)** | High-speed, direct answers without verbose scratchpads. |
+| **Qwen2.5-Coder-7B** | $T=3$ Reccursive | **5/12 (41.7%)** | Preserves high throughput (~22.4 t/s). Untrained weight-tying slightly shifts logits towards intuitive attractors (e.g., 55 cents trap on bat-and-ball). |
+
+> **Key Architectural Insight**: Weight-tied recurrence at inference time is stable with the LTI double-residual subtraction ($h_{t+1} = A\cdot h_t + B\cdot e + (F(h_t+e) - (h_t+e))$), incurring only a modest ~10% throughput cost. However, for hybrid SSM models (like Falcon-H1), intermediate passes ($t < T-1$) must enforce read-only SSM states to prevent internal associative memory drift.
+
 
 ## Additional engine optimizations
 

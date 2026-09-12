@@ -129,30 +129,16 @@ llama_model_falcon_h1::graph::graph(const llama_model & model, const llm_graph_p
 
     ggml_tensor * inp_out_ids = build_inp_out_ids();
 
-    // --- OpenMythos-style weight-tied recurrence ---
-    // One decoder layer applied T times with frozen anchor injection + LTI state.
-    // h_{t+1} = A * h_t + B * e + decoder(h_t + e)
-    // A: decay (rho(A) < 1 by scalar), B: anchor injection, e: frozen prelude output.
-    // KV cache accumulates naturally across loop iterations (same layer index).
-    // SSM recomputes fresh each iteration (state overwritten; LTI carries inter-iteration memory).
-    // T=1 (default): vanilla — straight loop over all layers, exact original behavior.
-
-    const int RECURRENT_T   = [] { const char * v = std::getenv("RECURRENT_T");   return v ? std::atoi(v) : 1; }();
-    const float RECURRENT_A = [] { const char * v = std::getenv("RECURRENT_A");   return v ? std::atof(v) : 0.90f; }();
-    const float RECURRENT_B = [] { const char * v = std::getenv("RECURRENT_B");   return v ? std::atof(v) : 0.10f; }();
-    const int n_rec_layer   = [] { const char * v = std::getenv("RECURRENT_LAYER"); return v ? std::atoi(v) : -1; }();
-
     // Decoder: SSM + Attention + FFN for one layer. Pure function of (layer_idx, input).
-    // SSM cache is per-layer; recurrent layer's cache is cleared before each iteration.
-    std::vector<ggml_tensor*> ssm_cache(n_layer, nullptr);
+    // The weight-tied recurrent core is factored into build_recurrent_core() (recurrence config
+    // comes from llama_context_params, resolved + validated at context creation). With
+    // recurrent_t == 1 the core reduces to the vanilla straight loop.
     auto falcon_decoder = [&](int il, ggml_tensor * input) -> ggml_tensor* {
         // SSM (native recurrent state — recomputed fresh in loop iterations)
-        if (ssm_cache[il] != nullptr) ssm_cache[il] = nullptr;
         ggml_tensor * ssm_in = build_norm(input, model.layers[il].attn_norm, NULL, LLM_NORM_RMS, il);
         cb(ssm_in, "ssm_in", il);
         ggml_tensor * ssm_out = build_mamba2_layer(inp->get_recr(), ssm_in, model, ubatch, il);
         cb(ssm_out, "ssm_out", il);
-        ssm_cache[il] = ssm_out;
 
         // Attention
         ggml_tensor * cur_a = build_norm(input, model.layers[il].attn_norm, NULL, LLM_NORM_RMS, il);
@@ -200,40 +186,7 @@ llama_model_falcon_h1::graph::graph(const llama_model & model, const llm_graph_p
         return cur;
     };
 
-    if (RECURRENT_T > 1 && n_rec_layer >= 0 && n_rec_layer < n_layer) {
-        // --- Recurrent path: weight-tied loop with LTI injection ---
-
-        // 1. Prelude: layers [0, n_rec_layer) straight through
-        for (int il = 0; il < n_rec_layer; ++il) {
-            inpL = falcon_decoder(il, inpL);
-        }
-
-        // 2. Freeze anchor (encoded input from prelude — injected every loop step)
-        ggml_tensor * anchor_e = inpL;
-
-        // 3. Weight-tied loop: layer n_rec_layer applied T times
-        ggml_tensor * h = inpL;
-        for (int t = 0; t < RECURRENT_T; ++t) {
-            // Combine recurrent state with frozen anchor, run decoder
-            ggml_tensor * combined = ggml_add(ctx0, h, anchor_e);
-            ggml_tensor * block_out = falcon_decoder(n_rec_layer, combined);
-            // LTI update: h = A * h + B * anchor_e + block_out
-            h = ggml_add(ctx0, ggml_add(ctx0, ggml_scale(ctx0, h, RECURRENT_A),
-                                               ggml_scale(ctx0, anchor_e, RECURRENT_B)),
-                         block_out);
-        }
-        inpL = h;
-
-        // 4. Coda: layers [n_rec_layer+1, n_layer) straight through
-        for (int il = n_rec_layer + 1; il < n_layer; ++il) {
-            inpL = falcon_decoder(il, inpL);
-        }
-    } else {
-        // --- Vanilla path: straight loop, exact original behavior ---
-        for (int il = 0; il < n_layer; ++il) {
-            inpL = falcon_decoder(il, inpL);
-        }
-    }
+    inpL = build_recurrent_core(*this, inpL, falcon_decoder, nullptr);
     cur = inpL;
 
     cur = build_norm(cur, model.output_norm, NULL, LLM_NORM_RMS, -1);

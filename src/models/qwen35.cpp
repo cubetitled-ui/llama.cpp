@@ -155,12 +155,6 @@ llama_model_qwen35::graph::graph(const llama_model & model, const llm_graph_para
     ggml_tensor * inp_pos     = build_inp_pos();
     ggml_tensor * inp_out_ids = build_inp_out_ids();
 
-    // --- OpenMythos-style weight-tied recurrence ---
-    const int RECURRENT_T   = [] { const char * v = std::getenv("RECURRENT_T");   return v ? std::atoi(v) : 1; }();
-    const float RECURRENT_A = [] { const char * v = std::getenv("RECURRENT_A");   return v ? std::atof(v) : 0.90f; }();
-    const float RECURRENT_B = [] { const char * v = std::getenv("RECURRENT_B");   return v ? std::atof(v) : 0.10f; }();
-    const int n_rec_layer   = [] { const char * v = std::getenv("RECURRENT_LAYER"); return v ? std::atoi(v) : -1; }();
-
     // Decoder: attn (linear or full) + post_norm + FFN for one layer.
     // Linear attention layers are natively recurrent — run once regardless of loop.
     auto qwen35_decoder = [&](int il, ggml_tensor * input) -> ggml_tensor* {
@@ -199,32 +193,9 @@ llama_model_qwen35::graph::graph(const llama_model & model, const llm_graph_para
         return cur;
     };
 
-    if (RECURRENT_T > 1 && n_rec_layer >= 0 && n_rec_layer < n_layer) {
-        for (int il = 0; il < n_rec_layer; ++il) {
-            res->t_layer_inp[il] = inpL;
-            inpL = qwen35_decoder(il, inpL);
-        }
-        ggml_tensor * anchor_e = inpL;
-        ggml_tensor * h = inpL;
-        for (int t = 0; t < RECURRENT_T; ++t) {
-            res->t_layer_inp[n_rec_layer] = h;
-            ggml_tensor * combined  = ggml_add(ctx0, h, anchor_e);
-            ggml_tensor * block_out = qwen35_decoder(n_rec_layer, combined);
-            h = ggml_add(ctx0, ggml_add(ctx0, ggml_scale(ctx0, h, RECURRENT_A),
-                                              ggml_scale(ctx0, anchor_e, RECURRENT_B)),
-                         block_out);
-        }
-        inpL = h;
-        for (int il = n_rec_layer + 1; il < n_layer; ++il) {
-            res->t_layer_inp[il] = inpL;
-            inpL = qwen35_decoder(il, inpL);
-        }
-    } else {
-        for (int il = 0; il < n_layer; ++il) {
-            res->t_layer_inp[il] = inpL;
-            inpL = qwen35_decoder(il, inpL);
-        }
-    }
+    const auto on_layer = [&](int il, ggml_tensor * input) { res->t_layer_inp[il] = input; };
+
+    inpL = build_recurrent_core(*this, inpL, qwen35_decoder, on_layer);
     cur = inpL;
 
     cur = build_norm(cur, model.output_norm, nullptr, LLM_NORM_RMS, -1);

@@ -60,11 +60,6 @@ llama_model_qwen2vl::graph::graph(const llama_model & model, const llm_graph_par
 
     ggml_tensor * inp_out_ids = build_inp_out_ids();
 
-    // --- OpenMythos-style weight-tied recurrence ---
-    const int RECURRENT_T   = [] { const char * v = std::getenv("RECURRENT_T");   return v ? std::atoi(v) : 1; }();
-    const float RECURRENT_A = [] { const char * v = std::getenv("RECURRENT_A");   return v ? std::atof(v) : 0.90f; }();
-    const float RECURRENT_B = [] { const char * v = std::getenv("RECURRENT_B");   return v ? std::atof(v) : 0.10f; }();
-    const int n_rec_layer   = [] { const char * v = std::getenv("RECURRENT_LAYER"); return v ? std::atoi(v) : -1; }();
     const float kq_scale    = 1.0f / sqrtf(float(n_embd_head));
 
     auto qwen2vl_decoder = [&](int il, ggml_tensor * input) -> ggml_tensor* {
@@ -111,22 +106,7 @@ llama_model_qwen2vl::graph::graph(const llama_model & model, const llm_graph_par
         return cur;
     };
 
-    if (RECURRENT_T > 1 && n_rec_layer >= 0 && n_rec_layer < n_layer) {
-        for (int il = 0; il < n_rec_layer; ++il) inpL = qwen2vl_decoder(il, inpL);
-        ggml_tensor * anchor_e = inpL;
-        ggml_tensor * h = inpL;
-        for (int t = 0; t < RECURRENT_T; ++t) {
-            ggml_tensor * combined  = ggml_add(ctx0, h, anchor_e);
-            ggml_tensor * block_out = qwen2vl_decoder(n_rec_layer, combined);
-            h = ggml_add(ctx0, ggml_add(ctx0, ggml_scale(ctx0, h, RECURRENT_A),
-                                              ggml_scale(ctx0, anchor_e, RECURRENT_B)),
-                         block_out);
-        }
-        inpL = h;
-        for (int il = n_rec_layer + 1; il < n_layer; ++il) inpL = qwen2vl_decoder(il, inpL);
-    } else {
-        for (int il = 0; il < n_layer; ++il) inpL = qwen2vl_decoder(il, inpL);
-    }
+    inpL = build_recurrent_core(*this, inpL, qwen2vl_decoder, nullptr);
     cur = inpL;
 
     cur = build_norm(cur,
