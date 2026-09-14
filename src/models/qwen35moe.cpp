@@ -163,41 +163,6 @@ llama_model_qwen35moe::graph::graph(const llama_model & model, const llm_graph_p
 
     GGML_ASSERT(n_embd_head == hparams.n_embd_head_k());
 
-    int S = 0;
-    int D = 0;
-
-    if (const char * env_s = std::getenv("RECURRENT_S")) {
-        S = std::atoi(env_s);
-    }
-    if (const char * env_d = std::getenv("RECURRENT_D")) {
-        D = std::atoi(env_d);
-    }
-
-    int k = n_layer / 4;
-    int r = n_layer % 4;
-
-    int size1 = k, size2 = k, size3 = k, size4 = k + r;
-    int start1 = 0, start2 = k, start3 = 2 * k, start4 = 3 * k;
-
-    int offset1 = (S * (size1 - 1)) / 100;
-    int offset2 = (S * (size2 - 1)) / 100;
-    int offset3 = (S * (size3 - 1)) / 100;
-    int offset4 = (S * (size4 - 1)) / 100;
-
-    int L2 = start2 + offset2;
-    int L3 = start3 + offset3;
-    int L4 = start4 + offset4;
-
-    int c2 = (D + 3) / 6;
-    int c3 = (D + 1) / 2;
-    int c4 = D - c2 - c3;
-
-    if (const char * env_c2 = std::getenv("RECURRENT_C2")) c2 = std::atoi(env_c2);
-    if (const char * env_c3 = std::getenv("RECURRENT_C3")) c3 = std::atoi(env_c3);
-    if (const char * env_c4 = std::getenv("RECURRENT_C4")) c4 = std::atoi(env_c4);
-
-    std::vector<int> recurrent_iters = get_recurrent_iters(n_layer, D, S, L2, L3, L4, c2, c3, c4);
-
     int sections[4];
     std::copy(std::begin(hparams.rope_sections), std::begin(hparams.rope_sections) + 4, sections);
 
@@ -213,87 +178,46 @@ llama_model_qwen35moe::graph::graph(const llama_model & model, const llm_graph_p
     ggml_tensor * inp_pos     = build_inp_pos();
     ggml_tensor * inp_out_ids = build_inp_out_ids();
 
-    // MTP/NextN layers are loaded as extra decoder blocks but not executed in the main pass.
-    for (int il = 0; il < n_layer; ++il) {
-        res->t_layer_inp[il] = inpL;
+    auto qwen35moe_decoder = [&](int il, ggml_tensor * input, bool store_kv) -> ggml_tensor* {
+        ggml_tensor * cur_a = build_norm(input, model.layers[il].attn_norm, nullptr, LLM_NORM_RMS, il);
+        cb(cur_a, "attn_norm", il);
 
-        int iters = recurrent_iters[il];
+        ggml_build_forward_expand(gf, cur_a);
 
-        ggml_tensor * inp_layer_orig = inpL;
-
-        for (int iter = 0; iter < iters; ++iter) {
-            ggml_tensor * inpSA = inpL;
-
-            cur = build_norm(inpL, model.layers[il].attn_norm, nullptr, LLM_NORM_RMS, il);
-            cb(cur, "attn_norm", il);
-
-            ggml_build_forward_expand(gf, cur);
-
-            // Determine layer type and build appropriate attention mechanism
-            if (hparams.is_recr(il)) {
-                // Linear attention layer (gated delta net) - natively recurrent, run once
-                cur = build_layer_attn_linear(inp->get_recr(), cur, il);
-            } else {
-                // Full attention layer - repeat for inference-time recurrence
-                cur = build_layer_attn(inp->get_attn(), cur, inp_pos, sections, il, get_store_kv(iter, iters));
-            }
-
-            if (il == n_layer - 1 && inp_out_ids && cparams.embeddings_nextn_masked) {
-                cur   = ggml_get_rows(ctx0, cur,   inp_out_ids);
-                inpSA = ggml_get_rows(ctx0, inpSA, inp_out_ids);
-            }
-
-            // Residual connection
-            cur = ggml_add(ctx0, cur, inpSA);
-            cb(cur, "attn_residual", il);
-
-            // Save the tensor before post-attention norm for residual connection
-            ggml_tensor * ffn_residual = cur;
-
-            // Post-attention norm
-            ggml_tensor * attn_post_norm = build_norm(cur, model.layers[il].attn_post_norm, nullptr, LLM_NORM_RMS, il);
-            cb(attn_post_norm, "attn_post_norm", il);
-
-            // MOE FFN layer
-            cur = build_layer_ffn(attn_post_norm, il);
-            cb(cur, "ffn_out", il);
-
-            // Residual connection for FFN - add to the tensor from before post_attention_layernorm
-            cur = ggml_add(ctx0, cur, ffn_residual);
-            cb(cur, "post_moe", il);
-
-            cur = build_cvec(cur, il);
-            cb(cur, "l_out", il);
-
-            if (iters > 1 && !hparams.is_recr(il)) {
-                float alpha = 1.0f / iters;
-                if (const char * env_a = std::getenv("RECURRENT_ALPHA")) {
-                    alpha = std::atof(env_a);
-                }
-                alpha = get_recurrent_alpha(iter, iters, alpha);
-                float beta = 1.0f - alpha;
-                if (const char * env_b = std::getenv("RECURRENT_BETA")) {
-                    beta = std::atof(env_b);
-                }
-                float gamma = get_recurrent_gamma();
-
-                ggml_tensor * scaled_h   = ggml_scale(ctx0, cur, alpha);
-                ggml_tensor * scaled_inp = ggml_scale(ctx0, inpSA, beta);
-                ggml_tensor * h_step     = ggml_add(ctx0, scaled_h, scaled_inp);
-
-                if (gamma > 0.0f) {
-                    ggml_tensor * h_step_scaled = ggml_scale(ctx0, h_step, 1.0f - gamma);
-                    ggml_tensor * anchor_scaled = ggml_scale(ctx0, inp_layer_orig, gamma);
-                    cur = ggml_add(ctx0, h_step_scaled, anchor_scaled);
-                } else {
-                    cur = h_step;
-                }
-            }
-
-            // Input for next layer or next iteration
-            inpL = cur;
+        ggml_tensor * cur;
+        if (hparams.is_recr(il)) {
+            cur = build_layer_attn_linear(inp->get_recr(), cur_a, il, store_kv);
+        } else {
+            cur = build_layer_attn(inp->get_attn(), cur_a, inp_pos, sections, il, store_kv);
         }
-    }
+
+        ggml_tensor * inpSA = input;
+        if (il == n_layer - 1 && inp_out_ids && cparams.embeddings_nextn_masked) {
+            cur   = ggml_get_rows(ctx0, cur,   inp_out_ids);
+            inpSA = ggml_get_rows(ctx0, inpSA, inp_out_ids);
+        }
+
+        cur = ggml_add(ctx0, cur, inpSA);
+        cb(cur, "attn_residual", il);
+
+        ggml_tensor * ffn_residual = cur;
+        ggml_tensor * attn_post_norm = build_norm(cur, model.layers[il].attn_post_norm, nullptr, LLM_NORM_RMS, il);
+        cb(attn_post_norm, "attn_post_norm", il);
+
+        cur = build_layer_ffn(attn_post_norm, il);
+        cb(cur, "ffn_out", il);
+
+        cur = ggml_add(ctx0, cur, ffn_residual);
+        cb(cur, "post_moe", il);
+
+        cur = build_cvec(cur, il);
+        cb(cur, "l_out", il);
+        return cur;
+    };
+
+    const auto on_layer = [&](int il, ggml_tensor * input) { res->t_layer_inp[il] = input; };
+
+    inpL = build_recurrent_core(*this, inpL, qwen35moe_decoder, on_layer);
     cur = inpL;
 
     // post-norm hidden state feeds both the LM head and the MTP seed below
@@ -430,7 +354,8 @@ ggml_tensor * llama_model_qwen35moe::graph::build_layer_attn(
 ggml_tensor * llama_model_qwen35moe::graph::build_layer_attn_linear(
         llm_graph_input_rs * inp,
         ggml_tensor *        cur,
-        int                  il) {
+        int                  il,
+        bool                 store_state) {
     const auto * mctx_cur = inp->mctx;
 
     const int64_t d_inner      = hparams.ssm_d_inner;
@@ -477,7 +402,7 @@ ggml_tensor * llama_model_qwen35moe::graph::build_layer_attn_linear(
     const int64_t conv_kernel_size = conv_kernel->ne[0];
     const int64_t conv_channels    = d_inner + 2 * hparams.ssm_n_group * hparams.ssm_d_state;
 
-    ggml_tensor * conv_input = build_conv_state(inp, conv_states_all, qkv_mixed, conv_kernel_size, conv_channels, il);
+    ggml_tensor * conv_input = build_conv_state(inp, conv_states_all, qkv_mixed, conv_kernel_size, conv_channels, il, store_state);
 
     ggml_tensor * state = build_rs(inp, ssm_states_all, hparams.n_embd_s(), n_seqs);
     state = ggml_reshape_4d(ctx0, state, head_v_dim, head_v_dim, num_v_heads, n_seqs);
@@ -539,7 +464,7 @@ ggml_tensor * llama_model_qwen35moe::graph::build_layer_attn_linear(
     cb(k_conv, "k_conv_predelta", il);
     cb(v_conv, "v_conv_predelta", il);
 
-    ggml_tensor * output = build_recurrent_attn(inp, ssm_states_all, q_conv, k_conv, v_conv, gate, beta, state, il);
+    ggml_tensor * output = build_recurrent_attn(inp, ssm_states_all, q_conv, k_conv, v_conv, gate, beta, state, il, store_state);
 
     // z: [head_dim, n_heads, n_tokens, n_seqs] -> [n_heads * n_tokens * n_seqs, head_dim]
     ggml_tensor * z_2d = ggml_reshape_4d(ctx0, z, head_v_dim, num_v_heads, n_seq_tokens, n_seqs);

@@ -157,16 +157,16 @@ llama_model_qwen35::graph::graph(const llama_model & model, const llm_graph_para
 
     // Decoder: attn (linear or full) + post_norm + FFN for one layer.
     // Linear attention layers are natively recurrent — run once regardless of loop.
-    auto qwen35_decoder = [&](int il, ggml_tensor * input) -> ggml_tensor* {
+    auto qwen35_decoder = [&](int il, ggml_tensor * input, bool store_kv) -> ggml_tensor* {
         ggml_tensor * cur_a = build_norm(input, model.layers[il].attn_norm, nullptr, LLM_NORM_RMS, il);
         cb(cur_a, "attn_norm", il);
         ggml_build_forward_expand(gf, cur_a);
 
         ggml_tensor * cur;
         if (hparams.is_recr(il)) {
-            cur = build_layer_attn_linear(inp->get_recr(), cur_a, il);
+            cur = build_layer_attn_linear(inp->get_recr(), cur_a, il, store_kv);
         } else {
-            cur = build_layer_attn(inp->get_attn(), cur_a, inp_pos, sections, il, true);
+            cur = build_layer_attn(inp->get_attn(), cur_a, inp_pos, sections, il, store_kv);
         }
 
         ggml_tensor * inpSA = input;
@@ -331,7 +331,8 @@ ggml_tensor * llama_model_qwen35::graph::build_layer_attn(
 ggml_tensor * llama_model_qwen35::graph::build_layer_attn_linear(
         llm_graph_input_rs * inp,
         ggml_tensor *        cur,
-        int                  il) {
+        int                  il,
+        bool                 store_state) {
     const auto * mctx_cur = inp->mctx;
 
     const int64_t d_inner      = hparams.ssm_d_inner;
@@ -378,7 +379,7 @@ ggml_tensor * llama_model_qwen35::graph::build_layer_attn_linear(
     const int64_t conv_kernel_size = conv_kernel->ne[0];
     const int64_t conv_channels    = d_inner + 2 * hparams.ssm_n_group * hparams.ssm_d_state;
 
-    ggml_tensor * conv_input = build_conv_state(inp, conv_states_all, qkv_mixed, conv_kernel_size, conv_channels, il);
+    ggml_tensor * conv_input = build_conv_state(inp, conv_states_all, qkv_mixed, conv_kernel_size, conv_channels, il, store_state);
 
     ggml_tensor * state = build_rs(inp, ssm_states_all, hparams.n_embd_s(), n_seqs);
     state = ggml_reshape_4d(ctx0, state, head_v_dim, head_v_dim, num_v_heads, n_seqs);
@@ -440,7 +441,7 @@ ggml_tensor * llama_model_qwen35::graph::build_layer_attn_linear(
     cb(k_conv, "k_conv_predelta", il);
     cb(v_conv, "v_conv_predelta", il);
 
-    ggml_tensor * output = build_recurrent_attn(inp, ssm_states_all, q_conv, k_conv, v_conv, gate, beta, state, il);
+    ggml_tensor * output = build_recurrent_attn(inp, ssm_states_all, q_conv, k_conv, v_conv, gate, beta, state, il, store_state);
 
     // z: [head_dim, n_heads, n_tokens, n_seqs] -> [n_heads * n_tokens * n_seqs, head_dim]
     ggml_tensor * z_2d = ggml_reshape_4d(ctx0, z, head_v_dim, num_v_heads, n_seq_tokens, n_seqs);
