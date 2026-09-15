@@ -371,6 +371,7 @@ extern "C" {
         float   recurrent_a;       // LTI decay scalar; |a| < 1 required for contraction when enabled
         float   recurrent_b;       // LTI anchor injection scalar
         float   recurrent_gate;    // scale of the nonlinear block output per loop (1 = legacy unscaled)
+        int32_t recurrent_mode;    // recurrence mode: 0=vanilla (LTI), 1=ORSD (Gram-Schmidt), 2=SNC (Lyapunov Momentum), 3=CAV (Anchor Verification), 4=DSCC (Dual Stream)
 
         // ref: https://github.com/ggml-org/llama.cpp/pull/2054
         float    rope_freq_base;   // RoPE base frequency, 0 = from model

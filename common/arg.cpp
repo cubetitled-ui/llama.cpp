@@ -30,6 +30,7 @@
 #include <cstdarg>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <list>
 #include <regex>
 #include <set>
@@ -2694,6 +2695,175 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
             params.recurrent_gate = std::stof(value);
         }
     ).set_env("LLAMA_ARG_RECURRENT_GATE"));
+    add_opt(common_arg(
+        {"--recurrent-mode", "--recurrent-strategy"}, "MODE",
+        "recurrent algorithm: 0/vanilla, 1/orsd (Gram-Schmidt), 2/snc (Lyapunov momentum), 3/cav (anchor verification), 4/dscc (dual stream)",
+        [](common_params & params, const std::string & value) {
+            if (value == "vanilla" || value == "0") params.recurrent_mode = 0;
+            else if (value == "orsd" || value == "1") params.recurrent_mode = 1;
+            else if (value == "snc" || value == "momentum" || value == "2") params.recurrent_mode = 2;
+            else if (value == "cav" || value == "anchor" || value == "3") params.recurrent_mode = 3;
+            else if (value == "dscc" || value == "dual" || value == "4") params.recurrent_mode = 4;
+            else {
+                try {
+                    params.recurrent_mode = std::stoi(value);
+                } catch (...) {
+                    fprintf(stderr, "warning: unknown recurrent mode '%s', defaulting to 0 (vanilla)\n", value.c_str());
+                }
+            }
+        }
+    ).set_env("LLAMA_ARG_RECURRENT_MODE"));
+    add_opt(common_arg(
+        {"-rc", "--recurrent-config", "--recurrent-script", "-rs"}, "FNAME",
+        "path to recurrence configuration file (.json, .conf, or .rlang script) to configure recurrent core and LoRA",
+        [](common_params & params, const std::string & value) {
+            std::ifstream file(value);
+            if (!file.is_open()) {
+                fprintf(stderr, "error: failed to open recurrent config/script file '%s'\n", value.c_str());
+                return;
+            }
+            std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+            size_t first_non_ws = content.find_first_not_of(" \t\r\n");
+            if (first_non_ws != std::string::npos && content[first_non_ws] == '{') {
+                try {
+                    auto j = nlohmann::json::parse(content);
+                    if (j.contains("recurrent_t")) params.recurrent_t = j["recurrent_t"].get<int32_t>();
+                    else if (j.contains("t")) params.recurrent_t = j["t"].get<int32_t>();
+                    else if (j.contains("iterations")) params.recurrent_t = j["iterations"].get<int32_t>();
+
+                    if (j.contains("recurrent_layer")) params.recurrent_layer = j["recurrent_layer"].get<int32_t>();
+                    else if (j.contains("layer")) params.recurrent_layer = j["layer"].get<int32_t>();
+
+                    if (j.contains("recurrent_layer_b")) params.recurrent_layer_b = j["recurrent_layer_b"].get<int32_t>();
+                    else if (j.contains("layer_b")) params.recurrent_layer_b = j["layer_b"].get<int32_t>();
+
+                    if (j.contains("layers") && j["layers"].is_array() && j["layers"].size() >= 2) {
+                        params.recurrent_layer = j["layers"][0].get<int32_t>();
+                        params.recurrent_layer_b = j["layers"][1].get<int32_t>();
+                    }
+
+                    if (j.contains("recurrent_a")) params.recurrent_a = j["recurrent_a"].get<float>();
+                    else if (j.contains("a")) params.recurrent_a = j["a"].get<float>();
+
+                    if (j.contains("recurrent_b")) params.recurrent_b = j["recurrent_b"].get<float>();
+                    else if (j.contains("b")) params.recurrent_b = j["b"].get<float>();
+
+                    if (j.contains("recurrent_gate")) params.recurrent_gate = j["recurrent_gate"].get<float>();
+                    else if (j.contains("gate")) params.recurrent_gate = j["gate"].get<float>();
+                    else if (j.contains("gamma")) params.recurrent_gate = j["gamma"].get<float>();
+
+                    if (j.contains("recurrent_mode")) {
+                        if (j["recurrent_mode"].is_number()) params.recurrent_mode = j["recurrent_mode"].get<int32_t>();
+                        else {
+                            std::string m = j["recurrent_mode"].get<std::string>();
+                            if (m == "orsd" || m == "1") params.recurrent_mode = 1;
+                            else if (m == "snc" || m == "momentum" || m == "2") params.recurrent_mode = 2;
+                            else if (m == "cav" || m == "anchor" || m == "3") params.recurrent_mode = 3;
+                            else if (m == "dscc" || m == "dual" || m == "4") params.recurrent_mode = 4;
+                            else params.recurrent_mode = 0;
+                        }
+                    } else if (j.contains("mode")) {
+                        if (j["mode"].is_number()) params.recurrent_mode = j["mode"].get<int32_t>();
+                        else {
+                            std::string m = j["mode"].get<std::string>();
+                            if (m == "orsd" || m == "1") params.recurrent_mode = 1;
+                            else if (m == "snc" || m == "momentum" || m == "2") params.recurrent_mode = 2;
+                            else if (m == "cav" || m == "anchor" || m == "3") params.recurrent_mode = 3;
+                            else if (m == "dscc" || m == "dual" || m == "4") params.recurrent_mode = 4;
+                            else params.recurrent_mode = 0;
+                        }
+                    }
+
+                    if (j.contains("lora") && j["lora"].is_string()) {
+                        params.lora_adapters.push_back({ j["lora"].get<std::string>(), 1.0, "", "", nullptr });
+                    }
+                    fprintf(stderr, "Loaded recurrent configuration (JSON) from '%s': T=%d, layers=[%d..%d], a=%.2f, b=%.2f, gate=%.2f, mode=%d\n",
+                            value.c_str(), params.recurrent_t, params.recurrent_layer, params.recurrent_layer_b, params.recurrent_a, params.recurrent_b, params.recurrent_gate, params.recurrent_mode);
+                    return;
+                } catch (const std::exception & e) {
+                    // fall back to regex parsing
+                }
+            }
+
+            std::istringstream stream(content);
+            std::string line;
+            bool is_rlang = (content.find("stage") != std::string::npos && content.find("loop") != std::string::npos);
+            bool in_loop_stage = !is_rlang;
+            int loop_brace_depth = 0;
+
+            while (std::getline(stream, line)) {
+                size_t cpos = line.find('#');
+                if (cpos != std::string::npos) line = line.substr(0, cpos);
+                cpos = line.find("//");
+                if (cpos != std::string::npos) line = line.substr(0, cpos);
+
+                if (is_rlang) {
+                    if (!in_loop_stage) {
+                        if (std::regex_search(line, std::regex(R"(\bstage\s+\w+\s+loop\b)", std::regex::icase)) ||
+                            std::regex_search(line, std::regex(R"(\bloop\s*\{)", std::regex::icase))) {
+                            in_loop_stage = true;
+                            loop_brace_depth = 0;
+                            for (char c : line) {
+                                if (c == '{') loop_brace_depth++;
+                                if (c == '}') loop_brace_depth--;
+                            }
+                            continue;
+                        }
+                    } else {
+                        for (char c : line) {
+                            if (c == '{') loop_brace_depth++;
+                            if (c == '}') loop_brace_depth--;
+                        }
+                        if (loop_brace_depth <= 0 && line.find('{') == std::string::npos) {
+                            in_loop_stage = false;
+                        }
+                    }
+                    if (!in_loop_stage) {
+                        continue;
+                    }
+                }
+
+                std::smatch match;
+                if (std::regex_search(line, match, std::regex(R"(\b(?:iterations|recurrent_t|recurrent-t|t)\s*[:=]\s*(\d+))", std::regex::icase))) {
+                    params.recurrent_t = std::stoi(match[1]);
+                }
+                if (std::regex_search(line, match, std::regex(R"(\blayers\s*[:=]\s*(\d+)\s*\.\.\s*(\d+))", std::regex::icase))) {
+                    params.recurrent_layer = std::stoi(match[1]);
+                    params.recurrent_layer_b = std::stoi(match[2]);
+                } else if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_layer|layer)\s*[:=]\s*(\d+))", std::regex::icase))) {
+                    params.recurrent_layer = std::stoi(match[1]);
+                }
+                if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_layer_b|layer_b)\s*[:=]\s*(\d+))", std::regex::icase))) {
+                    params.recurrent_layer_b = std::stoi(match[1]);
+                }
+                if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_a|recurrent-a|a)\s*[:=]\s*([-+]?[0-9]*\.?[0-9]+))", std::regex::icase))) {
+                    params.recurrent_a = std::stof(match[1]);
+                }
+                if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_b|recurrent-b|b)\s*[:=]\s*([-+]?[0-9]*\.?[0-9]+))", std::regex::icase))) {
+                    params.recurrent_b = std::stof(match[1]);
+                }
+                if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_gate|recurrent-gate|gate|gamma)\s*[:=]\s*([-+]?[0-9]*\.?[0-9]+))", std::regex::icase))) {
+                    params.recurrent_gate = std::stof(match[1]);
+                }
+                if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_mode|mode|strategy)\s*[:=]\s*(\w+))", std::regex::icase))) {
+                    std::string m = match[1];
+                    if (m == "orsd" || m == "1") params.recurrent_mode = 1;
+                    else if (m == "snc" || m == "momentum" || m == "2") params.recurrent_mode = 2;
+                    else if (m == "cav" || m == "anchor" || m == "3") params.recurrent_mode = 3;
+                    else if (m == "dscc" || m == "dual" || m == "4") params.recurrent_mode = 4;
+                    else {
+                        try { params.recurrent_mode = std::stoi(m); } catch (...) { params.recurrent_mode = 0; }
+                    }
+                }
+                if (std::regex_search(line, match, std::regex(R"(\blora\s*[:=]\s*["']?([^"';\s\r\n]+)["']?)", std::regex::icase))) {
+                    params.lora_adapters.push_back({ match[1].str(), 1.0, "", "", nullptr });
+                }
+            }
+            fprintf(stderr, "Loaded recurrent configuration (Script/Conf) from '%s': T=%d, layers=[%d..%d], a=%.2f, b=%.2f, gate=%.2f, mode=%d\n",
+                    value.c_str(), params.recurrent_t, params.recurrent_layer, params.recurrent_layer_b, params.recurrent_a, params.recurrent_b, params.recurrent_gate, params.recurrent_mode);
+        }
+    ).set_env("LLAMA_ARG_RECURRENT_CONFIG"));
     GGML_ASSERT(params.n_gpu_layers < 0); // string_format would need to be extended for a default >= 0
     add_opt(common_arg(
         {"-ngl", "--gpu-layers", "--n-gpu-layers"}, "N",

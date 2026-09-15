@@ -1,0 +1,258 @@
+{
+  "score_pct": 20.0,
+  "passed": 2,
+  "total": 10,
+  "total_latency_s": 103.8,
+  "results": [
+    {
+      "id": "hard_01_k8s_incident",
+      "success": false,
+      "hop1_passed": true,
+      "hop2_passed": true,
+      "final_grounded": false,
+      "turns": 3,
+      "total_latency": 10.19,
+      "details": [
+        {
+          "turn": 1,
+          "latency": 3.42,
+          "model_output": "```json\n{\n  \"tool\": \"get_incident_alert\",\n  \"args\": {\n    \"incident_id\": 8821\n  }\n}\n```"
+        },
+        {
+          "turn": 2,
+          "latency": 3.31,
+          "model_output": "```json\n{\n  \"tool\": \"get_node_metrics\",\n  \"args\": {\n    \"node\": \"worker-04\"\n  }\n}\n```"
+        },
+        {
+          "turn": 3,
+          "latency": 3.46,
+          "model_output": "```json\n{\n  \"tool\": \"reboot_node\",\n  \"args\": {\n    \"node\": \"worker-04\"\n  }\n}\n```"
+        }
+      ]
+    },
+    {
+      "id": "hard_02_failed_payment",
+      "success": false,
+      "hop1_passed": true,
+      "hop2_passed": true,
+      "final_grounded": false,
+      "turns": 3,
+      "total_latency": 10.2,
+      "details": [
+        {
+          "turn": 1,
+          "latency": 3.36,
+          "model_output": "```json\n{\n  \"tool\": \"get_user_by_email\",\n  \"args\": {\n    \"email\": \"bob@corp.com\"\n  }\n}\n```"
+        },
+        {
+          "turn": 2,
+          "latency": 3.37,
+          "model_output": "```json\n{\n  \"tool\": \"get_last_transaction\",\n  \"args\": {\n    \"user_id\": 4091\n  }\n}\n```"
+        },
+        {
+          "turn": 3,
+          "latency": 3.47,
+          "model_output": "```json\n{\n  \"tool\": \"send_email_receipt\",\n  \"args\": {\n    \"user_id\": 4091\n  }\n}\n```"
+        }
+      ]
+    },
+    {
+      "id": "hard_03_crypto_spread",
+      "success": false,
+      "hop1_passed": true,
+      "hop2_passed": true,
+      "final_grounded": false,
+      "turns": 3,
+      "total_latency": 11.22,
+      "details": [
+        {
+          "turn": 1,
+          "latency": 3.62,
+          "model_output": "```json\n{\n  \"tool\": \"get_market_price\",\n  \"args\": {\n    \"pair\": \"BTC/USDT\",\n    \"exchange\": \"binance\"\n  }\n}\n```"
+        },
+        {
+          "turn": 2,
+          "latency": 3.76,
+          "model_output": "```json\n{\n  \"tool\": \"get_market_price\",\n  \"args\": {\n    \"pair\": \"BTC/USDT\",\n    \"exchange\": \"coinbase\"\n  }\n}\n```"
+        },
+        {
+          "turn": 3,
+          "latency": 3.84,
+          "model_output": "```json\n{\n  \"tool\": \"calculator\",\n  \"args\": {\n    \"expression\": \"64550.0 - 64200.0\"\n  }\n}\n```"
+        }
+      ]
+    },
+    {
+      "id": "hard_04_inventory_trace",
+      "success": false,
+      "hop1_passed": true,
+      "hop2_passed": true,
+      "final_grounded": false,
+      "turns": 3,
+      "total_latency": 11.11,
+      "details": [
+        {
+          "turn": 1,
+          "latency": 3.29,
+          "model_output": "```json\n{\n  \"tool\": \"lookup_warehouse\",\n  \"args\": {\n    \"city\": \"Berlin\"\n  }\n}\n```"
+        },
+        {
+          "turn": 2,
+          "latency": 3.78,
+          "model_output": "```json\n{\n  \"tool\": \"query_inventory\",\n  \"args\": {\n    \"warehouse_id\": 7,\n    \"sku\": \"SKU-101\"\n  }\n}\n```"
+        },
+        {
+          "turn": 3,
+          "latency": 4.04,
+          "model_output": "```json\n{\n  \"tool\": \"query_inventory\",\n  \"args\": {\n    \"warehouse_id\": 7,\n    \"sku\": \"SKU-101\"\n  }\n}\n```"
+        }
+      ]
+    },
+    {
+      "id": "hard_05_flight_weather",
+      "success": false,
+      "hop1_passed": false,
+      "hop2_passed": false,
+      "final_grounded": false,
+      "turns": 1,
+      "total_latency": 5.13,
+      "details": [
+        {
+          "turn": 1,
+          "latency": 5.13,
+          "model_output": "```json"
+        }
+      ]
+    },
+    {
+      "id": "hard_06_threat_investigation",
+      "success": true,
+      "hop1_passed": true,
+      "hop2_passed": true,
+      "final_grounded": true,
+      "turns": 3,
+      "total_latency": 11.28,
+      "details": [
+        {
+          "turn": 1,
+          "latency": 3.25,
+          "model_output": "```json\n{\n  \"tool\": \"dns_lookup\",\n  \"args\": {\n    \"domain\": \"api.service.internal\"\n  }\n}\n```"
+        },
+        {
+          "turn": 2,
+          "latency": 3.68,
+          "model_output": "```json\n{\n  \"tool\": \"threat_intel\",\n  \"args\": {\n    \"ip\": \"10.0.4.15\"\n  }\n}\n```"
+        },
+        {
+          "turn": 3,
+          "latency": 4.35,
+          "model_output": "The IP address for the domain 'api.service.internal' is 10.0.4.15. The threat intelligence for this IP indicates a risk score of 85 and a compromise status of true, with the tag \"c2_beacon\"."
+        }
+      ]
+    },
+    {
+      "id": "hard_07_payroll_net_pay",
+      "success": true,
+      "hop1_passed": true,
+      "hop2_passed": true,
+      "final_grounded": true,
+      "turns": 3,
+      "total_latency": 10.15,
+      "details": [
+        {
+          "turn": 1,
+          "latency": 3.33,
+          "model_output": "```json\n{\n  \"tool\": \"get_employee_payroll\",\n  \"args\": {\n    \"emp_id\": 303\n  }\n}\n```"
+        },
+        {
+          "turn": 2,
+          "latency": 3.76,
+          "model_output": "```json\n{\n  \"tool\": \"calculator\",\n  \"args\": {\n    \"expression\": \"8000.0 * (1 - 0.28)\"\n  }\n}\n```"
+        },
+        {
+          "turn": 3,
+          "latency": 3.06,
+          "model_output": "The net monthly salary for employee 303 after deducting tax is **5760.0**."
+        }
+      ]
+    },
+    {
+      "id": "hard_08_null_deref_debugger",
+      "success": false,
+      "hop1_passed": true,
+      "hop2_passed": true,
+      "final_grounded": false,
+      "turns": 3,
+      "total_latency": 10.66,
+      "details": [
+        {
+          "turn": 1,
+          "latency": 3.13,
+          "model_output": "```json\n{\n  \"tool\": \"grep_logs\",\n  \"args\": {\n    \"pattern\": \"NullPointerException\"\n  }\n}\n```"
+        },
+        {
+          "turn": 2,
+          "latency": 3.7,
+          "model_output": "```json\n{\n  \"tool\": \"read_file_lines\",\n  \"args\": {\n    \"file\": \"src/auth.cpp\",\n    \"line\": 142\n  }\n}\n```"
+        },
+        {
+          "turn": 3,
+          "latency": 3.83,
+          "model_output": "```json\n{\n  \"tool\": \"git_revert_commit\",\n  \"args\": {\n    \"commit\": \"1234567890abcdef\"\n  }\n}\n```"
+        }
+      ]
+    },
+    {
+      "id": "hard_09_customs_tariff",
+      "success": false,
+      "hop1_passed": true,
+      "hop2_passed": true,
+      "final_grounded": false,
+      "turns": 3,
+      "total_latency": 11.95,
+      "details": [
+        {
+          "turn": 1,
+          "latency": 4.1,
+          "model_output": "```json\n{\n  \"tool\": \"get_hs_tariff\",\n  \"args\": {\n    \"hs_code\": \"8507.60\",\n    \"country\": \"DE\"\n  }\n}\n```"
+        },
+        {
+          "turn": 2,
+          "latency": 3.98,
+          "model_output": "```json\n{\n  \"tool\": \"get_hs_tariff\",\n  \"args\": {\n    \"hs_code\": \"8507.60\",\n    \"country\": \"DE\"\n  }\n}\n```"
+        },
+        {
+          "turn": 3,
+          "latency": 3.87,
+          "model_output": "```json\n{\n  \"tool\": \"get_hs_tariff\",\n  \"args\": {\n    \"hs_code\": \"8507.60\",\n    \"country\": \"DE\"\n  }\n}\n```"
+        }
+      ]
+    },
+    {
+      "id": "hard_10_kv_cache_memory",
+      "success": false,
+      "hop1_passed": true,
+      "hop2_passed": true,
+      "final_grounded": false,
+      "turns": 3,
+      "total_latency": 11.91,
+      "details": [
+        {
+          "turn": 1,
+          "latency": 4.57,
+          "model_output": "```json\n{\n  \"tool\": \"calculator\",\n  \"args\": {\n    \"expression\": \"2 * 28 * 28 * 128 * 32768 * 2 / (1024 * 1024)\"\n  }\n}\n```"
+        },
+        {
+          "turn": 2,
+          "latency": 3.69,
+          "model_output": "```json\n{\n  \"tool\": \"calculator\",\n  \"args\": {\n    \"expression\": \"12544.0\"\n  }\n}\n```"
+        },
+        {
+          "turn": 3,
+          "latency": 3.65,
+          "model_output": "```json\n{\n  \"tool\": \"calculator\",\n  \"args\": {\n    \"expression\": \"12544.0\"\n  }\n}\n```"
+        }
+      ]
+    }
+  ]
+}

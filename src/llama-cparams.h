@@ -46,6 +46,7 @@ struct llama_cparams {
     float   recurrent_a       = 0.90f; // LTI decay scalar
     float   recurrent_b       = 0.10f; // LTI anchor injection scalar
     float   recurrent_gate    = 1.00f; // block-output scale per loop (use <1 with RMSNorm to bound growth)
+    int32_t recurrent_mode    = 0;     // 0=vanilla, 1=orsd, 2=snc, 3=cav, 4=dscc
     bool fused_gdn_ar;       // use fused gated delta net (autoregressive)
     bool fused_gdn_ch;       // use fused gated delta net (chunked)
     bool auto_fgdn;

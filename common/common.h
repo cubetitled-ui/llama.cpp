@@ -542,6 +542,7 @@ struct common_params {
     float   recurrent_a                = 0.90f; // LTI decay scalar (|a| < 1)
     float   recurrent_b                = 0.10f; // LTI anchor injection scalar
     float   recurrent_gate             = 1.00f; // block-output scale per loop
+    int32_t recurrent_mode             = 0;     // recurrence mode: 0=vanilla, 1=ORSD, 2=SNC, 3=CAV, 4=DSCC
 
     int32_t ppl_stride      = 0;     // stride for perplexity calculations. If left at 0, the pre-existing approach will be used.
     int32_t ppl_output_type = 0;     // = 0 -> ppl output is as usual, = 1 -> ppl output is num_tokens, ppl, one per line

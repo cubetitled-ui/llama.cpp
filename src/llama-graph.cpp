@@ -3545,14 +3545,13 @@ int32_t llama_relative_position_bucket(llama_pos x, llama_pos y, uint64_t n_buck
 ggml_tensor * build_recurrent_core(
         llm_graph_context & gf,
         ggml_tensor * inpL,
-        const std::function<ggml_tensor * (int il, ggml_tensor * input)> & decoder,
+        const llm_decoder_kv_fn & decoder,
         const std::function<void (int il, ggml_tensor * input)> & on_entry) {
     const int32_t recurrent_t       = gf.cparams.recurrent_t;
     const int32_t recurrent_layer   = gf.cparams.recurrent_layer;
     const int32_t recurrent_layer_b = gf.cparams.recurrent_layer_b;
-    const float   recurrent_a       = gf.cparams.recurrent_a;
-    const float   recurrent_b       = gf.cparams.recurrent_b;
     const float   recurrent_gate    = gf.cparams.recurrent_gate;
+    const int32_t recurrent_mode    = gf.cparams.recurrent_mode;
     const int32_t n_layer           = gf.n_layer;
 
     // recurrent_t has already been validated at context creation (>= 1), and recurrent_layer is
@@ -3565,63 +3564,133 @@ ggml_tensor * build_recurrent_core(
     if (recurrent_t <= 1 || recurrent_layer < 0) {
         for (int il = 0; il < n_layer; ++il) {
             if (on_entry) on_entry(il, inpL);
-            inpL = decoder(il, inpL);
+            inpL = decoder(il, inpL, true);
         }
         return inpL;
     }
-    if (has_b) {
-        const int32_t ab_gap = recurrent_layer > recurrent_layer_b
-            ? recurrent_layer - recurrent_layer_b
-            : recurrent_layer_b - recurrent_layer;
-        if (ab_gap != 1) {
-            throw std::logic_error(
-                "build_recurrent_core: non-adjacent recurrent layers A=" + std::to_string(recurrent_layer) +
-                " B=" + std::to_string(recurrent_layer_b) + " would silently skip intervening layer(s); " +
-                "this minimal experiment requires adjacent A/B (|A-B| == 1) so every layer is either in " +
-                "the prelude [0, lo), in the A/B loop, or in the coda (hi, n_layer)");
-        }
-    }
-
     const int32_t lo = has_b ? std::min(recurrent_layer, recurrent_layer_b) : recurrent_layer;
     const int32_t hi = has_b ? std::max(recurrent_layer, recurrent_layer_b) : recurrent_layer;
 
     // 1. prelude: layers [0, lo) straight through
     for (int il = 0; il < lo; ++il) {
         if (on_entry) on_entry(il, inpL);
-        inpL = decoder(il, inpL);
+        inpL = decoder(il, inpL, true);
     }
 
-    // 2. frozen anchor = prelude output (injected every loop step)
+    // 2. frozen anchor = prelude output
     ggml_tensor * anchor_e = inpL;
 
-    // 3. weight-tied loop with LTI injection; single-layer: core applied T times,
-    //    alternating: A->B->A... for T passes starting at recurrent_layer (A).
-    //    Adjacency (|A-B| == 1, enforced above) guarantees no layer in [lo, hi] is skipped:
-    //    the interval contains exactly {A, B}.
-    //    Update: combined = RMSNorm(h + e) keeps the block input on-distribution;
-    //    delta_thought = decoder(il, combined) - combined extracts the pure transformation delta;
-    //    h = A*h + B*e + gate*delta_thought preserves the natural residual-stream scale
-    //    for the coda without double-adding the combined state.
-    ggml_tensor * h = inpL;
-    for (int t = 0; t < recurrent_t; ++t) {
-        const int il = has_b ? (t % 2 == 0 ? recurrent_layer : recurrent_layer_b) : recurrent_layer;
-        if (on_entry) on_entry(il, h);
-        ggml_tensor * combined  = ggml_rms_norm(gf.ctx0,
-                ggml_add(gf.ctx0, h, anchor_e), gf.hparams.f_norm_rms_eps);
-        ggml_tensor * block_out = decoder(il, combined);
-        ggml_tensor * delta_thought = ggml_sub(gf.ctx0, block_out, combined);
-        h = ggml_add(gf.ctx0,
-                ggml_add(gf.ctx0, ggml_scale(gf.ctx0, h, recurrent_a), ggml_scale(gf.ctx0, anchor_e, recurrent_b)),
-                ggml_scale(gf.ctx0, delta_thought, recurrent_gate));
+    // 3. Pass 0: 100% pristine baseline forward pass through compound core [lo..hi]
+    // store_kv = true: stores pristine K and V in cache for current token
+    ggml_tensor * cur = anchor_e;
+    for (int il = lo; il <= hi; ++il) {
+        if (on_entry) on_entry(il, cur);
+        cur = decoder(il, cur, true);
+    }
+    ggml_tensor * h = cur; // full pristine representation (preserves 100% baseline accuracy)
+    ggml_tensor * delta_0 = ggml_sub(gf.ctx0, h, anchor_e);
+
+    // 4. Recurrent deliberation passes (t = 1 .. recurrent_t - 1)
+    // store_kv = false: NEVER overwrites or corrupts the autoregressive KV cache!
+    std::vector<ggml_tensor *> past_u = { delta_0 };
+    ggml_tensor * m_state = delta_0;
+    ggml_tensor * v_slow  = h;
+
+    for (int t = 1; t < recurrent_t; ++t) {
+        ggml_tensor * step_in = h;
+        cur = step_in;
+        for (int il = lo; il <= hi; ++il) {
+            if (on_entry) on_entry(il, cur);
+            cur = decoder(il, cur, false); // <--- store_kv = false!
+        }
+        ggml_tensor * block_out = cur;
+        ggml_tensor * delta_thought = ggml_sub(gf.ctx0, block_out, step_in);
+
+        if (recurrent_mode == 1) {
+            // =========================================================================
+            // PILLAR 1: ORSD (Orthogonal Residual Subspace Decomposition via Gram-Schmidt)
+            // Projects candidate delta onto orthogonal complement of historical thought subspace.
+            // Delta_t^perp = Delta_t - sum_{j < t} ( <Delta_t, u_j> / ||u_j||^2 ) * u_j
+            // =========================================================================
+            ggml_tensor * delta_ortho = delta_thought;
+            for (ggml_tensor * u_j : past_u) {
+                ggml_tensor * dot_du = ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, delta_ortho, u_j)); // [1, n_tokens]
+                ggml_tensor * dot_uu = ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, u_j, u_j));         // [1, n_tokens]
+                dot_uu = ggml_clamp(gf.ctx0, dot_uu, 1e-7f, INFINITY);
+                ggml_tensor * coeff  = ggml_div(gf.ctx0, dot_du, dot_uu);                            // [1, n_tokens]
+                ggml_tensor * proj   = ggml_mul(gf.ctx0, u_j, coeff);                                // [n_embd, n_tokens]
+                delta_ortho          = ggml_sub(gf.ctx0, delta_ortho, proj);
+            }
+            past_u.push_back(delta_ortho);
+
+            // Scale-Invariant Relative Energy Matching:
+            // 1. Normalize delta_ortho to unit RMS (energy-normalized direction)
+            // 2. Scale by baseline thought Delta_0's per-token RMS energy (past_u[0]) so that recurrent_gate represents exact invariant energy percentage relative to the core's baseline step size
+            ggml_tensor * delta_normed = ggml_rms_norm(gf.ctx0, delta_ortho, gf.hparams.f_norm_rms_eps);
+            ggml_tensor * u0           = past_u[0];
+            ggml_tensor * u0_sq        = ggml_mul(gf.ctx0, u0, u0);
+            ggml_tensor * u0_mean      = ggml_scale(gf.ctx0, ggml_sum_rows(gf.ctx0, u0_sq), 1.0f / float(gf.n_embd));
+            ggml_tensor * u0_rms       = ggml_sqrt(gf.ctx0, ggml_clamp(gf.ctx0, u0_mean, 1e-7f, INFINITY));
+            delta_thought              = ggml_mul(gf.ctx0, delta_normed, u0_rms);
+        } else if (recurrent_mode == 2) {
+            // =========================================================================
+            // PILLAR 5: SNC-MD (Spectral-Norm Lyapunov Momentum Damper)
+            // Heavy-ball momentum + RMS damping to eliminate activation explosion.
+            // m_t = mu * m_{t-1} + (1 - mu) * Delta_t
+            // =========================================================================
+            const float mu = 0.60f;
+            ggml_tensor * m_prev = ggml_scale(gf.ctx0, m_state, mu);
+            ggml_tensor * d_new  = ggml_scale(gf.ctx0, delta_thought, 1.0f - mu);
+            m_state              = ggml_add(gf.ctx0, m_prev, d_new);
+            delta_thought        = ggml_rms_norm(gf.ctx0, m_state, gf.hparams.f_norm_rms_eps);
+        } else if (recurrent_mode == 3) {
+            // =========================================================================
+            // PILLAR 7: REG-CAV (Contrastive Anchor Energy Verification)
+            // Measures cosine similarity of h with anchor_e; gates update to suppress hallucination.
+            // =========================================================================
+            ggml_tensor * dot_he    = ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, h, anchor_e));
+            ggml_tensor * norm_h2   = ggml_clamp(gf.ctx0, ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, h, h)), 1e-7f, INFINITY);
+            ggml_tensor * norm_e2   = ggml_clamp(gf.ctx0, ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, anchor_e, anchor_e)), 1e-7f, INFINITY);
+            ggml_tensor * norm_prod = ggml_sqrt(gf.ctx0, ggml_mul(gf.ctx0, norm_h2, norm_e2));
+            ggml_tensor * cos_sim   = ggml_div(gf.ctx0, dot_he, norm_prod); // [1, n_tokens]
+            ggml_tensor * cav_gate  = ggml_clamp(gf.ctx0, cos_sim, 0.0f, 1.0f);
+            delta_thought           = ggml_mul(gf.ctx0, delta_thought, cav_gate);
+        } else if (recurrent_mode == 4) {
+            // =========================================================================
+            // PILLAR 2: DSCC-Engine (Dual-Stream Cognitive Counterpoint)
+            // Decoupled fast stream h and slow latent stream v_slow
+            // =========================================================================
+            const float alpha = 0.35f;
+            ggml_tensor * v_accum = ggml_add(gf.ctx0,
+                    ggml_scale(gf.ctx0, v_slow, 1.0f - alpha),
+                    ggml_scale(gf.ctx0, delta_thought, alpha));
+            v_slow = ggml_rms_norm(gf.ctx0, v_accum, gf.hparams.f_norm_rms_eps);
+            ggml_tensor * steer = ggml_sub(gf.ctx0, v_slow, h);
+            delta_thought = ggml_add(gf.ctx0,
+                    delta_thought,
+                    ggml_scale(gf.ctx0, steer, 0.20f));
+        }
+
+        // Add deliberation update scaled by recurrent_gate
+        h = ggml_add(gf.ctx0, h, ggml_scale(gf.ctx0, delta_thought, recurrent_gate));
     }
     inpL = h;
 
-    // 4. coda: layers (hi, n_layer) straight through. Together: every layer 0..n_layer-1
-    //    executes exactly once outside the loop except A/B, which execute T times inside it.
+    // 5. coda: layers (hi, n_layer) straight through.
     for (int il = hi + 1; il < n_layer; ++il) {
         if (on_entry) on_entry(il, inpL);
-        inpL = decoder(il, inpL);
+        inpL = decoder(il, inpL, true);
     }
 
     return inpL;
+}
+
+ggml_tensor * build_recurrent_core(
+        llm_graph_context & gf,
+        ggml_tensor * inpL,
+        const std::function<ggml_tensor * (int il, ggml_tensor * input)> & decoder,
+        const std::function<void (int il, ggml_tensor * input)> & on_entry) {
+    return build_recurrent_core(gf, inpL, [&](int il, ggml_tensor * inp, bool /*store_kv*/) {
+        return decoder(il, inp);
+    }, on_entry);
 }

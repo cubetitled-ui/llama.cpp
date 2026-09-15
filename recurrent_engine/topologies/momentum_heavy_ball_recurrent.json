@@ -1,0 +1,37 @@
+{
+  "architecture": "qwen2",
+  "total_layers": 28,
+  "description": "Polyak Heavy-Ball momentum recurrent core: accumulates latent delta momentum across iterations",
+  "blocks": [
+    {
+      "type": "feedforward",
+      "layers": [0, 12]
+    },
+    {
+      "type": "recurrent_loop",
+      "name": "momentum_recurrent_core",
+      "layers": [13, 14],
+      "iterations": 3,
+      "state_tensors": ["v"],
+      "custom_params": {
+        "a": 0.90,
+        "b": 0.10,
+        "mu": 0.65,
+        "gamma": 1.00
+      },
+      "custom_formulas": [
+        "delta = block_out - combined",
+        "v = mu * v + delta",
+        "h = a * h + b * anchor + gamma * v",
+        "h = rms_norm(h, eps=1e-6)"
+      ],
+      "kv_mode": "step_overwrite",
+      "norm_eps": 1e-6,
+      "save_state": true
+    },
+    {
+      "type": "feedforward",
+      "layers": [15, 27]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "architecture": "focal",
+  "total_layers": 32,
+  "description": "Multiscale latent loop for Focal transformer models with pure delta formulation and KV cache step-overwrite",
+  "blocks": [
+    {
+      "type": "feedforward",
+      "layers": [0, 9],
+      "description": "Prelude: initial feature extraction straight through layers 0 to 9"
+    },
+    {
+      "type": "recurrent_loop",
+      "name": "focal_multiscale_block",
+      "layers": [10, 12],
+      "iterations": 2,
+      "recurrent_a": 0.85,
+      "recurrent_b": 0.15,
+      "recurrent_gate": 1.00,
+      "delta_mode": "pure_delta",
+      "anchor_mode": "prelude_hidden",
+      "norm_eps": 1e-6,
+      "kv_mode": "step_overwrite",
+      "save_state": true,
+      "description": "Multiscale core: delta_mode=pure_delta eliminates double-residual inflation by subtracting input. kv_mode=step_overwrite preserves converged representations for autoregression."
+    },
+    {
+      "type": "feedforward",
+      "layers": [13, 31],
+      "description": "Coda: decoding and logits projection straight through layers 13 to 31"
+    }
+  ]
+}

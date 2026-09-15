@@ -1667,6 +1667,7 @@ struct llama_context_params common_context_params_to_llama(const common_params &
     cparams.recurrent_a       = params.recurrent_a;
     cparams.recurrent_b       = params.recurrent_b;
     cparams.recurrent_gate    = params.recurrent_gate;
+    cparams.recurrent_mode    = params.recurrent_mode;
 
     return cparams;
 }

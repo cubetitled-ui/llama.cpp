@@ -1,0 +1,134 @@
+[
+  {
+    "gamma": 0.06,
+    "mode": 1,
+    "score": 7,
+    "total": 13,
+    "accuracy": 53.84615384615385,
+    "results": {
+      "code_04_lisp_interpreter": true,
+      "code_06_diff_patch_engine": true,
+      "code_08_transactional_key_value": true,
+      "code_12_tarjan_scc": false,
+      "code_01_regex_nfa": false,
+      "code_02_bytecode_vm": true,
+      "code_03_lazy_segment_tree": false,
+      "code_05_dinic_max_flow": true,
+      "code_07_avl_tree_invariants": false,
+      "code_09_expression_calculator_shunting_yard": false,
+      "code_10_interval_tree_overlap": false,
+      "code_11_topological_lexical_kahn": true,
+      "code_13_knapsack_with_reconstruction": true
+    }
+  },
+  {
+    "gamma": 0.07,
+    "mode": 1,
+    "score": 2,
+    "total": 13,
+    "accuracy": 15.384615384615385,
+    "results": {
+      "code_04_lisp_interpreter": true,
+      "code_06_diff_patch_engine": true,
+      "code_08_transactional_key_value": false,
+      "code_12_tarjan_scc": false,
+      "code_01_regex_nfa": false,
+      "code_02_bytecode_vm": false,
+      "code_03_lazy_segment_tree": false,
+      "code_05_dinic_max_flow": false,
+      "code_07_avl_tree_invariants": false,
+      "code_09_expression_calculator_shunting_yard": false,
+      "code_10_interval_tree_overlap": false,
+      "code_11_topological_lexical_kahn": false,
+      "code_13_knapsack_with_reconstruction": false
+    }
+  },
+  {
+    "gamma": 0.08,
+    "mode": 1,
+    "score": 7,
+    "total": 13,
+    "accuracy": 53.84615384615385,
+    "results": {
+      "code_04_lisp_interpreter": true,
+      "code_06_diff_patch_engine": true,
+      "code_08_transactional_key_value": true,
+      "code_12_tarjan_scc": true,
+      "code_01_regex_nfa": false,
+      "code_02_bytecode_vm": false,
+      "code_03_lazy_segment_tree": false,
+      "code_05_dinic_max_flow": true,
+      "code_07_avl_tree_invariants": false,
+      "code_09_expression_calculator_shunting_yard": false,
+      "code_10_interval_tree_overlap": false,
+      "code_11_topological_lexical_kahn": true,
+      "code_13_knapsack_with_reconstruction": true
+    }
+  },
+  {
+    "gamma": 0.09,
+    "mode": 1,
+    "score": 3,
+    "total": 13,
+    "accuracy": 23.076923076923077,
+    "results": {
+      "code_04_lisp_interpreter": true,
+      "code_06_diff_patch_engine": true,
+      "code_08_transactional_key_value": false,
+      "code_12_tarjan_scc": true,
+      "code_01_regex_nfa": false,
+      "code_02_bytecode_vm": false,
+      "code_03_lazy_segment_tree": false,
+      "code_05_dinic_max_flow": false,
+      "code_07_avl_tree_invariants": false,
+      "code_09_expression_calculator_shunting_yard": false,
+      "code_10_interval_tree_overlap": false,
+      "code_11_topological_lexical_kahn": false,
+      "code_13_knapsack_with_reconstruction": false
+    }
+  },
+  {
+    "gamma": 0.1,
+    "mode": 1,
+    "score": 2,
+    "total": 13,
+    "accuracy": 15.384615384615385,
+    "results": {
+      "code_04_lisp_interpreter": true,
+      "code_06_diff_patch_engine": true,
+      "code_08_transactional_key_value": false,
+      "code_12_tarjan_scc": false,
+      "code_01_regex_nfa": false,
+      "code_02_bytecode_vm": false,
+      "code_03_lazy_segment_tree": false,
+      "code_05_dinic_max_flow": false,
+      "code_07_avl_tree_invariants": false,
+      "code_09_expression_calculator_shunting_yard": false,
+      "code_10_interval_tree_overlap": false,
+      "code_11_topological_lexical_kahn": false,
+      "code_13_knapsack_with_reconstruction": false
+    }
+  },
+  {
+    "gamma": 0.12,
+    "mode": 1,
+    "score": 3,
+    "total": 13,
+    "accuracy": 23.076923076923077,
+    "results": {
+      "code_04_lisp_interpreter": true,
+      "code_06_diff_patch_engine": true,
+      "code_08_transactional_key_value": false,
+      "code_12_tarjan_scc": true,
+      "code_01_regex_nfa": false,
+      "code_02_bytecode_vm": false,
+      "code_03_lazy_segment_tree": false,
+      "code_05_dinic_max_flow": false,
+      "code_07_avl_tree_invariants": false,
+      "code_09_expression_calculator_shunting_yard": false,
+      "code_10_interval_tree_overlap": false,
+      "code_11_topological_lexical_kahn": false,
+      "code_13_knapsack_with_reconstruction": false
+    }
+  }
+]

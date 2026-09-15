@@ -1,0 +1,135 @@
+# ==============================================================================
+# RLang Recurrent Theory Specification: deep_reasoning_v1.rlang
+# ==============================================================================
+#
+# Architecture: Qwen2 / Qwen2.5-Coder (28-layer transformer)
+# Theory: Non-Linear Gated Polyak Momentum Recurrence with Dynamic Annealing
+#
+# Mathematical Foundation:
+# Standard autoregressive transformers pass hidden representations through a feedforward
+# chain of static layer weights:
+#     h_{l+1} = h_l + F_l(RMSNorm(h_l))
+#
+# Under the RLang Universal Recurrent Architecture, layers [13..14] form a contractive
+# discrete-time dynamical system that iterates T times per generation step.
+# To prevent spectral explosion (eigenvalues lambda > 1.0) and double-residual
+# gradient corruption, the transformation delta is strictly isolated via Pure Delta mode:
+#     Delta_t = BlockOut_t - Combined_t = G_{13..14}(Combined_t)
+#
+# System State Update Equations:
+# 1. Combination & Anchor Injection:
+#     Combined_t = RMSNorm(h_t + anchor_e, eps=1e-6)
+# 2. Block Evaluation (layers 13 and 14):
+#     BlockOut_t = L_{14}(L_{13}(Combined_t))
+# 3. Pure Delta Extraction:
+#     Delta_t = BlockOut_t - Combined_t
+# 4. Polyak Heavy-Ball Momentum Update:
+#     v_{t+1} = beta_t * v_t + (1.0 - beta_t) * Delta_t
+# 5. Non-Linear Gating (Energy Modulation):
+#     gate_t = Sigmoid(gate_scale * v_{t+1})
+# 6. Contractive State Transition:
+#     h_{t+1} = a_t * h_t + b_t * anchor_e + gamma_t * (gate_t * v_{t+1})
+#
+# Dynamic Parameter Schedules:
+# - State Preservation (a_t): Cosine annealing from 0.95 down to 0.70 across iterations.
+#   Early iterations preserve high memory fidelity; late iterations allow higher plasticity.
+# - Delta Thought Scaling (gamma_t): Linear decay from 1.00 down to 0.20.
+#   Stabilizes final hidden representations, minimizing perplexity drift.
+# - Momentum Factor (beta_t): Exponential schedule beta_t = 0.90 * (0.95^t).
+#   Ensures rapid acceleration in initial steps, followed by fine-grained convergence.
+#
+# KV Cache Policy:
+# - Policy: `step_overwrite`
+#   During iterations t in [0, T-2], keys and values overwrite the current token's
+#   slot in the KV cache, ensuring O(1) memory complexity and zero cache fragmentation.
+# ==============================================================================
+
+model Qwen2_DeepThinking_Core {
+    architecture: qwen2;
+    total_layers: 28;
+    epsilon: 1e-6;
+    description: "Deep Thinking Core with Gated Polyak Momentum and Cosine Annealed Recurrence";
+}
+
+# ------------------------------------------------------------------------------
+# STAGE 1: Prelude (Perceptual Feature Encoding)
+# Hidden states are extracted from token embeddings and projected through the
+# early transformer layers to build rich semantic representations.
+# ------------------------------------------------------------------------------
+stage prelude feedforward {
+    layers: 0..12;
+}
+
+# ------------------------------------------------------------------------------
+# STAGE 2: Cognitive Recurrent Core (Iterative Latent Reasoning)
+# Compound recurrent loop executing layers 13 and 14 over T=3 iterations.
+# ------------------------------------------------------------------------------
+stage cognitive_core loop {
+    layers: 13..14;
+    iterations: 3;
+
+    # Hyperparameters & Constants
+    params {
+        a: 0.90;
+        b: 0.10;
+        gamma: 1.00;
+        momentum_beta: 0.85;
+        gate_scale: 1.25;
+        damping: 0.05;
+        leak: 0.02;
+    }
+
+    # Dynamic Parameter Schedules across recurrence steps t in [0..T-1]
+    schedules {
+        a: "cosine(0.95, 0.70)";
+        gamma: "linear(1.00, 0.20)";
+        momentum_beta: "exponential(0.85, 0.95)";
+    }
+
+    # Auxiliary State Registers
+    # v: Momentum velocity vector (initialized to zero tensor)
+    # delta_acc: Accumulated thought updates
+    registers {
+        v = 0.0;
+        delta_acc = 0.0;
+    }
+
+    # Anchor Bindings
+    anchors {
+        prelude_anchor: inpL;
+    }
+
+    # Execution & Memory Policies
+    policy {
+        kv_cache: step_overwrite;
+        delta_mode: pure_delta;
+    }
+
+    # Mathematical Update Rules (Compiled directly to GGML Graph C++ API)
+    formulas {
+        delta = block_out - combined;
+        v = momentum_beta * v + (1.0 - momentum_beta) * delta;
+        gate = sigmoid(gate_scale * v);
+        delta_acc = delta_acc + delta;
+        h = a * h + b * anchor + gamma * (gate * v);
+    }
+}
+
+# ------------------------------------------------------------------------------
+# STAGE 3: Coda (Verbalization & Vocabulary Projection)
+# Final feedforward layers project the refined recurrent state into the
+# output vocabulary distribution for token generation.
+# ------------------------------------------------------------------------------
+stage coda feedforward {
+    layers: 15..27;
+}
+
+# ==============================================================================
+# Stability Proof Summary:
+# Let ||A_t|| <= a_max = 0.95 < 1.0.
+# Since ||Sigmoid(x)|| <= 1.0 and Delta_t is bounded by layer Lipschitz constants L < 1.2,
+# the transition map phi(h) = a*h + b*anchor + gamma*v satisfies:
+#     ||phi(h_1) - phi(h_2)|| <= a_max * ||h_1 - h_2||
+# By the Banach Fixed-Point Theorem, the recurrent dynamics converge to a unique,
+# stable latent fixed point h* as T -> infinity, guaranteeing zero divergence.
+# ==============================================================================

@@ -1,0 +1,4366 @@
+{
+  "qwen25_coder_7b": {
+    "t1_baseline": {
+      "tasks": {
+        "agent_01_calc": {
+          "passed": true,
+          "duration": 14.276503086090088,
+          "speed": 27.549999999999997,
+          "category": "systems_agentic_loop"
+        },
+        "agent_02_sql": {
+          "passed": true,
+          "duration": 13.44817304611206,
+          "speed": 31.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_03_file": {
+          "passed": true,
+          "duration": 12.213377952575684,
+          "speed": 30.3,
+          "category": "systems_agentic_loop"
+        },
+        "agent_04_weather": {
+          "passed": true,
+          "duration": 13.394448518753052,
+          "speed": 28.2,
+          "category": "systems_agentic_loop"
+        },
+        "agent_05_stock": {
+          "passed": true,
+          "duration": 14.403170585632324,
+          "speed": 28.299999999999997,
+          "category": "systems_agentic_loop"
+        },
+        "agent_06_db_update": {
+          "passed": true,
+          "duration": 13.22579550743103,
+          "speed": 30.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_07_unit_convert": {
+          "passed": true,
+          "duration": 17.29304003715515,
+          "speed": 27.95,
+          "category": "systems_agentic_loop"
+        },
+        "agent_08_kb_search": {
+          "passed": true,
+          "duration": 13.873735904693604,
+          "speed": 28.0,
+          "category": "systems_agentic_loop"
+        },
+        "agent_09_k8s_status": {
+          "passed": true,
+          "duration": 14.45465898513794,
+          "speed": 27.4,
+          "category": "systems_agentic_loop"
+        },
+        "agent_10_forex_triangular": {
+          "passed": false,
+          "duration": 17.591135263442993,
+          "speed": 27.65,
+          "category": "systems_agentic_loop"
+        },
+        "agent_11_auth_jwt": {
+          "passed": true,
+          "duration": 14.403130531311035,
+          "speed": 28.4,
+          "category": "systems_agentic_loop"
+        },
+        "agent_12_cve_severity": {
+          "passed": true,
+          "duration": 13.713448286056519,
+          "speed": 28.200000000000003,
+          "category": "systems_agentic_loop"
+        },
+        "agent_13_disk_cleanup": {
+          "passed": true,
+          "duration": 12.765681505203247,
+          "speed": 28.1,
+          "category": "systems_agentic_loop"
+        },
+        "code_01_regex_nfa": {
+          "passed": false,
+          "duration": 13.532407522201538,
+          "speed": 27.1,
+          "category": "systems_coding"
+        },
+        "code_02_bytecode_vm": {
+          "passed": true,
+          "duration": 14.27181363105774,
+          "speed": 27.7,
+          "category": "systems_coding"
+        },
+        "code_03_lazy_segment_tree": {
+          "passed": false,
+          "duration": 24.03381085395813,
+          "speed": 27.6,
+          "category": "systems_coding"
+        },
+        "code_04_lisp_interpreter": {
+          "passed": true,
+          "duration": 16.069408178329468,
+          "speed": 27.7,
+          "category": "systems_coding"
+        },
+        "code_05_dinic_max_flow": {
+          "passed": true,
+          "duration": 17.67471480369568,
+          "speed": 27.7,
+          "category": "systems_coding"
+        },
+        "code_06_diff_patch_engine": {
+          "passed": true,
+          "duration": 16.987603187561035,
+          "speed": 27.7,
+          "category": "systems_coding"
+        },
+        "code_07_avl_tree_invariants": {
+          "passed": false,
+          "duration": 23.16181182861328,
+          "speed": 27.7,
+          "category": "systems_coding"
+        },
+        "code_08_transactional_key_value": {
+          "passed": true,
+          "duration": 13.754088163375854,
+          "speed": 27.7,
+          "category": "systems_coding"
+        },
+        "code_09_expression_calculator_shunting_yard": {
+          "passed": false,
+          "duration": 21.492812871932983,
+          "speed": 27.6,
+          "category": "systems_coding"
+        },
+        "code_10_interval_tree_overlap": {
+          "passed": false,
+          "duration": 19.54270577430725,
+          "speed": 27.7,
+          "category": "systems_coding"
+        },
+        "code_11_topological_lexical_kahn": {
+          "passed": true,
+          "duration": 15.641031980514526,
+          "speed": 27.7,
+          "category": "systems_coding"
+        },
+        "code_12_tarjan_scc": {
+          "passed": false,
+          "duration": 14.514465570449829,
+          "speed": 27.7,
+          "category": "systems_coding"
+        },
+        "code_13_knapsack_with_reconstruction": {
+          "passed": true,
+          "duration": 14.467949867248535,
+          "speed": 27.7,
+          "category": "systems_coding"
+        },
+        "web_01_countdown": {
+          "passed": true,
+          "duration": 20.239177465438843,
+          "speed": 27.6,
+          "category": "systems_web_dev"
+        },
+        "web_02_dark_mode": {
+          "passed": true,
+          "duration": 20.425867080688477,
+          "speed": 27.6,
+          "category": "systems_web_dev"
+        },
+        "web_03_modal_esc": {
+          "passed": true,
+          "duration": 19.507498264312744,
+          "speed": 27.6,
+          "category": "systems_web_dev"
+        },
+        "web_04_responsive_nav": {
+          "passed": true,
+          "duration": 24.10203456878662,
+          "speed": 27.6,
+          "category": "systems_web_dev"
+        },
+        "web_05_debounce": {
+          "passed": true,
+          "duration": 22.173945903778076,
+          "speed": 27.6,
+          "category": "systems_web_dev"
+        },
+        "web_06_fetch_retry": {
+          "passed": true,
+          "duration": 13.859986066818237,
+          "speed": 27.7,
+          "category": "systems_web_dev"
+        },
+        "web_07_custom_tabs": {
+          "passed": true,
+          "duration": 24.001449584960938,
+          "speed": 27.6,
+          "category": "systems_web_dev"
+        },
+        "web_08_css_grid": {
+          "passed": true,
+          "duration": 10.377099990844727,
+          "speed": 27.8,
+          "category": "systems_web_dev"
+        },
+        "web_09_promise_pool": {
+          "passed": true,
+          "duration": 15.466604471206665,
+          "speed": 27.7,
+          "category": "systems_web_dev"
+        },
+        "web_10_virtual_list_calc": {
+          "passed": true,
+          "duration": 24.03337025642395,
+          "speed": 27.6,
+          "category": "systems_web_dev"
+        },
+        "web_11_fsm_state_machine": {
+          "passed": true,
+          "duration": 24.045308351516724,
+          "speed": 27.6,
+          "category": "systems_web_dev"
+        },
+        "web_12_svg_arc_path": {
+          "passed": true,
+          "duration": 24.24435544013977,
+          "speed": 27.6,
+          "category": "systems_web_dev"
+        },
+        "web_13_reactive_signal": {
+          "passed": true,
+          "duration": 18.090957641601562,
+          "speed": 27.6,
+          "category": "systems_web_dev"
+        },
+        "logic_01_bat_ball": {
+          "passed": true,
+          "duration": 5.6689980030059814,
+          "speed": 31.5,
+          "category": "systems_logic"
+        },
+        "logic_02_train_speed": {
+          "passed": true,
+          "duration": 5.539801597595215,
+          "speed": 32.2,
+          "category": "systems_logic"
+        },
+        "logic_03_snail_well": {
+          "passed": true,
+          "duration": 5.51921272277832,
+          "speed": 48.6,
+          "category": "systems_logic"
+        },
+        "logic_04_lily_pads": {
+          "passed": false,
+          "duration": 5.62817120552063,
+          "speed": 37.4,
+          "category": "systems_logic"
+        },
+        "logic_05_machines": {
+          "passed": true,
+          "duration": 5.511172533035278,
+          "speed": 46.9,
+          "category": "systems_logic"
+        },
+        "logic_06_sheep": {
+          "passed": true,
+          "duration": 5.564646005630493,
+          "speed": 48.0,
+          "category": "systems_logic"
+        },
+        "logic_07_sister_age": {
+          "passed": false,
+          "duration": 5.623322010040283,
+          "speed": 36.7,
+          "category": "systems_logic"
+        },
+        "logic_08_monty_hall": {
+          "passed": true,
+          "duration": 6.368795871734619,
+          "speed": 28.3,
+          "category": "systems_logic"
+        },
+        "logic_09_bayesian_disease": {
+          "passed": false,
+          "duration": 14.687525033950806,
+          "speed": 27.6,
+          "category": "systems_logic"
+        },
+        "logic_10_monty_hall_4doors": {
+          "passed": false,
+          "duration": 15.06835651397705,
+          "speed": 27.7,
+          "category": "systems_logic"
+        },
+        "logic_11_water_jug_4L": {
+          "passed": true,
+          "duration": 5.939329147338867,
+          "speed": 47.7,
+          "category": "systems_logic"
+        },
+        "logic_12_two_dice_sum8": {
+          "passed": false,
+          "duration": 14.804680347442627,
+          "speed": 27.7,
+          "category": "systems_logic"
+        },
+        "logic_13_clock_angle_315": {
+          "passed": true,
+          "duration": 5.642639398574829,
+          "speed": 34.4,
+          "category": "systems_logic"
+        },
+        "tbench_acl-permissions-inheritance": {
+          "passed": true,
+          "duration": 13.488454341888428,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_amuse-install": {
+          "passed": true,
+          "duration": 9.410863876342773,
+          "speed": 27.8,
+          "category": "terminal_agent"
+        },
+        "tbench_analyze-access-logs": {
+          "passed": true,
+          "duration": 13.02280569076538,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_bank-trans-filter": {
+          "passed": true,
+          "duration": 12.696781873703003,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_broken-python": {
+          "passed": false,
+          "duration": 19.63172960281372,
+          "speed": 27.5,
+          "category": "terminal_agent"
+        },
+        "tbench_cpp-compatibility": {
+          "passed": true,
+          "duration": 23.915117979049683,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_cross-entropy-method": {
+          "passed": false,
+          "duration": 24.627759218215942,
+          "speed": 27.4,
+          "category": "terminal_agent"
+        },
+        "tbench_csv-to-parquet": {
+          "passed": true,
+          "duration": 10.600075244903564,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_decommissioning-service-with-sensitive-data": {
+          "passed": false,
+          "duration": 12.82120156288147,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_fibonacci-server": {
+          "passed": true,
+          "duration": 19.63870596885681,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-pandas-version": {
+          "passed": false,
+          "duration": 13.055789470672607,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-permissions": {
+          "passed": true,
+          "duration": 24.308756113052368,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_flood-monitoring-basic": {
+          "passed": false,
+          "duration": 24.27054262161255,
+          "speed": 27.5,
+          "category": "terminal_agent"
+        },
+        "tbench_gomoku-planner": {
+          "passed": true,
+          "duration": 24.27283215522766,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_grid-pattern-transform": {
+          "passed": false,
+          "duration": 23.0460946559906,
+          "speed": 27.5,
+          "category": "terminal_agent"
+        },
+        "tbench_hdfs-deployment": {
+          "passed": true,
+          "duration": 24.2657527923584,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_hello-world": {
+          "passed": true,
+          "duration": 6.316035509109497,
+          "speed": 28.5,
+          "category": "terminal_agent"
+        },
+        "tbench_heterogeneous-dates": {
+          "passed": true,
+          "duration": 12.926510572433472,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_hydra-debug-slurm-mode": {
+          "passed": true,
+          "duration": 24.521498680114746,
+          "speed": 27.5,
+          "category": "terminal_agent"
+        },
+        "tbench_jq-data-processing": {
+          "passed": false,
+          "duration": 15.674886703491211,
+          "speed": 27.3,
+          "category": "terminal_agent"
+        },
+        "tbench_jsonl-aggregator": {
+          "passed": true,
+          "duration": 24.163981914520264,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_jupyter-notebook-server": {
+          "passed": false,
+          "duration": 24.251859664916992,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_log-summary": {
+          "passed": true,
+          "duration": 12.73933458328247,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_logistic-regression-divergence": {
+          "passed": false,
+          "duration": 24.11047863960266,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_mlflow-register": {
+          "passed": false,
+          "duration": 15.900489568710327,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_mnist-learning-fix": {
+          "passed": false,
+          "duration": 25.064727544784546,
+          "speed": 27.3,
+          "category": "terminal_agent"
+        },
+        "tbench_modernize-fortran-build": {
+          "passed": true,
+          "duration": 12.559349298477173,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_new-encrypt-command": {
+          "passed": true,
+          "duration": 22.75325107574463,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-etl": {
+          "passed": true,
+          "duration": 17.88745880126953,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-sql-query": {
+          "passed": true,
+          "duration": 24.120017051696777,
+          "speed": 27.5,
+          "category": "terminal_agent"
+        },
+        "tbench_png-generation": {
+          "passed": false,
+          "duration": 23.25476050376892,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_predict-customer-churn": {
+          "passed": false,
+          "duration": 24.8069109916687,
+          "speed": 27.5,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-accuracy-log": {
+          "passed": true,
+          "duration": 24.16531467437744,
+          "speed": 27.0,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-obfuscated-files": {
+          "passed": true,
+          "duration": 14.593600749969482,
+          "speed": 27.6,
+          "category": "terminal_agent"
+        },
+        "tbench_schedule-vacation": {
+          "passed": true,
+          "duration": 16.42009162902832,
+          "speed": 27.5,
+          "category": "terminal_agent"
+        },
+        "tbench_setup-custom-dev-env": {
+          "passed": true,
+          "duration": 24.372607469558716,
+          "speed": 27.4,
+          "category": "terminal_agent"
+        },
+        "tbench_sparql-professors-universities": {
+          "passed": false,
+          "duration": 9.594754219055176,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_spinning-up-rl": {
+          "passed": true,
+          "duration": 15.137892007827759,
+          "speed": 27.7,
+          "category": "terminal_agent"
+        },
+        "tbench_vimscript-vim-quine": {
+          "passed": true,
+          "duration": 24.468788385391235,
+          "speed": 27.5,
+          "category": "terminal_agent"
+        },
+        "harbor_atrx-vep-crispr": {
+          "passed": false,
+          "duration": 25.31564474105835,
+          "speed": 27.3,
+          "category": "heavy_systems"
+        },
+        "harbor_batched-eval-parity": {
+          "passed": true,
+          "duration": 25.221160173416138,
+          "speed": 27.3,
+          "category": "heavy_systems"
+        },
+        "harbor_biped-contact-dynamics": {
+          "passed": false,
+          "duration": 25.557758331298828,
+          "speed": 27.2,
+          "category": "heavy_systems"
+        },
+        "harbor_bun-sourcemap-leak": {
+          "passed": false,
+          "duration": 25.279043197631836,
+          "speed": 27.3,
+          "category": "heavy_systems"
+        },
+        "harbor_cad-model": {
+          "passed": false,
+          "duration": 24.401730060577393,
+          "speed": 27.5,
+          "category": "heavy_systems"
+        },
+        "harbor_cargo-flight-dispatch": {
+          "passed": false,
+          "duration": 0.0,
+          "speed": 0.0,
+          "category": "heavy_systems"
+        },
+        "harbor_coq-block-bound": {
+          "passed": true,
+          "duration": 24.901370525360107,
+          "speed": 27.3,
+          "category": "heavy_systems"
+        },
+        "harbor_ctr-optimization": {
+          "passed": false,
+          "duration": 24.644160985946655,
+          "speed": 27.4,
+          "category": "heavy_systems"
+        },
+        "harbor_cumulative-layout-shift": {
+          "passed": false,
+          "duration": 24.481670141220093,
+          "speed": 27.5,
+          "category": "heavy_systems"
+        }
+      },
+      "passed_count": 67,
+      "total_count": 100,
+      "total_duration": 1705.0156304836273
+    },
+    "t2_orsd": {
+      "tasks": {
+        "agent_01_calc": {
+          "passed": true,
+          "duration": 13.940197944641113,
+          "speed": 26.95,
+          "category": "systems_agentic_loop"
+        },
+        "agent_02_sql": {
+          "passed": true,
+          "duration": 13.027205467224121,
+          "speed": 30.6,
+          "category": "systems_agentic_loop"
+        },
+        "agent_03_file": {
+          "passed": true,
+          "duration": 12.395527124404907,
+          "speed": 28.75,
+          "category": "systems_agentic_loop"
+        },
+        "agent_04_weather": {
+          "passed": true,
+          "duration": 13.588674068450928,
+          "speed": 26.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_05_stock": {
+          "passed": true,
+          "duration": 13.318756818771362,
+          "speed": 26.7,
+          "category": "systems_agentic_loop"
+        },
+        "agent_06_db_update": {
+          "passed": true,
+          "duration": 13.058646440505981,
+          "speed": 28.95,
+          "category": "systems_agentic_loop"
+        },
+        "agent_07_unit_convert": {
+          "passed": true,
+          "duration": 16.54060649871826,
+          "speed": 26.299999999999997,
+          "category": "systems_agentic_loop"
+        },
+        "agent_08_kb_search": {
+          "passed": true,
+          "duration": 13.040152549743652,
+          "speed": 26.9,
+          "category": "systems_agentic_loop"
+        },
+        "agent_09_k8s_status": {
+          "passed": true,
+          "duration": 13.517815589904785,
+          "speed": 26.75,
+          "category": "systems_agentic_loop"
+        },
+        "agent_10_forex_triangular": {
+          "passed": false,
+          "duration": 16.910704612731934,
+          "speed": 26.45,
+          "category": "systems_agentic_loop"
+        },
+        "agent_11_auth_jwt": {
+          "passed": true,
+          "duration": 14.389999866485596,
+          "speed": 26.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_12_cve_severity": {
+          "passed": true,
+          "duration": 13.956631422042847,
+          "speed": 26.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_13_disk_cleanup": {
+          "passed": true,
+          "duration": 13.227254867553711,
+          "speed": 26.65,
+          "category": "systems_agentic_loop"
+        },
+        "code_01_regex_nfa": {
+          "passed": false,
+          "duration": 13.91342306137085,
+          "speed": 25.9,
+          "category": "systems_coding"
+        },
+        "code_02_bytecode_vm": {
+          "passed": true,
+          "duration": 15.234954118728638,
+          "speed": 26.0,
+          "category": "systems_coding"
+        },
+        "code_03_lazy_segment_tree": {
+          "passed": false,
+          "duration": 64.78933119773865,
+          "speed": 8.8,
+          "category": "systems_coding"
+        },
+        "code_04_lisp_interpreter": {
+          "passed": true,
+          "duration": 20.59793448448181,
+          "speed": 26.0,
+          "category": "systems_coding"
+        },
+        "code_05_dinic_max_flow": {
+          "passed": true,
+          "duration": 17.52285408973694,
+          "speed": 26.0,
+          "category": "systems_coding"
+        },
+        "code_06_diff_patch_engine": {
+          "passed": true,
+          "duration": 17.972353219985962,
+          "speed": 26.0,
+          "category": "systems_coding"
+        },
+        "code_07_avl_tree_invariants": {
+          "passed": false,
+          "duration": 23.939270496368408,
+          "speed": 26.0,
+          "category": "systems_coding"
+        },
+        "code_08_transactional_key_value": {
+          "passed": true,
+          "duration": 13.518656253814697,
+          "speed": 26.1,
+          "category": "systems_coding"
+        },
+        "code_09_expression_calculator_shunting_yard": {
+          "passed": false,
+          "duration": 22.69832420349121,
+          "speed": 25.9,
+          "category": "systems_coding"
+        },
+        "code_10_interval_tree_overlap": {
+          "passed": false,
+          "duration": 19.994541883468628,
+          "speed": 26.0,
+          "category": "systems_coding"
+        },
+        "code_11_topological_lexical_kahn": {
+          "passed": true,
+          "duration": 16.10071349143982,
+          "speed": 26.0,
+          "category": "systems_coding"
+        },
+        "code_12_tarjan_scc": {
+          "passed": true,
+          "duration": 16.11163330078125,
+          "speed": 26.0,
+          "category": "systems_coding"
+        },
+        "code_13_knapsack_with_reconstruction": {
+          "passed": true,
+          "duration": 14.531794309616089,
+          "speed": 26.0,
+          "category": "systems_coding"
+        },
+        "web_01_countdown": {
+          "passed": true,
+          "duration": 22.273696422576904,
+          "speed": 26.0,
+          "category": "systems_web_dev"
+        },
+        "web_02_dark_mode": {
+          "passed": true,
+          "duration": 21.074777126312256,
+          "speed": 25.9,
+          "category": "systems_web_dev"
+        },
+        "web_03_modal_esc": {
+          "passed": true,
+          "duration": 20.07174277305603,
+          "speed": 25.7,
+          "category": "systems_web_dev"
+        },
+        "web_04_responsive_nav": {
+          "passed": true,
+          "duration": 24.676898956298828,
+          "speed": 25.9,
+          "category": "systems_web_dev"
+        },
+        "web_05_debounce": {
+          "passed": true,
+          "duration": 22.972460746765137,
+          "speed": 25.9,
+          "category": "systems_web_dev"
+        },
+        "web_06_fetch_retry": {
+          "passed": true,
+          "duration": 24.858073711395264,
+          "speed": 25.7,
+          "category": "systems_web_dev"
+        },
+        "web_07_custom_tabs": {
+          "passed": true,
+          "duration": 24.717612266540527,
+          "speed": 25.9,
+          "category": "systems_web_dev"
+        },
+        "web_08_css_grid": {
+          "passed": true,
+          "duration": 9.791775941848755,
+          "speed": 26.1,
+          "category": "systems_web_dev"
+        },
+        "web_09_promise_pool": {
+          "passed": true,
+          "duration": 14.899699926376343,
+          "speed": 26.1,
+          "category": "systems_web_dev"
+        },
+        "web_10_virtual_list_calc": {
+          "passed": true,
+          "duration": 24.882657289505005,
+          "speed": 25.8,
+          "category": "systems_web_dev"
+        },
+        "web_11_fsm_state_machine": {
+          "passed": true,
+          "duration": 24.91257929801941,
+          "speed": 25.9,
+          "category": "systems_web_dev"
+        },
+        "web_12_svg_arc_path": {
+          "passed": true,
+          "duration": 24.906370639801025,
+          "speed": 25.9,
+          "category": "systems_web_dev"
+        },
+        "web_13_reactive_signal": {
+          "passed": true,
+          "duration": 17.98999047279358,
+          "speed": 26.0,
+          "category": "systems_web_dev"
+        },
+        "logic_01_bat_ball": {
+          "passed": true,
+          "duration": 5.3600172996521,
+          "speed": 30.7,
+          "category": "systems_logic"
+        },
+        "logic_02_train_speed": {
+          "passed": true,
+          "duration": 5.1803953647613525,
+          "speed": 30.6,
+          "category": "systems_logic"
+        },
+        "logic_03_snail_well": {
+          "passed": true,
+          "duration": 5.0690600872039795,
+          "speed": 45.8,
+          "category": "systems_logic"
+        },
+        "logic_04_lily_pads": {
+          "passed": false,
+          "duration": 5.080513954162598,
+          "speed": 34.6,
+          "category": "systems_logic"
+        },
+        "logic_05_machines": {
+          "passed": true,
+          "duration": 5.098643064498901,
+          "speed": 44.6,
+          "category": "systems_logic"
+        },
+        "logic_06_sheep": {
+          "passed": true,
+          "duration": 5.030436277389526,
+          "speed": 44.5,
+          "category": "systems_logic"
+        },
+        "logic_07_sister_age": {
+          "passed": false,
+          "duration": 5.085408687591553,
+          "speed": 35.2,
+          "category": "systems_logic"
+        },
+        "logic_08_monty_hall": {
+          "passed": true,
+          "duration": 5.904199123382568,
+          "speed": 26.7,
+          "category": "systems_logic"
+        },
+        "logic_09_bayesian_disease": {
+          "passed": false,
+          "duration": 14.903648614883423,
+          "speed": 26.0,
+          "category": "systems_logic"
+        },
+        "logic_10_monty_hall_4doors": {
+          "passed": true,
+          "duration": 14.945992708206177,
+          "speed": 25.9,
+          "category": "systems_logic"
+        },
+        "logic_11_water_jug_4L": {
+          "passed": true,
+          "duration": 5.3033366203308105,
+          "speed": 45.3,
+          "category": "systems_logic"
+        },
+        "logic_12_two_dice_sum8": {
+          "passed": false,
+          "duration": 14.826354026794434,
+          "speed": 26.1,
+          "category": "systems_logic"
+        },
+        "logic_13_clock_angle_315": {
+          "passed": true,
+          "duration": 5.097625255584717,
+          "speed": 31.9,
+          "category": "systems_logic"
+        },
+        "tbench_acl-permissions-inheritance": {
+          "passed": true,
+          "duration": 13.104803323745728,
+          "speed": 26.0,
+          "category": "terminal_agent"
+        },
+        "tbench_amuse-install": {
+          "passed": true,
+          "duration": 11.654857397079468,
+          "speed": 26.1,
+          "category": "terminal_agent"
+        },
+        "tbench_analyze-access-logs": {
+          "passed": true,
+          "duration": 12.327423095703125,
+          "speed": 26.0,
+          "category": "terminal_agent"
+        },
+        "tbench_bank-trans-filter": {
+          "passed": true,
+          "duration": 11.696928024291992,
+          "speed": 26.0,
+          "category": "terminal_agent"
+        },
+        "tbench_broken-python": {
+          "passed": false,
+          "duration": 20.505524396896362,
+          "speed": 26.0,
+          "category": "terminal_agent"
+        },
+        "tbench_cpp-compatibility": {
+          "passed": true,
+          "duration": 24.11901569366455,
+          "speed": 25.9,
+          "category": "terminal_agent"
+        },
+        "tbench_cross-entropy-method": {
+          "passed": false,
+          "duration": 25.24901580810547,
+          "speed": 25.8,
+          "category": "terminal_agent"
+        },
+        "tbench_csv-to-parquet": {
+          "passed": true,
+          "duration": 10.268509864807129,
+          "speed": 26.1,
+          "category": "terminal_agent"
+        },
+        "tbench_decommissioning-service-with-sensitive-data": {
+          "passed": false,
+          "duration": 10.741479635238647,
+          "speed": 26.0,
+          "category": "terminal_agent"
+        },
+        "tbench_fibonacci-server": {
+          "passed": true,
+          "duration": 22.088523387908936,
+          "speed": 26.0,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-pandas-version": {
+          "passed": false,
+          "duration": 9.588562250137329,
+          "speed": 26.1,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-permissions": {
+          "passed": true,
+          "duration": 16.880656957626343,
+          "speed": 26.0,
+          "category": "terminal_agent"
+        },
+        "tbench_flood-monitoring-basic": {
+          "passed": false,
+          "duration": 21.35083842277527,
+          "speed": 25.9,
+          "category": "terminal_agent"
+        },
+        "tbench_gomoku-planner": {
+          "passed": true,
+          "duration": 21.468172550201416,
+          "speed": 26.0,
+          "category": "terminal_agent"
+        },
+        "tbench_grid-pattern-transform": {
+          "passed": false,
+          "duration": 21.62142825126648,
+          "speed": 25.9,
+          "category": "terminal_agent"
+        },
+        "tbench_hdfs-deployment": {
+          "passed": true,
+          "duration": 21.642085313796997,
+          "speed": 25.7,
+          "category": "terminal_agent"
+        },
+        "tbench_hello-world": {
+          "passed": true,
+          "duration": 2.6712920665740967,
+          "speed": 26.5,
+          "category": "terminal_agent"
+        },
+        "tbench_heterogeneous-dates": {
+          "passed": true,
+          "duration": 8.762715578079224,
+          "speed": 25.5,
+          "category": "terminal_agent"
+        },
+        "tbench_hydra-debug-slurm-mode": {
+          "passed": true,
+          "duration": 14.553618907928467,
+          "speed": 25.1,
+          "category": "terminal_agent"
+        },
+        "tbench_jq-data-processing": {
+          "passed": false,
+          "duration": 12.13285231590271,
+          "speed": 25.7,
+          "category": "terminal_agent"
+        },
+        "tbench_jsonl-aggregator": {
+          "passed": true,
+          "duration": 21.5319242477417,
+          "speed": 25.9,
+          "category": "terminal_agent"
+        },
+        "tbench_jupyter-notebook-server": {
+          "passed": false,
+          "duration": 21.46099328994751,
+          "speed": 26.0,
+          "category": "terminal_agent"
+        },
+        "tbench_log-summary": {
+          "passed": true,
+          "duration": 9.268784523010254,
+          "speed": 25.4,
+          "category": "terminal_agent"
+        },
+        "tbench_logistic-regression-divergence": {
+          "passed": false,
+          "duration": 21.634715795516968,
+          "speed": 25.6,
+          "category": "terminal_agent"
+        },
+        "tbench_mlflow-register": {
+          "passed": false,
+          "duration": 19.9130961894989,
+          "speed": 25.7,
+          "category": "terminal_agent"
+        },
+        "tbench_mnist-learning-fix": {
+          "passed": false,
+          "duration": 21.78806161880493,
+          "speed": 25.9,
+          "category": "terminal_agent"
+        },
+        "tbench_modernize-fortran-build": {
+          "passed": true,
+          "duration": 8.231610536575317,
+          "speed": 26.1,
+          "category": "terminal_agent"
+        },
+        "tbench_new-encrypt-command": {
+          "passed": true,
+          "duration": 18.793833017349243,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-etl": {
+          "passed": true,
+          "duration": 18.76060914993286,
+          "speed": 26.0,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-sql-query": {
+          "passed": true,
+          "duration": 21.548370361328125,
+          "speed": 25.8,
+          "category": "terminal_agent"
+        },
+        "tbench_png-generation": {
+          "passed": false,
+          "duration": 14.217452049255371,
+          "speed": 25.5,
+          "category": "terminal_agent"
+        },
+        "tbench_predict-customer-churn": {
+          "passed": false,
+          "duration": 25.19170832633972,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-accuracy-log": {
+          "passed": true,
+          "duration": 24.443702459335327,
+          "speed": 24.8,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-obfuscated-files": {
+          "passed": true,
+          "duration": 16.6065776348114,
+          "speed": 25.4,
+          "category": "terminal_agent"
+        },
+        "tbench_schedule-vacation": {
+          "passed": true,
+          "duration": 18.336038827896118,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_setup-custom-dev-env": {
+          "passed": true,
+          "duration": 24.56027579307556,
+          "speed": 25.4,
+          "category": "terminal_agent"
+        },
+        "tbench_sparql-professors-universities": {
+          "passed": false,
+          "duration": 9.804828882217407,
+          "speed": 25.8,
+          "category": "terminal_agent"
+        },
+        "tbench_spinning-up-rl": {
+          "passed": true,
+          "duration": 13.696575164794922,
+          "speed": 25.9,
+          "category": "terminal_agent"
+        },
+        "tbench_vimscript-vim-quine": {
+          "passed": true,
+          "duration": 24.474595546722412,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "harbor_atrx-vep-crispr": {
+          "passed": false,
+          "duration": 24.053048610687256,
+          "speed": 25.1,
+          "category": "heavy_systems"
+        },
+        "harbor_batched-eval-parity": {
+          "passed": true,
+          "duration": 22.88204526901245,
+          "speed": 25.0,
+          "category": "heavy_systems"
+        },
+        "harbor_biped-contact-dynamics": {
+          "passed": false,
+          "duration": 23.324899911880493,
+          "speed": 25.0,
+          "category": "heavy_systems"
+        },
+        "harbor_bun-sourcemap-leak": {
+          "passed": false,
+          "duration": 22.10901165008545,
+          "speed": 25.5,
+          "category": "heavy_systems"
+        },
+        "harbor_cad-model": {
+          "passed": false,
+          "duration": 21.33456587791443,
+          "speed": 26.0,
+          "category": "heavy_systems"
+        },
+        "harbor_cargo-flight-dispatch": {
+          "passed": false,
+          "duration": 0.0,
+          "speed": 0.0,
+          "category": "heavy_systems"
+        },
+        "harbor_coq-block-bound": {
+          "passed": true,
+          "duration": 21.52692151069641,
+          "speed": 25.9,
+          "category": "heavy_systems"
+        },
+        "harbor_ctr-optimization": {
+          "passed": false,
+          "duration": 21.557198762893677,
+          "speed": 25.9,
+          "category": "heavy_systems"
+        },
+        "harbor_cumulative-layout-shift": {
+          "passed": false,
+          "duration": 21.35088801383972,
+          "speed": 26.0,
+          "category": "heavy_systems"
+        }
+      },
+      "passed_count": 69,
+      "total_count": 100,
+      "total_duration": 1677.582560300827
+    },
+    "t4_deep": {
+      "tasks": {
+        "agent_01_calc": {
+          "passed": true,
+          "duration": 5.667714357376099,
+          "speed": 24.15,
+          "category": "systems_agentic_loop"
+        },
+        "agent_02_sql": {
+          "passed": true,
+          "duration": 5.268981695175171,
+          "speed": 27.95,
+          "category": "systems_agentic_loop"
+        },
+        "agent_03_file": {
+          "passed": true,
+          "duration": 4.693884372711182,
+          "speed": 25.95,
+          "category": "systems_agentic_loop"
+        },
+        "agent_04_weather": {
+          "passed": true,
+          "duration": 6.113062858581543,
+          "speed": 23.85,
+          "category": "systems_agentic_loop"
+        },
+        "agent_05_stock": {
+          "passed": true,
+          "duration": 5.7114012241363525,
+          "speed": 23.9,
+          "category": "systems_agentic_loop"
+        },
+        "agent_06_db_update": {
+          "passed": true,
+          "duration": 5.504977464675903,
+          "speed": 26.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_07_unit_convert": {
+          "passed": true,
+          "duration": 9.647673606872559,
+          "speed": 23.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_08_kb_search": {
+          "passed": true,
+          "duration": 5.638503313064575,
+          "speed": 24.049999999999997,
+          "category": "systems_agentic_loop"
+        },
+        "agent_09_k8s_status": {
+          "passed": true,
+          "duration": 5.90925145149231,
+          "speed": 23.9,
+          "category": "systems_agentic_loop"
+        },
+        "agent_10_forex_triangular": {
+          "passed": false,
+          "duration": 9.384937047958374,
+          "speed": 23.6,
+          "category": "systems_agentic_loop"
+        },
+        "agent_11_auth_jwt": {
+          "passed": true,
+          "duration": 6.991299629211426,
+          "speed": 23.85,
+          "category": "systems_agentic_loop"
+        },
+        "agent_12_cve_severity": {
+          "passed": true,
+          "duration": 6.440492153167725,
+          "speed": 23.75,
+          "category": "systems_agentic_loop"
+        },
+        "agent_13_disk_cleanup": {
+          "passed": true,
+          "duration": 5.583381414413452,
+          "speed": 23.95,
+          "category": "systems_agentic_loop"
+        },
+        "code_01_regex_nfa": {
+          "passed": false,
+          "duration": 13.574238061904907,
+          "speed": 23.2,
+          "category": "systems_coding"
+        },
+        "code_02_bytecode_vm": {
+          "passed": true,
+          "duration": 12.029626369476318,
+          "speed": 23.3,
+          "category": "systems_coding"
+        },
+        "code_03_lazy_segment_tree": {
+          "passed": false,
+          "duration": 23.68856406211853,
+          "speed": 23.2,
+          "category": "systems_coding"
+        },
+        "code_04_lisp_interpreter": {
+          "passed": true,
+          "duration": 14.427248001098633,
+          "speed": 23.2,
+          "category": "systems_coding"
+        },
+        "code_05_dinic_max_flow": {
+          "passed": true,
+          "duration": 16.74694061279297,
+          "speed": 23.2,
+          "category": "systems_coding"
+        },
+        "code_06_diff_patch_engine": {
+          "passed": false,
+          "duration": 14.32785177230835,
+          "speed": 23.3,
+          "category": "systems_coding"
+        },
+        "code_07_avl_tree_invariants": {
+          "passed": false,
+          "duration": 22.661511182785034,
+          "speed": 23.2,
+          "category": "systems_coding"
+        },
+        "code_08_transactional_key_value": {
+          "passed": false,
+          "duration": 10.375899314880371,
+          "speed": 23.3,
+          "category": "systems_coding"
+        },
+        "code_09_expression_calculator_shunting_yard": {
+          "passed": false,
+          "duration": 23.679790496826172,
+          "speed": 23.2,
+          "category": "systems_coding"
+        },
+        "code_10_interval_tree_overlap": {
+          "passed": true,
+          "duration": 16.579428911209106,
+          "speed": 23.2,
+          "category": "systems_coding"
+        },
+        "code_11_topological_lexical_kahn": {
+          "passed": true,
+          "duration": 12.783940315246582,
+          "speed": 23.3,
+          "category": "systems_coding"
+        },
+        "code_12_tarjan_scc": {
+          "passed": true,
+          "duration": 16.009481191635132,
+          "speed": 23.3,
+          "category": "systems_coding"
+        },
+        "code_13_knapsack_with_reconstruction": {
+          "passed": true,
+          "duration": 12.256733417510986,
+          "speed": 23.3,
+          "category": "systems_coding"
+        },
+        "web_01_countdown": {
+          "passed": true,
+          "duration": 23.16939067840576,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "web_02_dark_mode": {
+          "passed": true,
+          "duration": 21.635976791381836,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "web_03_modal_esc": {
+          "passed": true,
+          "duration": 19.210190057754517,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "web_04_responsive_nav": {
+          "passed": true,
+          "duration": 23.652470350265503,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "web_05_debounce": {
+          "passed": true,
+          "duration": 21.892215967178345,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "web_06_fetch_retry": {
+          "passed": true,
+          "duration": 22.847537517547607,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "web_07_custom_tabs": {
+          "passed": true,
+          "duration": 23.64016819000244,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "web_08_css_grid": {
+          "passed": true,
+          "duration": 7.5988805294036865,
+          "speed": 23.4,
+          "category": "systems_web_dev"
+        },
+        "web_09_promise_pool": {
+          "passed": true,
+          "duration": 11.356725931167603,
+          "speed": 23.3,
+          "category": "systems_web_dev"
+        },
+        "web_10_virtual_list_calc": {
+          "passed": true,
+          "duration": 23.62750816345215,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "web_11_fsm_state_machine": {
+          "passed": true,
+          "duration": 23.6398708820343,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "web_12_svg_arc_path": {
+          "passed": true,
+          "duration": 23.64961338043213,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "web_13_reactive_signal": {
+          "passed": true,
+          "duration": 16.57967782020569,
+          "speed": 23.2,
+          "category": "systems_web_dev"
+        },
+        "logic_01_bat_ball": {
+          "passed": false,
+          "duration": 1.6710278987884521,
+          "speed": 32.2,
+          "category": "systems_logic"
+        },
+        "logic_02_train_speed": {
+          "passed": true,
+          "duration": 1.7521677017211914,
+          "speed": 27.9,
+          "category": "systems_logic"
+        },
+        "logic_03_snail_well": {
+          "passed": true,
+          "duration": 1.631596326828003,
+          "speed": 43.3,
+          "category": "systems_logic"
+        },
+        "logic_04_lily_pads": {
+          "passed": false,
+          "duration": 1.6696476936340332,
+          "speed": 32.3,
+          "category": "systems_logic"
+        },
+        "logic_05_machines": {
+          "passed": true,
+          "duration": 1.619676113128662,
+          "speed": 43.3,
+          "category": "systems_logic"
+        },
+        "logic_06_sheep": {
+          "passed": true,
+          "duration": 1.6181204319000244,
+          "speed": 43.4,
+          "category": "systems_logic"
+        },
+        "logic_07_sister_age": {
+          "passed": false,
+          "duration": 1.66762113571167,
+          "speed": 32.4,
+          "category": "systems_logic"
+        },
+        "logic_08_monty_hall": {
+          "passed": true,
+          "duration": 2.8360178470611572,
+          "speed": 23.9,
+          "category": "systems_logic"
+        },
+        "logic_09_bayesian_disease": {
+          "passed": false,
+          "duration": 12.600716352462769,
+          "speed": 23.3,
+          "category": "systems_logic"
+        },
+        "logic_10_monty_hall_4doors": {
+          "passed": false,
+          "duration": 12.613615989685059,
+          "speed": 23.3,
+          "category": "systems_logic"
+        },
+        "logic_11_water_jug_4L": {
+          "passed": true,
+          "duration": 1.6286842823028564,
+          "speed": 41.9,
+          "category": "systems_logic"
+        },
+        "logic_12_two_dice_sum8": {
+          "passed": false,
+          "duration": 12.617281198501587,
+          "speed": 23.3,
+          "category": "systems_logic"
+        },
+        "logic_13_clock_angle_315": {
+          "passed": true,
+          "duration": 1.7162466049194336,
+          "speed": 29.5,
+          "category": "systems_logic"
+        },
+        "tbench_acl-permissions-inheritance": {
+          "passed": true,
+          "duration": 10.63822603225708,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_amuse-install": {
+          "passed": true,
+          "duration": 5.326714992523193,
+          "speed": 23.5,
+          "category": "terminal_agent"
+        },
+        "tbench_analyze-access-logs": {
+          "passed": true,
+          "duration": 10.55162239074707,
+          "speed": 23.3,
+          "category": "terminal_agent"
+        },
+        "tbench_bank-trans-filter": {
+          "passed": true,
+          "duration": 11.678199768066406,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_broken-python": {
+          "passed": false,
+          "duration": 8.433069705963135,
+          "speed": 23.4,
+          "category": "terminal_agent"
+        },
+        "tbench_cpp-compatibility": {
+          "passed": true,
+          "duration": 17.94004726409912,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_cross-entropy-method": {
+          "passed": false,
+          "duration": 24.440598011016846,
+          "speed": 23.0,
+          "category": "terminal_agent"
+        },
+        "tbench_csv-to-parquet": {
+          "passed": true,
+          "duration": 8.349777460098267,
+          "speed": 23.4,
+          "category": "terminal_agent"
+        },
+        "tbench_decommissioning-service-with-sensitive-data": {
+          "passed": false,
+          "duration": 10.430097103118896,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_fibonacci-server": {
+          "passed": true,
+          "duration": 23.84871745109558,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-pandas-version": {
+          "passed": false,
+          "duration": 9.015763521194458,
+          "speed": 23.3,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-permissions": {
+          "passed": true,
+          "duration": 21.34840989112854,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_flood-monitoring-basic": {
+          "passed": false,
+          "duration": 23.950361967086792,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_gomoku-planner": {
+          "passed": true,
+          "duration": 15.917182207107544,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_grid-pattern-transform": {
+          "passed": false,
+          "duration": 24.06938648223877,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_hdfs-deployment": {
+          "passed": true,
+          "duration": 23.819744348526,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_hello-world": {
+          "passed": true,
+          "duration": 2.6281814575195312,
+          "speed": 24.0,
+          "category": "terminal_agent"
+        },
+        "tbench_heterogeneous-dates": {
+          "passed": true,
+          "duration": 7.379385232925415,
+          "speed": 23.4,
+          "category": "terminal_agent"
+        },
+        "tbench_hydra-debug-slurm-mode": {
+          "passed": true,
+          "duration": 21.108500957489014,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_jq-data-processing": {
+          "passed": false,
+          "duration": 13.499678611755371,
+          "speed": 22.9,
+          "category": "terminal_agent"
+        },
+        "tbench_jsonl-aggregator": {
+          "passed": true,
+          "duration": 23.981773376464844,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_jupyter-notebook-server": {
+          "passed": false,
+          "duration": 23.90515923500061,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_log-summary": {
+          "passed": true,
+          "duration": 9.631733417510986,
+          "speed": 23.3,
+          "category": "terminal_agent"
+        },
+        "tbench_logistic-regression-divergence": {
+          "passed": false,
+          "duration": 23.69365358352661,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_mlflow-register": {
+          "passed": false,
+          "duration": 16.384207725524902,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_mnist-learning-fix": {
+          "passed": false,
+          "duration": 24.258203744888306,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_modernize-fortran-build": {
+          "passed": true,
+          "duration": 9.615325212478638,
+          "speed": 23.3,
+          "category": "terminal_agent"
+        },
+        "tbench_new-encrypt-command": {
+          "passed": true,
+          "duration": 20.68290638923645,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-etl": {
+          "passed": true,
+          "duration": 20.887475967407227,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-sql-query": {
+          "passed": true,
+          "duration": 23.55557894706726,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_png-generation": {
+          "passed": false,
+          "duration": 12.558838129043579,
+          "speed": 23.3,
+          "category": "terminal_agent"
+        },
+        "tbench_predict-customer-churn": {
+          "passed": false,
+          "duration": 27.832824230194092,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-accuracy-log": {
+          "passed": true,
+          "duration": 26.32874894142151,
+          "speed": 22.8,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-obfuscated-files": {
+          "passed": true,
+          "duration": 16.96077871322632,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_schedule-vacation": {
+          "passed": true,
+          "duration": 26.775487422943115,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_setup-custom-dev-env": {
+          "passed": true,
+          "duration": 26.630804777145386,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_sparql-professors-universities": {
+          "passed": false,
+          "duration": 11.736028909683228,
+          "speed": 23.2,
+          "category": "terminal_agent"
+        },
+        "tbench_spinning-up-rl": {
+          "passed": true,
+          "duration": 15.04912257194519,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "tbench_vimscript-vim-quine": {
+          "passed": true,
+          "duration": 26.138225078582764,
+          "speed": 23.1,
+          "category": "terminal_agent"
+        },
+        "harbor_atrx-vep-crispr": {
+          "passed": false,
+          "duration": 25.26138997077942,
+          "speed": 22.9,
+          "category": "heavy_systems"
+        },
+        "harbor_batched-eval-parity": {
+          "passed": true,
+          "duration": 24.60400891304016,
+          "speed": 23.0,
+          "category": "heavy_systems"
+        },
+        "harbor_biped-contact-dynamics": {
+          "passed": false,
+          "duration": 25.150303840637207,
+          "speed": 22.8,
+          "category": "heavy_systems"
+        },
+        "harbor_bun-sourcemap-leak": {
+          "passed": false,
+          "duration": 24.285542011260986,
+          "speed": 23.0,
+          "category": "heavy_systems"
+        },
+        "harbor_cad-model": {
+          "passed": false,
+          "duration": 21.917629957199097,
+          "speed": 23.2,
+          "category": "heavy_systems"
+        },
+        "harbor_cargo-flight-dispatch": {
+          "passed": false,
+          "duration": 0.0,
+          "speed": 0.0,
+          "category": "heavy_systems"
+        },
+        "harbor_coq-block-bound": {
+          "passed": true,
+          "duration": 23.942694902420044,
+          "speed": 23.1,
+          "category": "heavy_systems"
+        },
+        "harbor_ctr-optimization": {
+          "passed": false,
+          "duration": 23.98988914489746,
+          "speed": 23.1,
+          "category": "heavy_systems"
+        },
+        "harbor_cumulative-layout-shift": {
+          "passed": false,
+          "duration": 23.773645639419556,
+          "speed": 23.2,
+          "category": "heavy_systems"
+        }
+      },
+      "passed_count": 66,
+      "total_count": 100,
+      "total_duration": 1483.7451057434082
+    }
+  },
+  "falcon_h1r_7b": {
+    "t1_baseline": {
+      "tasks": {
+        "agent_01_calc": {
+          "passed": false,
+          "duration": 18.565264463424683,
+          "speed": 25.45,
+          "category": "systems_agentic_loop"
+        },
+        "agent_02_sql": {
+          "passed": true,
+          "duration": 13.874344110488892,
+          "speed": 25.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_03_file": {
+          "passed": true,
+          "duration": 13.578254699707031,
+          "speed": 25.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_04_weather": {
+          "passed": true,
+          "duration": 13.597187280654907,
+          "speed": 25.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_05_stock": {
+          "passed": true,
+          "duration": 13.601710081100464,
+          "speed": 25.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_06_db_update": {
+          "passed": true,
+          "duration": 13.643181324005127,
+          "speed": 25.45,
+          "category": "systems_agentic_loop"
+        },
+        "agent_07_unit_convert": {
+          "passed": false,
+          "duration": 13.655746221542358,
+          "speed": 25.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_08_kb_search": {
+          "passed": true,
+          "duration": 13.634820461273193,
+          "speed": 25.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_09_k8s_status": {
+          "passed": true,
+          "duration": 13.686674118041992,
+          "speed": 25.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_10_forex_triangular": {
+          "passed": false,
+          "duration": 13.034428119659424,
+          "speed": 25.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_11_auth_jwt": {
+          "passed": false,
+          "duration": 13.687060832977295,
+          "speed": 25.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_12_cve_severity": {
+          "passed": true,
+          "duration": 13.650038957595825,
+          "speed": 25.45,
+          "category": "systems_agentic_loop"
+        },
+        "agent_13_disk_cleanup": {
+          "passed": true,
+          "duration": 13.599723815917969,
+          "speed": 25.5,
+          "category": "systems_agentic_loop"
+        },
+        "code_01_regex_nfa": {
+          "passed": false,
+          "duration": 22.092148542404175,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_02_bytecode_vm": {
+          "passed": false,
+          "duration": 22.16096782684326,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_03_lazy_segment_tree": {
+          "passed": false,
+          "duration": 22.042153358459473,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_04_lisp_interpreter": {
+          "passed": false,
+          "duration": 22.177818059921265,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_05_dinic_max_flow": {
+          "passed": false,
+          "duration": 22.03799867630005,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_06_diff_patch_engine": {
+          "passed": false,
+          "duration": 22.07745099067688,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_07_avl_tree_invariants": {
+          "passed": false,
+          "duration": 22.04462218284607,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_08_transactional_key_value": {
+          "passed": false,
+          "duration": 22.0720055103302,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_09_expression_calculator_shunting_yard": {
+          "passed": false,
+          "duration": 22.053102731704712,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_10_interval_tree_overlap": {
+          "passed": false,
+          "duration": 22.045594692230225,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_11_topological_lexical_kahn": {
+          "passed": false,
+          "duration": 22.046860933303833,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_12_tarjan_scc": {
+          "passed": false,
+          "duration": 22.05494475364685,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "code_13_knapsack_with_reconstruction": {
+          "passed": false,
+          "duration": 22.07192826271057,
+          "speed": 25.3,
+          "category": "systems_coding"
+        },
+        "web_01_countdown": {
+          "passed": true,
+          "duration": 22.009162425994873,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_02_dark_mode": {
+          "passed": true,
+          "duration": 22.041898488998413,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_03_modal_esc": {
+          "passed": true,
+          "duration": 22.016178131103516,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_04_responsive_nav": {
+          "passed": true,
+          "duration": 22.014780044555664,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_05_debounce": {
+          "passed": true,
+          "duration": 22.002313137054443,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_06_fetch_retry": {
+          "passed": true,
+          "duration": 21.99066948890686,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_07_custom_tabs": {
+          "passed": true,
+          "duration": 22.00622797012329,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_08_css_grid": {
+          "passed": true,
+          "duration": 22.020567655563354,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_09_promise_pool": {
+          "passed": true,
+          "duration": 22.043091297149658,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_10_virtual_list_calc": {
+          "passed": true,
+          "duration": 22.009273290634155,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_11_fsm_state_machine": {
+          "passed": true,
+          "duration": 21.992998838424683,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_12_svg_arc_path": {
+          "passed": true,
+          "duration": 22.02047562599182,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "web_13_reactive_signal": {
+          "passed": true,
+          "duration": 21.98289918899536,
+          "speed": 25.3,
+          "category": "systems_web_dev"
+        },
+        "logic_01_bat_ball": {
+          "passed": true,
+          "duration": 8.78852105140686,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "logic_02_train_speed": {
+          "passed": true,
+          "duration": 7.2186079025268555,
+          "speed": 25.5,
+          "category": "systems_logic"
+        },
+        "logic_03_snail_well": {
+          "passed": true,
+          "duration": 11.882048606872559,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "logic_04_lily_pads": {
+          "passed": true,
+          "duration": 11.873136043548584,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "logic_05_machines": {
+          "passed": true,
+          "duration": 11.859880685806274,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "logic_06_sheep": {
+          "passed": true,
+          "duration": 4.630067348480225,
+          "speed": 25.6,
+          "category": "systems_logic"
+        },
+        "logic_07_sister_age": {
+          "passed": true,
+          "duration": 11.864794254302979,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "logic_08_monty_hall": {
+          "passed": true,
+          "duration": 11.864544868469238,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "logic_09_bayesian_disease": {
+          "passed": false,
+          "duration": 11.90103793144226,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "logic_10_monty_hall_4doors": {
+          "passed": false,
+          "duration": 11.897281885147095,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "logic_11_water_jug_4L": {
+          "passed": false,
+          "duration": 11.88231348991394,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "logic_12_two_dice_sum8": {
+          "passed": true,
+          "duration": 11.895384311676025,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "logic_13_clock_angle_315": {
+          "passed": false,
+          "duration": 11.86376953125,
+          "speed": 25.4,
+          "category": "systems_logic"
+        },
+        "tbench_acl-permissions-inheritance": {
+          "passed": true,
+          "duration": 22.411648511886597,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_amuse-install": {
+          "passed": true,
+          "duration": 22.21092653274536,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_analyze-access-logs": {
+          "passed": true,
+          "duration": 22.362648248672485,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_bank-trans-filter": {
+          "passed": true,
+          "duration": 22.42293667793274,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_broken-python": {
+          "passed": false,
+          "duration": 22.01619553565979,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_cpp-compatibility": {
+          "passed": true,
+          "duration": 22.11536693572998,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_cross-entropy-method": {
+          "passed": false,
+          "duration": 22.915681838989258,
+          "speed": 25.1,
+          "category": "terminal_agent"
+        },
+        "tbench_csv-to-parquet": {
+          "passed": true,
+          "duration": 22.028494358062744,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_decommissioning-service-with-sensitive-data": {
+          "passed": false,
+          "duration": 22.52959156036377,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_fibonacci-server": {
+          "passed": true,
+          "duration": 22.30119299888611,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-pandas-version": {
+          "passed": false,
+          "duration": 22.056983709335327,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-permissions": {
+          "passed": true,
+          "duration": 22.048638105392456,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_flood-monitoring-basic": {
+          "passed": false,
+          "duration": 22.440290689468384,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_gomoku-planner": {
+          "passed": true,
+          "duration": 22.444770336151123,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_grid-pattern-transform": {
+          "passed": false,
+          "duration": 22.59458899497986,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_hdfs-deployment": {
+          "passed": true,
+          "duration": 22.266430616378784,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_hello-world": {
+          "passed": true,
+          "duration": 11.438207626342773,
+          "speed": 25.4,
+          "category": "terminal_agent"
+        },
+        "tbench_heterogeneous-dates": {
+          "passed": true,
+          "duration": 22.213196516036987,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_hydra-debug-slurm-mode": {
+          "passed": true,
+          "duration": 22.70296025276184,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_jq-data-processing": {
+          "passed": false,
+          "duration": 18.532673597335815,
+          "speed": 25.0,
+          "category": "terminal_agent"
+        },
+        "tbench_jsonl-aggregator": {
+          "passed": true,
+          "duration": 22.491076946258545,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_jupyter-notebook-server": {
+          "passed": false,
+          "duration": 22.400002479553223,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_log-summary": {
+          "passed": true,
+          "duration": 22.284904956817627,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_logistic-regression-divergence": {
+          "passed": false,
+          "duration": 22.068232536315918,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_mlflow-register": {
+          "passed": false,
+          "duration": 22.11484169960022,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_mnist-learning-fix": {
+          "passed": false,
+          "duration": 22.81306290626526,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_modernize-fortran-build": {
+          "passed": true,
+          "duration": 22.403330087661743,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_new-encrypt-command": {
+          "passed": true,
+          "duration": 22.09931468963623,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-etl": {
+          "passed": true,
+          "duration": 22.351364374160767,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-sql-query": {
+          "passed": true,
+          "duration": 22.372225999832153,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_png-generation": {
+          "passed": false,
+          "duration": 22.108070373535156,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_predict-customer-churn": {
+          "passed": false,
+          "duration": 26.293285369873047,
+          "speed": 24.9,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-accuracy-log": {
+          "passed": true,
+          "duration": 9.915312051773071,
+          "speed": 25.1,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-obfuscated-files": {
+          "passed": true,
+          "duration": 24.798439741134644,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_schedule-vacation": {
+          "passed": true,
+          "duration": 24.896444082260132,
+          "speed": 25.2,
+          "category": "terminal_agent"
+        },
+        "tbench_setup-custom-dev-env": {
+          "passed": true,
+          "duration": 22.60382318496704,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_sparql-professors-universities": {
+          "passed": false,
+          "duration": 22.392752408981323,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_spinning-up-rl": {
+          "passed": true,
+          "duration": 22.4285888671875,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "tbench_vimscript-vim-quine": {
+          "passed": true,
+          "duration": 22.3543643951416,
+          "speed": 25.3,
+          "category": "terminal_agent"
+        },
+        "harbor_atrx-vep-crispr": {
+          "passed": false,
+          "duration": 23.50216507911682,
+          "speed": 25.0,
+          "category": "heavy_systems"
+        },
+        "harbor_batched-eval-parity": {
+          "passed": true,
+          "duration": 23.32015633583069,
+          "speed": 25.1,
+          "category": "heavy_systems"
+        },
+        "harbor_biped-contact-dynamics": {
+          "passed": false,
+          "duration": 23.72468328475952,
+          "speed": 25.0,
+          "category": "heavy_systems"
+        },
+        "harbor_bun-sourcemap-leak": {
+          "passed": false,
+          "duration": 22.838790893554688,
+          "speed": 25.2,
+          "category": "heavy_systems"
+        },
+        "harbor_cad-model": {
+          "passed": false,
+          "duration": 22.221658945083618,
+          "speed": 25.3,
+          "category": "heavy_systems"
+        },
+        "harbor_cargo-flight-dispatch": {
+          "passed": false,
+          "duration": 0.0,
+          "speed": 0.0,
+          "category": "heavy_systems"
+        },
+        "harbor_coq-block-bound": {
+          "passed": true,
+          "duration": 22.449883699417114,
+          "speed": 25.3,
+          "category": "heavy_systems"
+        },
+        "harbor_ctr-optimization": {
+          "passed": false,
+          "duration": 22.49039316177368,
+          "speed": 25.2,
+          "category": "heavy_systems"
+        },
+        "harbor_cumulative-layout-shift": {
+          "passed": false,
+          "duration": 22.22297215461731,
+          "speed": 25.3,
+          "category": "heavy_systems"
+        }
+      },
+      "passed_count": 58,
+      "total_count": 100,
+      "total_duration": 1930.3715188503265
+    },
+    "t2_orsd": {
+      "tasks": {
+        "agent_01_calc": {
+          "passed": false,
+          "duration": 14.097371578216553,
+          "speed": 24.45,
+          "category": "systems_agentic_loop"
+        },
+        "agent_02_sql": {
+          "passed": true,
+          "duration": 14.071446180343628,
+          "speed": 24.45,
+          "category": "systems_agentic_loop"
+        },
+        "agent_03_file": {
+          "passed": true,
+          "duration": 14.088775157928467,
+          "speed": 24.45,
+          "category": "systems_agentic_loop"
+        },
+        "agent_04_weather": {
+          "passed": true,
+          "duration": 14.092270135879517,
+          "speed": 24.4,
+          "category": "systems_agentic_loop"
+        },
+        "agent_05_stock": {
+          "passed": true,
+          "duration": 14.102681159973145,
+          "speed": 24.4,
+          "category": "systems_agentic_loop"
+        },
+        "agent_06_db_update": {
+          "passed": true,
+          "duration": 14.101394176483154,
+          "speed": 24.45,
+          "category": "systems_agentic_loop"
+        },
+        "agent_07_unit_convert": {
+          "passed": false,
+          "duration": 14.12839412689209,
+          "speed": 24.45,
+          "category": "systems_agentic_loop"
+        },
+        "agent_08_kb_search": {
+          "passed": true,
+          "duration": 14.150617837905884,
+          "speed": 24.4,
+          "category": "systems_agentic_loop"
+        },
+        "agent_09_k8s_status": {
+          "passed": true,
+          "duration": 14.144296884536743,
+          "speed": 24.4,
+          "category": "systems_agentic_loop"
+        },
+        "agent_10_forex_triangular": {
+          "passed": false,
+          "duration": 14.113375425338745,
+          "speed": 24.4,
+          "category": "systems_agentic_loop"
+        },
+        "agent_11_auth_jwt": {
+          "passed": true,
+          "duration": 13.84611201286316,
+          "speed": 24.45,
+          "category": "systems_agentic_loop"
+        },
+        "agent_12_cve_severity": {
+          "passed": true,
+          "duration": 14.109167575836182,
+          "speed": 24.4,
+          "category": "systems_agentic_loop"
+        },
+        "agent_13_disk_cleanup": {
+          "passed": true,
+          "duration": 14.140779733657837,
+          "speed": 24.4,
+          "category": "systems_agentic_loop"
+        },
+        "code_01_regex_nfa": {
+          "passed": false,
+          "duration": 22.958181858062744,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_02_bytecode_vm": {
+          "passed": false,
+          "duration": 23.0297954082489,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_03_lazy_segment_tree": {
+          "passed": false,
+          "duration": 22.94639015197754,
+          "speed": 24.2,
+          "category": "systems_coding"
+        },
+        "code_04_lisp_interpreter": {
+          "passed": false,
+          "duration": 23.083333015441895,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_05_dinic_max_flow": {
+          "passed": false,
+          "duration": 22.933977603912354,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_06_diff_patch_engine": {
+          "passed": false,
+          "duration": 22.94388723373413,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_07_avl_tree_invariants": {
+          "passed": false,
+          "duration": 22.950639486312866,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_08_transactional_key_value": {
+          "passed": false,
+          "duration": 22.991811990737915,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_09_expression_calculator_shunting_yard": {
+          "passed": false,
+          "duration": 22.961909294128418,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_10_interval_tree_overlap": {
+          "passed": false,
+          "duration": 22.95266628265381,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_11_topological_lexical_kahn": {
+          "passed": false,
+          "duration": 22.947907209396362,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_12_tarjan_scc": {
+          "passed": false,
+          "duration": 22.9205379486084,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "code_13_knapsack_with_reconstruction": {
+          "passed": false,
+          "duration": 22.956990480422974,
+          "speed": 24.3,
+          "category": "systems_coding"
+        },
+        "web_01_countdown": {
+          "passed": true,
+          "duration": 22.898651838302612,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_02_dark_mode": {
+          "passed": true,
+          "duration": 22.89421772956848,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_03_modal_esc": {
+          "passed": true,
+          "duration": 22.88786005973816,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_04_responsive_nav": {
+          "passed": true,
+          "duration": 22.883137941360474,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_05_debounce": {
+          "passed": true,
+          "duration": 22.879955768585205,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_06_fetch_retry": {
+          "passed": true,
+          "duration": 22.843405723571777,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_07_custom_tabs": {
+          "passed": true,
+          "duration": 22.905266523361206,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_08_css_grid": {
+          "passed": true,
+          "duration": 19.130078077316284,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_09_promise_pool": {
+          "passed": true,
+          "duration": 22.893945455551147,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_10_virtual_list_calc": {
+          "passed": true,
+          "duration": 22.904628038406372,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_11_fsm_state_machine": {
+          "passed": true,
+          "duration": 22.884936571121216,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_12_svg_arc_path": {
+          "passed": true,
+          "duration": 22.920714139938354,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "web_13_reactive_signal": {
+          "passed": true,
+          "duration": 22.906529426574707,
+          "speed": 24.3,
+          "category": "systems_web_dev"
+        },
+        "logic_01_bat_ball": {
+          "passed": true,
+          "duration": 8.67025113105774,
+          "speed": 24.4,
+          "category": "systems_logic"
+        },
+        "logic_02_train_speed": {
+          "passed": true,
+          "duration": 7.303245782852173,
+          "speed": 24.4,
+          "category": "systems_logic"
+        },
+        "logic_03_snail_well": {
+          "passed": true,
+          "duration": 12.339138984680176,
+          "speed": 24.3,
+          "category": "systems_logic"
+        },
+        "logic_04_lily_pads": {
+          "passed": true,
+          "duration": 12.343025207519531,
+          "speed": 24.3,
+          "category": "systems_logic"
+        },
+        "logic_05_machines": {
+          "passed": true,
+          "duration": 12.325092077255249,
+          "speed": 24.3,
+          "category": "systems_logic"
+        },
+        "logic_06_sheep": {
+          "passed": true,
+          "duration": 6.251508712768555,
+          "speed": 24.5,
+          "category": "systems_logic"
+        },
+        "logic_07_sister_age": {
+          "passed": true,
+          "duration": 11.254195928573608,
+          "speed": 24.3,
+          "category": "systems_logic"
+        },
+        "logic_08_monty_hall": {
+          "passed": true,
+          "duration": 12.316320896148682,
+          "speed": 24.3,
+          "category": "systems_logic"
+        },
+        "logic_09_bayesian_disease": {
+          "passed": false,
+          "duration": 12.356683254241943,
+          "speed": 24.3,
+          "category": "systems_logic"
+        },
+        "logic_10_monty_hall_4doors": {
+          "passed": false,
+          "duration": 12.345173597335815,
+          "speed": 24.3,
+          "category": "systems_logic"
+        },
+        "logic_11_water_jug_4L": {
+          "passed": false,
+          "duration": 12.332547903060913,
+          "speed": 24.3,
+          "category": "systems_logic"
+        },
+        "logic_12_two_dice_sum8": {
+          "passed": true,
+          "duration": 12.308888673782349,
+          "speed": 24.3,
+          "category": "systems_logic"
+        },
+        "logic_13_clock_angle_315": {
+          "passed": true,
+          "duration": 12.324247360229492,
+          "speed": 24.3,
+          "category": "systems_logic"
+        },
+        "tbench_acl-permissions-inheritance": {
+          "passed": true,
+          "duration": 23.334486961364746,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_amuse-install": {
+          "passed": true,
+          "duration": 23.13367462158203,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_analyze-access-logs": {
+          "passed": true,
+          "duration": 23.221853971481323,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_bank-trans-filter": {
+          "passed": true,
+          "duration": 23.334917545318604,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_broken-python": {
+          "passed": false,
+          "duration": 22.90970754623413,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_cpp-compatibility": {
+          "passed": true,
+          "duration": 22.97795557975769,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_cross-entropy-method": {
+          "passed": false,
+          "duration": 23.776488542556763,
+          "speed": 24.1,
+          "category": "terminal_agent"
+        },
+        "tbench_csv-to-parquet": {
+          "passed": true,
+          "duration": 22.914483785629272,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_decommissioning-service-with-sensitive-data": {
+          "passed": false,
+          "duration": 23.449744939804077,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_fibonacci-server": {
+          "passed": true,
+          "duration": 23.153940200805664,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-pandas-version": {
+          "passed": false,
+          "duration": 22.939302444458008,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-permissions": {
+          "passed": true,
+          "duration": 22.966667413711548,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_flood-monitoring-basic": {
+          "passed": false,
+          "duration": 23.335153818130493,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_gomoku-planner": {
+          "passed": true,
+          "duration": 23.264793872833252,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_grid-pattern-transform": {
+          "passed": false,
+          "duration": 23.4846248626709,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_hdfs-deployment": {
+          "passed": true,
+          "duration": 23.144923210144043,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_hello-world": {
+          "passed": true,
+          "duration": 17.24316644668579,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_heterogeneous-dates": {
+          "passed": true,
+          "duration": 23.046951055526733,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_hydra-debug-slurm-mode": {
+          "passed": true,
+          "duration": 23.682399034500122,
+          "speed": 24.1,
+          "category": "terminal_agent"
+        },
+        "tbench_jq-data-processing": {
+          "passed": false,
+          "duration": 19.269157648086548,
+          "speed": 24.0,
+          "category": "terminal_agent"
+        },
+        "tbench_jsonl-aggregator": {
+          "passed": true,
+          "duration": 23.36080241203308,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_jupyter-notebook-server": {
+          "passed": false,
+          "duration": 23.25697612762451,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_log-summary": {
+          "passed": true,
+          "duration": 23.214269876480103,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_logistic-regression-divergence": {
+          "passed": false,
+          "duration": 22.976577758789062,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_mlflow-register": {
+          "passed": false,
+          "duration": 22.982734203338623,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_mnist-learning-fix": {
+          "passed": false,
+          "duration": 23.73568606376648,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_modernize-fortran-build": {
+          "passed": true,
+          "duration": 23.344996452331543,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_new-encrypt-command": {
+          "passed": true,
+          "duration": 22.951425552368164,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-etl": {
+          "passed": true,
+          "duration": 23.277212858200073,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-sql-query": {
+          "passed": true,
+          "duration": 23.393856048583984,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_png-generation": {
+          "passed": false,
+          "duration": 22.968681812286377,
+          "speed": 24.3,
+          "category": "terminal_agent"
+        },
+        "tbench_predict-customer-churn": {
+          "passed": false,
+          "duration": 23.473086833953857,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-accuracy-log": {
+          "passed": true,
+          "duration": 7.192617654800415,
+          "speed": 24.1,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-obfuscated-files": {
+          "passed": true,
+          "duration": 23.124097108840942,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_schedule-vacation": {
+          "passed": true,
+          "duration": 23.443827867507935,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_setup-custom-dev-env": {
+          "passed": true,
+          "duration": 23.323153972625732,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_sparql-professors-universities": {
+          "passed": false,
+          "duration": 23.297720193862915,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_spinning-up-rl": {
+          "passed": true,
+          "duration": 23.266245365142822,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "tbench_vimscript-vim-quine": {
+          "passed": true,
+          "duration": 23.23823881149292,
+          "speed": 24.2,
+          "category": "terminal_agent"
+        },
+        "harbor_atrx-vep-crispr": {
+          "passed": false,
+          "duration": 24.410212993621826,
+          "speed": 24.0,
+          "category": "heavy_systems"
+        },
+        "harbor_batched-eval-parity": {
+          "passed": true,
+          "duration": 24.28888726234436,
+          "speed": 24.0,
+          "category": "heavy_systems"
+        },
+        "harbor_biped-contact-dynamics": {
+          "passed": false,
+          "duration": 24.732125282287598,
+          "speed": 23.9,
+          "category": "heavy_systems"
+        },
+        "harbor_bun-sourcemap-leak": {
+          "passed": false,
+          "duration": 23.729363679885864,
+          "speed": 24.1,
+          "category": "heavy_systems"
+        },
+        "harbor_cad-model": {
+          "passed": false,
+          "duration": 23.082114696502686,
+          "speed": 24.2,
+          "category": "heavy_systems"
+        },
+        "harbor_cargo-flight-dispatch": {
+          "passed": false,
+          "duration": 0.0,
+          "speed": 0.0,
+          "category": "heavy_systems"
+        },
+        "harbor_coq-block-bound": {
+          "passed": true,
+          "duration": 23.317244291305542,
+          "speed": 24.2,
+          "category": "heavy_systems"
+        },
+        "harbor_ctr-optimization": {
+          "passed": false,
+          "duration": 23.373445987701416,
+          "speed": 24.2,
+          "category": "heavy_systems"
+        },
+        "harbor_cumulative-layout-shift": {
+          "passed": false,
+          "duration": 23.08677840232849,
+          "speed": 24.2,
+          "category": "heavy_systems"
+        }
+      },
+      "passed_count": 60,
+      "total_count": 100,
+      "total_duration": 1990.4951298236847
+    },
+    "t4_deep": {
+      "tasks": {
+        "agent_01_calc": {
+          "passed": false,
+          "duration": 15.000870704650879,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_02_sql": {
+          "passed": true,
+          "duration": 15.001998901367188,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_03_file": {
+          "passed": true,
+          "duration": 15.03719973564148,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_04_weather": {
+          "passed": true,
+          "duration": 15.0137779712677,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_05_stock": {
+          "passed": true,
+          "duration": 15.024970054626465,
+          "speed": 22.6,
+          "category": "systems_agentic_loop"
+        },
+        "agent_06_db_update": {
+          "passed": true,
+          "duration": 15.052254915237427,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_07_unit_convert": {
+          "passed": false,
+          "duration": 15.049915075302124,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_08_kb_search": {
+          "passed": true,
+          "duration": 15.115976095199585,
+          "speed": 22.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_09_k8s_status": {
+          "passed": true,
+          "duration": 15.011400938034058,
+          "speed": 22.5,
+          "category": "systems_agentic_loop"
+        },
+        "agent_10_forex_triangular": {
+          "passed": false,
+          "duration": 15.05185580253601,
+          "speed": 22.6,
+          "category": "systems_agentic_loop"
+        },
+        "agent_11_auth_jwt": {
+          "passed": true,
+          "duration": 15.022144794464111,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_12_cve_severity": {
+          "passed": true,
+          "duration": 15.03274941444397,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_13_disk_cleanup": {
+          "passed": true,
+          "duration": 14.945446491241455,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "code_01_regex_nfa": {
+          "passed": false,
+          "duration": 24.74875783920288,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_02_bytecode_vm": {
+          "passed": false,
+          "duration": 24.835394859313965,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_03_lazy_segment_tree": {
+          "passed": false,
+          "duration": 24.75128436088562,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_04_lisp_interpreter": {
+          "passed": false,
+          "duration": 24.863775730133057,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_05_dinic_max_flow": {
+          "passed": false,
+          "duration": 24.68011784553528,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_06_diff_patch_engine": {
+          "passed": false,
+          "duration": 24.721848487854004,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_07_avl_tree_invariants": {
+          "passed": false,
+          "duration": 24.70896339416504,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_08_transactional_key_value": {
+          "passed": false,
+          "duration": 24.756545305252075,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_09_expression_calculator_shunting_yard": {
+          "passed": false,
+          "duration": 24.715287685394287,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_10_interval_tree_overlap": {
+          "passed": false,
+          "duration": 24.663251399993896,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_11_topological_lexical_kahn": {
+          "passed": false,
+          "duration": 24.745819330215454,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_12_tarjan_scc": {
+          "passed": false,
+          "duration": 24.679259300231934,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_13_knapsack_with_reconstruction": {
+          "passed": false,
+          "duration": 24.699119091033936,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "web_01_countdown": {
+          "passed": true,
+          "duration": 24.68526554107666,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_02_dark_mode": {
+          "passed": true,
+          "duration": 24.695033073425293,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_03_modal_esc": {
+          "passed": true,
+          "duration": 24.6804416179657,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_04_responsive_nav": {
+          "passed": true,
+          "duration": 24.66427707672119,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_05_debounce": {
+          "passed": true,
+          "duration": 24.656569004058838,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_06_fetch_retry": {
+          "passed": true,
+          "duration": 24.69066548347473,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_07_custom_tabs": {
+          "passed": true,
+          "duration": 24.690322637557983,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_08_css_grid": {
+          "passed": true,
+          "duration": 19.35776948928833,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_09_promise_pool": {
+          "passed": true,
+          "duration": 24.699580430984497,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_10_virtual_list_calc": {
+          "passed": true,
+          "duration": 24.680198907852173,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_11_fsm_state_machine": {
+          "passed": true,
+          "duration": 24.629284381866455,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_12_svg_arc_path": {
+          "passed": true,
+          "duration": 24.698589324951172,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_13_reactive_signal": {
+          "passed": true,
+          "duration": 24.668328285217285,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "logic_01_bat_ball": {
+          "passed": true,
+          "duration": 13.230630159378052,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_02_train_speed": {
+          "passed": true,
+          "duration": 8.34184980392456,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_03_snail_well": {
+          "passed": false,
+          "duration": 13.246167659759521,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_04_lily_pads": {
+          "passed": true,
+          "duration": 13.233697652816772,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_05_machines": {
+          "passed": true,
+          "duration": 13.245237350463867,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_06_sheep": {
+          "passed": true,
+          "duration": 5.540674448013306,
+          "speed": 22.6,
+          "category": "systems_logic"
+        },
+        "logic_07_sister_age": {
+          "passed": true,
+          "duration": 8.93723440170288,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_08_monty_hall": {
+          "passed": true,
+          "duration": 13.221453666687012,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_09_bayesian_disease": {
+          "passed": false,
+          "duration": 13.262500286102295,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_10_monty_hall_4doors": {
+          "passed": false,
+          "duration": 13.24917221069336,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_11_water_jug_4L": {
+          "passed": false,
+          "duration": 13.24302077293396,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_12_two_dice_sum8": {
+          "passed": true,
+          "duration": 13.234715461730957,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_13_clock_angle_315": {
+          "passed": false,
+          "duration": 13.243379592895508,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "tbench_acl-permissions-inheritance": {
+          "passed": true,
+          "duration": 25.136540174484253,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_amuse-install": {
+          "passed": true,
+          "duration": 24.95236897468567,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_analyze-access-logs": {
+          "passed": true,
+          "duration": 25.01877999305725,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_bank-trans-filter": {
+          "passed": true,
+          "duration": 25.14900040626526,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_broken-python": {
+          "passed": false,
+          "duration": 24.66791296005249,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_cpp-compatibility": {
+          "passed": true,
+          "duration": 24.764402627944946,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_cross-entropy-method": {
+          "passed": false,
+          "duration": 25.6994206905365,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_csv-to-parquet": {
+          "passed": true,
+          "duration": 24.73031735420227,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_decommissioning-service-with-sensitive-data": {
+          "passed": false,
+          "duration": 25.27973771095276,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_fibonacci-server": {
+          "passed": true,
+          "duration": 24.924691677093506,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-pandas-version": {
+          "passed": false,
+          "duration": 24.82419466972351,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-permissions": {
+          "passed": true,
+          "duration": 24.76917314529419,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_flood-monitoring-basic": {
+          "passed": false,
+          "duration": 25.143430948257446,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_gomoku-planner": {
+          "passed": true,
+          "duration": 25.079609155654907,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_grid-pattern-transform": {
+          "passed": false,
+          "duration": 25.31584334373474,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_hdfs-deployment": {
+          "passed": true,
+          "duration": 25.01020312309265,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_hello-world": {
+          "passed": true,
+          "duration": 24.665277004241943,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_heterogeneous-dates": {
+          "passed": true,
+          "duration": 24.830540895462036,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_hydra-debug-slurm-mode": {
+          "passed": true,
+          "duration": 25.45568323135376,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_jq-data-processing": {
+          "passed": false,
+          "duration": 20.710580587387085,
+          "speed": 22.1,
+          "category": "terminal_agent"
+        },
+        "tbench_jsonl-aggregator": {
+          "passed": true,
+          "duration": 25.136393070220947,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_jupyter-notebook-server": {
+          "passed": false,
+          "duration": 25.080959796905518,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_log-summary": {
+          "passed": true,
+          "duration": 24.950660467147827,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_logistic-regression-divergence": {
+          "passed": false,
+          "duration": 24.719568729400635,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_mlflow-register": {
+          "passed": false,
+          "duration": 24.784023761749268,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_mnist-learning-fix": {
+          "passed": false,
+          "duration": 25.84314799308777,
+          "speed": 22.1,
+          "category": "terminal_agent"
+        },
+        "tbench_modernize-fortran-build": {
+          "passed": true,
+          "duration": 37.30570673942566,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_new-encrypt-command": {
+          "passed": true,
+          "duration": 27.357544422149658,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-etl": {
+          "passed": true,
+          "duration": 25.875298738479614,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-sql-query": {
+          "passed": true,
+          "duration": 32.34842348098755,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_png-generation": {
+          "passed": false,
+          "duration": 24.915473461151123,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_predict-customer-churn": {
+          "passed": false,
+          "duration": 120.0,
+          "speed": 0.0,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-accuracy-log": {
+          "passed": true,
+          "duration": 11.115841627120972,
+          "speed": 22.2,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-obfuscated-files": {
+          "passed": true,
+          "duration": 27.720510005950928,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_schedule-vacation": {
+          "passed": true,
+          "duration": 28.05154514312744,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_setup-custom-dev-env": {
+          "passed": true,
+          "duration": 25.261245489120483,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_sparql-professors-universities": {
+          "passed": false,
+          "duration": 25.265710830688477,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_spinning-up-rl": {
+          "passed": true,
+          "duration": 25.041195154190063,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_vimscript-vim-quine": {
+          "passed": true,
+          "duration": 25.002387046813965,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "harbor_atrx-vep-crispr": {
+          "passed": false,
+          "duration": 26.339733362197876,
+          "speed": 22.1,
+          "category": "heavy_systems"
+        },
+        "harbor_batched-eval-parity": {
+          "passed": true,
+          "duration": 26.16942310333252,
+          "speed": 22.2,
+          "category": "heavy_systems"
+        },
+        "harbor_biped-contact-dynamics": {
+          "passed": false,
+          "duration": 26.71385145187378,
+          "speed": 22.1,
+          "category": "heavy_systems"
+        },
+        "harbor_bun-sourcemap-leak": {
+          "passed": false,
+          "duration": 25.579989194869995,
+          "speed": 22.3,
+          "category": "heavy_systems"
+        },
+        "harbor_cad-model": {
+          "passed": false,
+          "duration": 24.88946843147278,
+          "speed": 22.4,
+          "category": "heavy_systems"
+        },
+        "harbor_cargo-flight-dispatch": {
+          "passed": false,
+          "duration": 0.0,
+          "speed": 0.0,
+          "category": "heavy_systems"
+        },
+        "harbor_coq-block-bound": {
+          "passed": true,
+          "duration": 25.1482994556427,
+          "speed": 22.3,
+          "category": "heavy_systems"
+        },
+        "harbor_ctr-optimization": {
+          "passed": false,
+          "duration": 25.282738208770752,
+          "speed": 22.3,
+          "category": "heavy_systems"
+        },
+        "harbor_cumulative-layout-shift": {
+          "passed": false,
+          "duration": 24.96551752090454,
+          "speed": 22.4,
+          "category": "heavy_systems"
+        }
+      },
+      "passed_count": 58,
+      "total_count": 100,
+      "total_duration": 2274.6484096050262
+    }
+  },
+  "mistral_7b": {
+    "t1_baseline": {
+      "tasks": {
+        "agent_01_calc": {
+          "passed": true,
+          "duration": 15.275187492370605,
+          "speed": 22.75,
+          "category": "systems_agentic_loop"
+        },
+        "agent_02_sql": {
+          "passed": true,
+          "duration": 11.917308330535889,
+          "speed": 22.700000000000003,
+          "category": "systems_agentic_loop"
+        },
+        "agent_03_file": {
+          "passed": true,
+          "duration": 9.240973711013794,
+          "speed": 22.799999999999997,
+          "category": "systems_agentic_loop"
+        },
+        "agent_04_weather": {
+          "passed": true,
+          "duration": 11.607947826385498,
+          "speed": 22.4,
+          "category": "systems_agentic_loop"
+        },
+        "agent_05_stock": {
+          "passed": true,
+          "duration": 14.400686025619507,
+          "speed": 22.25,
+          "category": "systems_agentic_loop"
+        },
+        "agent_06_db_update": {
+          "passed": true,
+          "duration": 10.954187870025635,
+          "speed": 22.1,
+          "category": "systems_agentic_loop"
+        },
+        "agent_07_unit_convert": {
+          "passed": false,
+          "duration": 10.160046815872192,
+          "speed": 23.0,
+          "category": "systems_agentic_loop"
+        },
+        "agent_08_kb_search": {
+          "passed": true,
+          "duration": 8.053016901016235,
+          "speed": 22.95,
+          "category": "systems_agentic_loop"
+        },
+        "agent_09_k8s_status": {
+          "passed": true,
+          "duration": 11.780592441558838,
+          "speed": 22.299999999999997,
+          "category": "systems_agentic_loop"
+        },
+        "agent_10_forex_triangular": {
+          "passed": false,
+          "duration": 14.62546420097351,
+          "speed": 21.95,
+          "category": "systems_agentic_loop"
+        },
+        "agent_11_auth_jwt": {
+          "passed": true,
+          "duration": 11.914239645004272,
+          "speed": 21.05,
+          "category": "systems_agentic_loop"
+        },
+        "agent_12_cve_severity": {
+          "passed": true,
+          "duration": 13.284897327423096,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_13_disk_cleanup": {
+          "passed": true,
+          "duration": 9.042999982833862,
+          "speed": 22.700000000000003,
+          "category": "systems_agentic_loop"
+        },
+        "code_01_regex_nfa": {
+          "passed": false,
+          "duration": 24.632596015930176,
+          "speed": 22.2,
+          "category": "systems_coding"
+        },
+        "code_02_bytecode_vm": {
+          "passed": false,
+          "duration": 25.00123691558838,
+          "speed": 21.8,
+          "category": "systems_coding"
+        },
+        "code_03_lazy_segment_tree": {
+          "passed": false,
+          "duration": 24.362633228302002,
+          "speed": 22.3,
+          "category": "systems_coding"
+        },
+        "code_04_lisp_interpreter": {
+          "passed": false,
+          "duration": 25.774431705474854,
+          "speed": 21.1,
+          "category": "systems_coding"
+        },
+        "code_05_dinic_max_flow": {
+          "passed": false,
+          "duration": 22.489392518997192,
+          "speed": 21.6,
+          "category": "systems_coding"
+        },
+        "code_06_diff_patch_engine": {
+          "passed": false,
+          "duration": 25.000890731811523,
+          "speed": 21.8,
+          "category": "systems_coding"
+        },
+        "code_07_avl_tree_invariants": {
+          "passed": false,
+          "duration": 28.456481456756592,
+          "speed": 21.5,
+          "category": "systems_coding"
+        },
+        "code_08_transactional_key_value": {
+          "passed": false,
+          "duration": 27.786412477493286,
+          "speed": 22.0,
+          "category": "systems_coding"
+        },
+        "code_09_expression_calculator_shunting_yard": {
+          "passed": false,
+          "duration": 25.164506673812866,
+          "speed": 21.8,
+          "category": "systems_coding"
+        },
+        "code_10_interval_tree_overlap": {
+          "passed": false,
+          "duration": 20.713685750961304,
+          "speed": 21.4,
+          "category": "systems_coding"
+        },
+        "code_11_topological_lexical_kahn": {
+          "passed": false,
+          "duration": 29.541191577911377,
+          "speed": 22.2,
+          "category": "systems_coding"
+        },
+        "code_12_tarjan_scc": {
+          "passed": false,
+          "duration": 24.54617404937744,
+          "speed": 22.4,
+          "category": "systems_coding"
+        },
+        "code_13_knapsack_with_reconstruction": {
+          "passed": false,
+          "duration": 20.174864768981934,
+          "speed": 21.6,
+          "category": "systems_coding"
+        },
+        "web_01_countdown": {
+          "passed": true,
+          "duration": 19.137595653533936,
+          "speed": 22.3,
+          "category": "systems_web_dev"
+        },
+        "web_02_dark_mode": {
+          "passed": true,
+          "duration": 15.590069770812988,
+          "speed": 22.4,
+          "category": "systems_web_dev"
+        },
+        "web_03_modal_esc": {
+          "passed": true,
+          "duration": 24.687888145446777,
+          "speed": 22.0,
+          "category": "systems_web_dev"
+        },
+        "web_04_responsive_nav": {
+          "passed": true,
+          "duration": 16.992061614990234,
+          "speed": 21.9,
+          "category": "systems_web_dev"
+        },
+        "web_05_debounce": {
+          "passed": true,
+          "duration": 21.750619411468506,
+          "speed": 21.1,
+          "category": "systems_web_dev"
+        },
+        "web_06_fetch_retry": {
+          "passed": true,
+          "duration": 23.150296688079834,
+          "speed": 20.6,
+          "category": "systems_web_dev"
+        },
+        "web_07_custom_tabs": {
+          "passed": true,
+          "duration": 31.89291524887085,
+          "speed": 20.3,
+          "category": "systems_web_dev"
+        },
+        "web_08_css_grid": {
+          "passed": true,
+          "duration": 15.578868865966797,
+          "speed": 19.8,
+          "category": "systems_web_dev"
+        },
+        "web_09_promise_pool": {
+          "passed": true,
+          "duration": 23.68354821205139,
+          "speed": 19.7,
+          "category": "systems_web_dev"
+        },
+        "web_10_virtual_list_calc": {
+          "passed": true,
+          "duration": 17.72040295600891,
+          "speed": 20.0,
+          "category": "systems_web_dev"
+        },
+        "web_11_fsm_state_machine": {
+          "passed": true,
+          "duration": 18.951715230941772,
+          "speed": 20.4,
+          "category": "systems_web_dev"
+        },
+        "web_12_svg_arc_path": {
+          "passed": true,
+          "duration": 27.141494750976562,
+          "speed": 21.9,
+          "category": "systems_web_dev"
+        },
+        "web_13_reactive_signal": {
+          "passed": false,
+          "duration": 120.0,
+          "speed": 0.0,
+          "category": "systems_web_dev"
+        },
+        "logic_01_bat_ball": {
+          "passed": true,
+          "duration": 17.84478259086609,
+          "speed": 22.3,
+          "category": "systems_logic"
+        },
+        "logic_02_train_speed": {
+          "passed": true,
+          "duration": 15.778601169586182,
+          "speed": 22.2,
+          "category": "systems_logic"
+        },
+        "logic_03_snail_well": {
+          "passed": false,
+          "duration": 16.76306939125061,
+          "speed": 22.6,
+          "category": "systems_logic"
+        },
+        "logic_04_lily_pads": {
+          "passed": true,
+          "duration": 11.99455976486206,
+          "speed": 22.4,
+          "category": "systems_logic"
+        },
+        "logic_05_machines": {
+          "passed": true,
+          "duration": 7.484319686889648,
+          "speed": 23.0,
+          "category": "systems_logic"
+        },
+        "logic_06_sheep": {
+          "passed": true,
+          "duration": 7.974202871322632,
+          "speed": 22.7,
+          "category": "systems_logic"
+        },
+        "logic_07_sister_age": {
+          "passed": true,
+          "duration": 7.922246694564819,
+          "speed": 22.5,
+          "category": "systems_logic"
+        },
+        "logic_08_monty_hall": {
+          "passed": true,
+          "duration": 16.399027824401855,
+          "speed": 21.6,
+          "category": "systems_logic"
+        },
+        "logic_09_bayesian_disease": {
+          "passed": false,
+          "duration": 16.602607488632202,
+          "speed": 21.4,
+          "category": "systems_logic"
+        },
+        "logic_10_monty_hall_4doors": {
+          "passed": false,
+          "duration": 18.641502618789673,
+          "speed": 20.4,
+          "category": "systems_logic"
+        },
+        "logic_11_water_jug_4L": {
+          "passed": false,
+          "duration": 12.68109130859375,
+          "speed": 22.3,
+          "category": "systems_logic"
+        },
+        "logic_12_two_dice_sum8": {
+          "passed": false,
+          "duration": 16.92666006088257,
+          "speed": 22.4,
+          "category": "systems_logic"
+        },
+        "logic_13_clock_angle_315": {
+          "passed": false,
+          "duration": 10.579065084457397,
+          "speed": 22.4,
+          "category": "systems_logic"
+        },
+        "tbench_acl-permissions-inheritance": {
+          "passed": true,
+          "duration": 21.306720733642578,
+          "speed": 22.0,
+          "category": "terminal_agent"
+        },
+        "tbench_amuse-install": {
+          "passed": true,
+          "duration": 13.502232551574707,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_analyze-access-logs": {
+          "passed": true,
+          "duration": 21.849316358566284,
+          "speed": 21.9,
+          "category": "terminal_agent"
+        },
+        "tbench_bank-trans-filter": {
+          "passed": true,
+          "duration": 29.863359212875366,
+          "speed": 22.0,
+          "category": "terminal_agent"
+        },
+        "tbench_broken-python": {
+          "passed": false,
+          "duration": 15.016584634780884,
+          "speed": 22.1,
+          "category": "terminal_agent"
+        },
+        "tbench_cpp-compatibility": {
+          "passed": true,
+          "duration": 24.72423768043518,
+          "speed": 20.8,
+          "category": "terminal_agent"
+        },
+        "tbench_cross-entropy-method": {
+          "passed": false,
+          "duration": 31.339982986450195,
+          "speed": 21.1,
+          "category": "terminal_agent"
+        },
+        "tbench_csv-to-parquet": {
+          "passed": true,
+          "duration": 29.32565426826477,
+          "speed": 21.8,
+          "category": "terminal_agent"
+        },
+        "tbench_decommissioning-service-with-sensitive-data": {
+          "passed": false,
+          "duration": 25.077152013778687,
+          "speed": 22.1,
+          "category": "terminal_agent"
+        },
+        "tbench_fibonacci-server": {
+          "passed": true,
+          "duration": 30.086572408676147,
+          "speed": 22.1,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-pandas-version": {
+          "passed": false,
+          "duration": 14.203495740890503,
+          "speed": 21.3,
+          "category": "terminal_agent"
+        },
+        "tbench_fix-permissions": {
+          "passed": true,
+          "duration": 22.117542028427124,
+          "speed": 22.4,
+          "category": "terminal_agent"
+        },
+        "tbench_flood-monitoring-basic": {
+          "passed": false,
+          "duration": 28.888981103897095,
+          "speed": 21.7,
+          "category": "terminal_agent"
+        },
+        "tbench_gomoku-planner": {
+          "passed": true,
+          "duration": 28.44345235824585,
+          "speed": 22.0,
+          "category": "terminal_agent"
+        },
+        "tbench_grid-pattern-transform": {
+          "passed": false,
+          "duration": 26.788633584976196,
+          "speed": 22.1,
+          "category": "terminal_agent"
+        },
+        "tbench_hdfs-deployment": {
+          "passed": true,
+          "duration": 28.310832023620605,
+          "speed": 21.9,
+          "category": "terminal_agent"
+        },
+        "tbench_hello-world": {
+          "passed": true,
+          "duration": 8.505016565322876,
+          "speed": 21.8,
+          "category": "terminal_agent"
+        },
+        "tbench_heterogeneous-dates": {
+          "passed": true,
+          "duration": 21.134050369262695,
+          "speed": 22.2,
+          "category": "terminal_agent"
+        },
+        "tbench_hydra-debug-slurm-mode": {
+          "passed": true,
+          "duration": 29.22878623008728,
+          "speed": 22.0,
+          "category": "terminal_agent"
+        },
+        "tbench_jq-data-processing": {
+          "passed": false,
+          "duration": 30.651431798934937,
+          "speed": 20.9,
+          "category": "terminal_agent"
+        },
+        "tbench_jsonl-aggregator": {
+          "passed": true,
+          "duration": 28.6342294216156,
+          "speed": 21.8,
+          "category": "terminal_agent"
+        },
+        "tbench_jupyter-notebook-server": {
+          "passed": false,
+          "duration": 27.496190547943115,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_log-summary": {
+          "passed": true,
+          "duration": 18.81075119972229,
+          "speed": 22.5,
+          "category": "terminal_agent"
+        },
+        "tbench_logistic-regression-divergence": {
+          "passed": false,
+          "duration": 27.31042170524597,
+          "speed": 22.3,
+          "category": "terminal_agent"
+        },
+        "tbench_mlflow-register": {
+          "passed": false,
+          "duration": 27.655439615249634,
+          "speed": 22.2,
+          "category": "terminal_agent"
+        },
+        "tbench_mnist-learning-fix": {
+          "passed": false,
+          "duration": 30.081698894500732,
+          "speed": 20.8,
+          "category": "terminal_agent"
+        },
+        "tbench_modernize-fortran-build": {
+          "passed": true,
+          "duration": 28.245324850082397,
+          "speed": 21.4,
+          "category": "terminal_agent"
+        },
+        "tbench_new-encrypt-command": {
+          "passed": true,
+          "duration": 17.523356914520264,
+          "speed": 21.3,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-etl": {
+          "passed": true,
+          "duration": 25.808762550354004,
+          "speed": 21.5,
+          "category": "terminal_agent"
+        },
+        "tbench_pandas-sql-query": {
+          "passed": true,
+          "duration": 24.0764377117157,
+          "speed": 20.9,
+          "category": "terminal_agent"
+        },
+        "tbench_png-generation": {
+          "passed": false,
+          "duration": 28.81088161468506,
+          "speed": 21.5,
+          "category": "terminal_agent"
+        },
+        "tbench_predict-customer-churn": {
+          "passed": false,
+          "duration": 30.96164584159851,
+          "speed": 22.1,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-accuracy-log": {
+          "passed": true,
+          "duration": 18.22644853591919,
+          "speed": 21.1,
+          "category": "terminal_agent"
+        },
+        "tbench_recover-obfuscated-files": {
+          "passed": true,
+          "duration": 22.865565538406372,
+          "speed": 21.3,
+          "category": "terminal_agent"
+        },
+        "tbench_schedule-vacation": {
+          "passed": true,
+          "duration": 29.82476258277893,
+          "speed": 21.5,
+          "category": "terminal_agent"
+        },
+        "tbench_setup-custom-dev-env": {
+          "passed": true,
+          "duration": 29.614699602127075,
+          "speed": 21.0,
+          "category": "terminal_agent"
+        },
+        "tbench_sparql-professors-universities": {
+          "passed": false,
+          "duration": 25.22281312942505,
+          "speed": 21.7,
+          "category": "terminal_agent"
+        },
+        "tbench_spinning-up-rl": {
+          "passed": true,
+          "duration": 23.834060668945312,
+          "speed": 21.9,
+          "category": "terminal_agent"
+        },
+        "tbench_vimscript-vim-quine": {
+          "passed": true,
+          "duration": 26.554195880889893,
+          "speed": 22.1,
+          "category": "terminal_agent"
+        },
+        "harbor_atrx-vep-crispr": {
+          "passed": false,
+          "duration": 29.157009601593018,
+          "speed": 20.9,
+          "category": "heavy_systems"
+        },
+        "harbor_batched-eval-parity": {
+          "passed": true,
+          "duration": 29.01508617401123,
+          "speed": 20.8,
+          "category": "heavy_systems"
+        },
+        "harbor_biped-contact-dynamics": {
+          "passed": false,
+          "duration": 29.385889530181885,
+          "speed": 21.5,
+          "category": "heavy_systems"
+        },
+        "harbor_bun-sourcemap-leak": {
+          "passed": false,
+          "duration": 26.262545824050903,
+          "speed": 21.9,
+          "category": "heavy_systems"
+        },
+        "harbor_cad-model": {
+          "passed": false,
+          "duration": 18.842251777648926,
+          "speed": 22.0,
+          "category": "heavy_systems"
+        },
+        "harbor_cargo-flight-dispatch": {
+          "passed": false,
+          "duration": 0.0,
+          "speed": 0.0,
+          "category": "heavy_systems"
+        },
+        "harbor_coq-block-bound": {
+          "passed": true,
+          "duration": 26.390498161315918,
+          "speed": 21.8,
+          "category": "heavy_systems"
+        },
+        "harbor_ctr-optimization": {
+          "passed": false,
+          "duration": 34.1045777797699,
+          "speed": 21.6,
+          "category": "heavy_systems"
+        },
+        "harbor_cumulative-layout-shift": {
+          "passed": false,
+          "duration": 35.5943067073822,
+          "speed": 21.0,
+          "category": "heavy_systems"
+        }
+      },
+      "passed_count": 57,
+      "total_count": 100,
+      "total_duration": 2230.445146560669
+    },
+    "t2_orsd": {
+      "tasks": {
+        "agent_01_calc": {
+          "passed": true,
+          "duration": 27.08192801475525,
+          "speed": 21.75,
+          "category": "systems_agentic_loop"
+        },
+        "agent_02_sql": {
+          "passed": true,
+          "duration": 21.716549396514893,
+          "speed": 22.0,
+          "category": "systems_agentic_loop"
+        },
+        "agent_03_file": {
+          "passed": true,
+          "duration": 20.202004432678223,
+          "speed": 21.95,
+          "category": "systems_agentic_loop"
+        },
+        "agent_04_weather": {
+          "passed": true,
+          "duration": 22.392974376678467,
+          "speed": 21.65,
+          "category": "systems_agentic_loop"
+        },
+        "agent_05_stock": {
+          "passed": true,
+          "duration": 30.10701823234558,
+          "speed": 21.25,
+          "category": "systems_agentic_loop"
+        },
+        "agent_06_db_update": {
+          "passed": true,
+          "duration": 25.651418209075928,
+          "speed": 22.450000000000003,
+          "category": "systems_agentic_loop"
+        },
+        "agent_07_unit_convert": {
+          "passed": false,
+          "duration": 25.81634759902954,
+          "speed": 22.450000000000003,
+          "category": "systems_agentic_loop"
+        },
+        "agent_08_kb_search": {
+          "passed": true,
+          "duration": 21.954148530960083,
+          "speed": 22.1,
+          "category": "systems_agentic_loop"
+        },
+        "agent_09_k8s_status": {
+          "passed": true,
+          "duration": 21.272705793380737,
+          "speed": 20.85,
+          "category": "systems_agentic_loop"
+        },
+        "agent_10_forex_triangular": {
+          "passed": false,
+          "duration": 21.921093225479126,
+          "speed": 22.55,
+          "category": "systems_agentic_loop"
+        },
+        "agent_11_auth_jwt": {
+          "passed": true,
+          "duration": 17.694713354110718,
+          "speed": 22.3,
+          "category": "systems_agentic_loop"
+        },
+        "agent_12_cve_severity": {
+          "passed": true,
+          "duration": 18.879595041275024,
+          "speed": 22.6,
+          "category": "systems_agentic_loop"
+        },
+        "agent_13_disk_cleanup": {
+          "passed": true,
+          "duration": 12.796077966690063,
+          "speed": 22.0,
+          "category": "systems_agentic_loop"
+        },
+        "code_01_regex_nfa": {
+          "passed": false,
+          "duration": 25.77117085456848,
+          "speed": 22.1,
+          "category": "systems_coding"
+        },
+        "code_02_bytecode_vm": {
+          "passed": false,
+          "duration": 28.11124849319458,
+          "speed": 21.5,
+          "category": "systems_coding"
+        },
+        "code_03_lazy_segment_tree": {
+          "passed": false,
+          "duration": 33.64095401763916,
+          "speed": 21.6,
+          "category": "systems_coding"
+        },
+        "code_04_lisp_interpreter": {
+          "passed": false,
+          "duration": 33.321669816970825,
+          "speed": 21.5,
+          "category": "systems_coding"
+        }
+      },
+      "passed_count": 11,
+      "total_count": 100,
+      "total_duration": 408.3316173553467
+    }
+  }
+}

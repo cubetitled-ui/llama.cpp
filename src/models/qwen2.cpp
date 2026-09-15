@@ -70,7 +70,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
 
     const float kq_scale    = 1.0f / sqrtf(float(n_embd_head));
 
-    auto qwen2_decoder = [&](int il, ggml_tensor * input) -> ggml_tensor* {
+    auto qwen2_decoder = [&](int il, ggml_tensor * input, bool store_kv) -> ggml_tensor* {
         ggml_tensor * cur_a = build_norm(input, model.layers[il].attn_norm, NULL, LLM_NORM_RMS, il);
         cb(cur_a, "attn_norm", il);
 
@@ -86,7 +86,7 @@ llama_model_qwen2::graph::graph(const llama_model & model, const llm_graph_param
 
         ggml_tensor * cur   = build_attn(inp_attn,
                 model.layers[il].wo, model.layers[il].wo_b, model.layers[il].wo_s,
-                Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, kq_scale, il, true);
+                Qcur, Kcur, Vcur, nullptr, nullptr, nullptr, kq_scale, il, store_kv);
         cb(cur, "attn_out", il);
 
         ggml_tensor * inpSA = input;

@@ -1,0 +1,8 @@
+{
+  "recurrent_t": 2,
+  "layers": [13, 14],
+  "recurrent_a": 0.90,
+  "recurrent_b": 0.10,
+  "recurrent_gate": 1.00,
+  "lora": "/home/cune/llama.cpp/models/recurrent_core_lora/checkpoint_step_300.gguf"
+}

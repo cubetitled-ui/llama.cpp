@@ -1,0 +1,46 @@
+// ==============================================================================
+// RLang Prototype: Dual-Stream Fork-Join Recurrent Architecture
+// Concept: Diverges into two parallel cognitive streams (Syntactic Stream A and
+// Semantic Stream B), executes contractive reasoning on each, and joins them
+// at the exit barrier!
+// ==============================================================================
+
+model qwen2 {
+    layers: 28;
+    hidden_dim: 3584;
+    heads: 28;
+    norm_eps: 1e-6;
+}
+
+stage prelude feedforward {
+    layers: 0..10;
+}
+
+// Stream A: Syntactic-structural reasoning core
+stage stream_a loop {
+    layers: 11..12;
+    iterations: 2;
+    a: 0.90;
+    b: 0.10;
+    gate: 0.85;
+    delta: pure_delta;
+    anchor: prelude;
+    norm: rms;
+}
+
+// Stream B: Deep semantic deduction core
+stage stream_b loop {
+    layers: 13..14;
+    iterations: 2;
+    a: 0.88;
+    b: 0.12;
+    gate: 1.00;
+    delta: pure_delta;
+    anchor: prelude;
+    norm: rms;
+    merge: gated;
+}
+
+stage coda feedforward {
+    layers: 15..27;
+}

@@ -1,0 +1,36 @@
+{
+  "architecture": "focal",
+  "total_layers": 32,
+  "description": "Dual-Stream cross-coupled nonlinear highway recurrence: adaptive sigmoid gating and bidirectional state propagation",
+  "blocks": [
+    {
+      "type": "feedforward",
+      "layers": [0, 9]
+    },
+    {
+      "type": "recurrent_loop",
+      "name": "highway_coupled_core",
+      "layers": [10, 12],
+      "iterations": 2,
+      "state_tensors": ["gate"],
+      "custom_params": {
+        "beta": 0.80,
+        "decay": 0.95
+      },
+      "custom_formulas": [
+        "delta = block_out - combined",
+        "gate = sigmoid(delta)",
+        "h = gate * h + (1.0 - gate) * delta",
+        "anchor = beta * anchor + (1.0 - beta) * h",
+        "h = rms_norm(h, eps=1e-6)"
+      ],
+      "kv_mode": "step_overwrite",
+      "norm_eps": 1e-6,
+      "save_state": true
+    },
+    {
+      "type": "feedforward",
+      "layers": [13, 31]
+    }
+  ]
+}

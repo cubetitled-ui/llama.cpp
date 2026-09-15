@@ -1,0 +1,1210 @@
+{
+  "baseline": {
+    "agent_01_calc": {
+      "passed": true,
+      "duration": 5.94667387008667,
+      "speed": 28.05,
+      "category": "systems_agentic_loop"
+    },
+    "agent_02_sql": {
+      "passed": true,
+      "duration": 5.437803030014038,
+      "speed": 31.950000000000003,
+      "category": "systems_agentic_loop"
+    },
+    "agent_03_file": {
+      "passed": true,
+      "duration": 4.842938423156738,
+      "speed": 30.45,
+      "category": "systems_agentic_loop"
+    },
+    "agent_04_weather": {
+      "passed": true,
+      "duration": 5.9290525913238525,
+      "speed": 27.95,
+      "category": "systems_agentic_loop"
+    },
+    "agent_05_stock": {
+      "passed": true,
+      "duration": 5.753798723220825,
+      "speed": 27.75,
+      "category": "systems_agentic_loop"
+    },
+    "agent_06_db_update": {
+      "passed": true,
+      "duration": 5.667675256729126,
+      "speed": 30.85,
+      "category": "systems_agentic_loop"
+    },
+    "agent_07_unit_convert": {
+      "passed": true,
+      "duration": 9.801301002502441,
+      "speed": 27.4,
+      "category": "systems_agentic_loop"
+    },
+    "agent_08_kb_search": {
+      "passed": true,
+      "duration": 11.174792766571045,
+      "speed": 27.2,
+      "category": "systems_agentic_loop"
+    },
+    "agent_09_k8s_status": {
+      "passed": true,
+      "duration": 6.100956439971924,
+      "speed": 27.25,
+      "category": "systems_agentic_loop"
+    },
+    "agent_10_forex_triangular": {
+      "passed": false,
+      "duration": 9.43018126487732,
+      "speed": 27.0,
+      "category": "systems_agentic_loop"
+    },
+    "agent_11_auth_jwt": {
+      "passed": true,
+      "duration": 6.929169416427612,
+      "speed": 27.1,
+      "category": "systems_agentic_loop"
+    },
+    "agent_12_cve_severity": {
+      "passed": true,
+      "duration": 6.617908716201782,
+      "speed": 27.3,
+      "category": "systems_agentic_loop"
+    },
+    "agent_13_disk_cleanup": {
+      "passed": true,
+      "duration": 5.621391296386719,
+      "speed": 28.0,
+      "category": "systems_agentic_loop"
+    },
+    "code_01_regex_nfa": {
+      "passed": false,
+      "duration": 9.063286781311035,
+      "speed": 27.7,
+      "category": "systems_coding"
+    },
+    "code_02_bytecode_vm": {
+      "passed": true,
+      "duration": 10.36950135231018,
+      "speed": 27.6,
+      "category": "systems_coding"
+    },
+    "code_03_lazy_segment_tree": {
+      "passed": false,
+      "duration": 21.17394995689392,
+      "speed": 26.4,
+      "category": "systems_coding"
+    },
+    "code_04_lisp_interpreter": {
+      "passed": true,
+      "duration": 12.835044860839844,
+      "speed": 27.1,
+      "category": "systems_coding"
+    },
+    "code_05_dinic_max_flow": {
+      "passed": true,
+      "duration": 14.046983003616333,
+      "speed": 26.8,
+      "category": "systems_coding"
+    },
+    "code_06_diff_patch_engine": {
+      "passed": true,
+      "duration": 25.194687604904175,
+      "speed": 26.2,
+      "category": "systems_coding"
+    },
+    "code_07_avl_tree_invariants": {
+      "passed": false,
+      "duration": 19.743787050247192,
+      "speed": 27.3,
+      "category": "systems_coding"
+    },
+    "code_08_transactional_key_value": {
+      "passed": true,
+      "duration": 19.67517590522766,
+      "speed": 27.5,
+      "category": "systems_coding"
+    },
+    "code_09_expression_calculator_shunting_yard": {
+      "passed": false,
+      "duration": 18.043187618255615,
+      "speed": 27.5,
+      "category": "systems_coding"
+    },
+    "code_10_interval_tree_overlap": {
+      "passed": false,
+      "duration": 18.34363079071045,
+      "speed": 26.4,
+      "category": "systems_coding"
+    },
+    "code_11_topological_lexical_kahn": {
+      "passed": true,
+      "duration": 12.218199253082275,
+      "speed": 27.5,
+      "category": "systems_coding"
+    },
+    "code_12_tarjan_scc": {
+      "passed": false,
+      "duration": 10.838331460952759,
+      "speed": 27.5,
+      "category": "systems_coding"
+    },
+    "code_13_knapsack_with_reconstruction": {
+      "passed": true,
+      "duration": 10.787816286087036,
+      "speed": 27.6,
+      "category": "systems_coding"
+    },
+    "web_01_countdown": {
+      "passed": true,
+      "duration": 17.16160750389099,
+      "speed": 26.5,
+      "category": "systems_web_dev"
+    },
+    "web_02_dark_mode": {
+      "passed": true,
+      "duration": 16.826395988464355,
+      "speed": 27.5,
+      "category": "systems_web_dev"
+    },
+    "web_03_modal_esc": {
+      "passed": true,
+      "duration": 16.54258966445923,
+      "speed": 26.2,
+      "category": "systems_web_dev"
+    },
+    "web_04_responsive_nav": {
+      "passed": true,
+      "duration": 20.709047317504883,
+      "speed": 27.1,
+      "category": "systems_web_dev"
+    },
+    "web_05_debounce": {
+      "passed": true,
+      "duration": 18.946082830429077,
+      "speed": 27.4,
+      "category": "systems_web_dev"
+    },
+    "web_06_fetch_retry": {
+      "passed": true,
+      "duration": 11.47034478187561,
+      "speed": 27.4,
+      "category": "systems_web_dev"
+    },
+    "web_07_custom_tabs": {
+      "passed": true,
+      "duration": 21.275147438049316,
+      "speed": 27.4,
+      "category": "systems_web_dev"
+    },
+    "web_08_css_grid": {
+      "passed": true,
+      "duration": 6.785607814788818,
+      "speed": 27.5,
+      "category": "systems_web_dev"
+    },
+    "web_09_promise_pool": {
+      "passed": true,
+      "duration": 12.158066511154175,
+      "speed": 27.3,
+      "category": "systems_web_dev"
+    },
+    "web_10_virtual_list_calc": {
+      "passed": true,
+      "duration": 20.833819150924683,
+      "speed": 27.1,
+      "category": "systems_web_dev"
+    },
+    "web_11_fsm_state_machine": {
+      "passed": true,
+      "duration": 21.195014476776123,
+      "speed": 26.5,
+      "category": "systems_web_dev"
+    },
+    "web_12_svg_arc_path": {
+      "passed": true,
+      "duration": 20.433706760406494,
+      "speed": 27.4,
+      "category": "systems_web_dev"
+    },
+    "web_13_reactive_signal": {
+      "passed": true,
+      "duration": 14.260049819946289,
+      "speed": 27.5,
+      "category": "systems_web_dev"
+    },
+    "logic_01_bat_ball": {
+      "passed": true,
+      "duration": 2.254660129547119,
+      "speed": 31.9,
+      "category": "systems_logic"
+    },
+    "logic_02_train_speed": {
+      "passed": true,
+      "duration": 1.9198524951934814,
+      "speed": 32.9,
+      "category": "systems_logic"
+    },
+    "logic_03_snail_well": {
+      "passed": true,
+      "duration": 1.8620681762695312,
+      "speed": 51.5,
+      "category": "systems_logic"
+    },
+    "logic_04_lily_pads": {
+      "passed": false,
+      "duration": 1.9063243865966797,
+      "speed": 37.2,
+      "category": "systems_logic"
+    },
+    "logic_05_machines": {
+      "passed": true,
+      "duration": 1.8366386890411377,
+      "speed": 51.7,
+      "category": "systems_logic"
+    },
+    "logic_06_sheep": {
+      "passed": true,
+      "duration": 1.8408915996551514,
+      "speed": 51.1,
+      "category": "systems_logic"
+    },
+    "logic_07_sister_age": {
+      "passed": false,
+      "duration": 1.9099998474121094,
+      "speed": 37.9,
+      "category": "systems_logic"
+    },
+    "logic_08_monty_hall": {
+      "passed": true,
+      "duration": 3.0167739391326904,
+      "speed": 25.0,
+      "category": "systems_logic"
+    },
+    "logic_09_bayesian_disease": {
+      "passed": false,
+      "duration": 11.573060750961304,
+      "speed": 27.7,
+      "category": "systems_logic"
+    },
+    "logic_10_monty_hall_4doors": {
+      "passed": false,
+      "duration": 11.038235187530518,
+      "speed": 27.7,
+      "category": "systems_logic"
+    },
+    "logic_11_water_jug_4L": {
+      "passed": true,
+      "duration": 1.8660390377044678,
+      "speed": 51.6,
+      "category": "systems_logic"
+    },
+    "logic_12_two_dice_sum8": {
+      "passed": false,
+      "duration": 11.287157773971558,
+      "speed": 26.9,
+      "category": "systems_logic"
+    },
+    "logic_13_clock_angle_315": {
+      "passed": true,
+      "duration": 2.0295889377593994,
+      "speed": 35.1,
+      "category": "systems_logic"
+    },
+    "tbench_acl-permissions-inheritance": {
+      "passed": false,
+      "duration": 9.887097120285034,
+      "speed": 27.7,
+      "category": "terminal_agent"
+    },
+    "tbench_amuse-install": {
+      "passed": false,
+      "duration": 5.681285381317139,
+      "speed": 27.9,
+      "category": "terminal_agent"
+    },
+    "tbench_analyze-access-logs": {
+      "passed": true,
+      "duration": 9.383403778076172,
+      "speed": 27.7,
+      "category": "terminal_agent"
+    },
+    "tbench_bank-trans-filter": {
+      "passed": false,
+      "duration": 9.114592552185059,
+      "speed": 27.7,
+      "category": "terminal_agent"
+    },
+    "tbench_broken-python": {
+      "passed": true,
+      "duration": 16.28348445892334,
+      "speed": 27.2,
+      "category": "terminal_agent"
+    },
+    "tbench_cpp-compatibility": {
+      "passed": false,
+      "duration": 33.67758584022522,
+      "speed": 26.7,
+      "category": "terminal_agent"
+    },
+    "tbench_cross-entropy-method": {
+      "passed": false,
+      "duration": 21.232243061065674,
+      "speed": 27.1,
+      "category": "terminal_agent"
+    },
+    "tbench_csv-to-parquet": {
+      "passed": false,
+      "duration": 19.73356342315674,
+      "speed": 27.5,
+      "category": "terminal_agent"
+    },
+    "tbench_decommissioning-service-with-sensitive-data": {
+      "passed": false,
+      "duration": 9.625669956207275,
+      "speed": 26.8,
+      "category": "terminal_agent"
+    },
+    "tbench_fibonacci-server": {
+      "passed": false,
+      "duration": 27.05927300453186,
+      "speed": 26.7,
+      "category": "terminal_agent"
+    },
+    "tbench_fix-pandas-version": {
+      "passed": false,
+      "duration": 9.42680025100708,
+      "speed": 27.7,
+      "category": "terminal_agent"
+    },
+    "tbench_fix-permissions": {
+      "passed": false,
+      "duration": 23.72636342048645,
+      "speed": 26.6,
+      "category": "terminal_agent"
+    },
+    "tbench_flood-monitoring-basic": {
+      "passed": false,
+      "duration": 21.825016260147095,
+      "speed": 27.0,
+      "category": "terminal_agent"
+    },
+    "tbench_gomoku-planner": {
+      "passed": false,
+      "duration": 20.510773181915283,
+      "speed": 27.5,
+      "category": "terminal_agent"
+    },
+    "tbench_grid-pattern-transform": {
+      "passed": false,
+      "duration": 20.02374005317688,
+      "speed": 26.5,
+      "category": "terminal_agent"
+    },
+    "tbench_hdfs-deployment": {
+      "passed": false,
+      "duration": 21.273991346359253,
+      "speed": 26.7,
+      "category": "terminal_agent"
+    },
+    "tbench_hello-world": {
+      "passed": true,
+      "duration": 12.91584300994873,
+      "speed": 28.7,
+      "category": "terminal_agent"
+    },
+    "tbench_heterogeneous-dates": {
+      "passed": false,
+      "duration": 9.328317642211914,
+      "speed": 27.8,
+      "category": "terminal_agent"
+    },
+    "tbench_hydra-debug-slurm-mode": {
+      "passed": false,
+      "duration": 16.436035871505737,
+      "speed": 27.5,
+      "category": "terminal_agent"
+    },
+    "tbench_jq-data-processing": {
+      "passed": false,
+      "duration": 14.241628408432007,
+      "speed": 26.9,
+      "category": "terminal_agent"
+    },
+    "tbench_jsonl-aggregator": {
+      "passed": false,
+      "duration": 21.361244440078735,
+      "speed": 26.4,
+      "category": "terminal_agent"
+    },
+    "tbench_jupyter-notebook-server": {
+      "passed": false,
+      "duration": 32.366323709487915,
+      "speed": 27.5,
+      "category": "terminal_agent"
+    },
+    "tbench_log-summary": {
+      "passed": true,
+      "duration": 9.68483304977417,
+      "speed": 27.6,
+      "category": "terminal_agent"
+    },
+    "tbench_logistic-regression-divergence": {
+      "passed": false,
+      "duration": 22.494014739990234,
+      "speed": 27.6,
+      "category": "terminal_agent"
+    },
+    "tbench_mlflow-register": {
+      "passed": false,
+      "duration": 13.620239973068237,
+      "speed": 26.5,
+      "category": "terminal_agent"
+    },
+    "tbench_mnist-learning-fix": {
+      "passed": false,
+      "duration": 24.689472913742065,
+      "speed": 27.0,
+      "category": "terminal_agent"
+    },
+    "tbench_modernize-fortran-build": {
+      "passed": false,
+      "duration": 11.285067319869995,
+      "speed": 27.5,
+      "category": "terminal_agent"
+    },
+    "tbench_new-encrypt-command": {
+      "passed": false,
+      "duration": 19.936965227127075,
+      "speed": 27.3,
+      "category": "terminal_agent"
+    },
+    "tbench_pandas-etl": {
+      "passed": false,
+      "duration": 14.899492263793945,
+      "speed": 27.5,
+      "category": "terminal_agent"
+    },
+    "tbench_pandas-sql-query": {
+      "passed": false,
+      "duration": 21.865777492523193,
+      "speed": 26.3,
+      "category": "terminal_agent"
+    },
+    "tbench_png-generation": {
+      "passed": false,
+      "duration": 20.35044765472412,
+      "speed": 27.4,
+      "category": "terminal_agent"
+    },
+    "tbench_predict-customer-churn": {
+      "passed": false,
+      "duration": 23.27299427986145,
+      "speed": 26.7,
+      "category": "terminal_agent"
+    },
+    "tbench_recover-accuracy-log": {
+      "passed": false,
+      "duration": 21.469074010849,
+      "speed": 26.8,
+      "category": "terminal_agent"
+    },
+    "tbench_recover-obfuscated-files": {
+      "passed": false,
+      "duration": 13.672674179077148,
+      "speed": 27.6,
+      "category": "terminal_agent"
+    },
+    "tbench_schedule-vacation": {
+      "passed": false,
+      "duration": 12.881073713302612,
+      "speed": 27.4,
+      "category": "terminal_agent"
+    },
+    "tbench_setup-custom-dev-env": {
+      "passed": false,
+      "duration": 38.77039980888367,
+      "speed": 27.0,
+      "category": "terminal_agent"
+    },
+    "tbench_sparql-professors-universities": {
+      "passed": false,
+      "duration": 10.390615224838257,
+      "speed": 26.2,
+      "category": "terminal_agent"
+    },
+    "tbench_spinning-up-rl": {
+      "passed": false,
+      "duration": 12.17158842086792,
+      "speed": 26.0,
+      "category": "terminal_agent"
+    },
+    "tbench_vimscript-vim-quine": {
+      "passed": false,
+      "duration": 22.003682613372803,
+      "speed": 27.0,
+      "category": "terminal_agent"
+    },
+    "harbor_atrx-vep-crispr": {
+      "passed": false,
+      "duration": 25.826143264770508,
+      "speed": 26.1,
+      "category": "heavy_systems"
+    },
+    "harbor_batched-eval-parity": {
+      "passed": false,
+      "duration": 25.66003656387329,
+      "speed": 26.8,
+      "category": "heavy_systems"
+    },
+    "harbor_biped-contact-dynamics": {
+      "passed": false,
+      "duration": 24.845961570739746,
+      "speed": 27.0,
+      "category": "heavy_systems"
+    },
+    "harbor_bun-sourcemap-leak": {
+      "passed": false,
+      "duration": 23.54582953453064,
+      "speed": 27.4,
+      "category": "heavy_systems"
+    },
+    "harbor_cad-model": {
+      "passed": false,
+      "duration": 23.34787654876709,
+      "speed": 27.5,
+      "category": "heavy_systems"
+    },
+    "harbor_cargo-flight-dispatch": {
+      "passed": false,
+      "duration": 0.0,
+      "speed": 0.0,
+      "category": "heavy_systems"
+    },
+    "harbor_coq-block-bound": {
+      "passed": false,
+      "duration": 24.53213357925415,
+      "speed": 27.4,
+      "category": "heavy_systems"
+    },
+    "harbor_ctr-optimization": {
+      "passed": false,
+      "duration": 22.673738956451416,
+      "speed": 27.5,
+      "category": "heavy_systems"
+    },
+    "harbor_cumulative-layout-shift": {
+      "passed": false,
+      "duration": 21.085034370422363,
+      "speed": 27.6,
+      "category": "heavy_systems"
+    }
+  },
+  "recurrent": {
+    "agent_01_calc": {
+      "passed": true,
+      "duration": 6.297302484512329,
+      "speed": 27.05,
+      "category": "systems_agentic_loop"
+    },
+    "agent_02_sql": {
+      "passed": true,
+      "duration": 5.456736087799072,
+      "speed": 31.55,
+      "category": "systems_agentic_loop"
+    },
+    "agent_03_file": {
+      "passed": true,
+      "duration": 4.882261276245117,
+      "speed": 29.049999999999997,
+      "category": "systems_agentic_loop"
+    },
+    "agent_04_weather": {
+      "passed": true,
+      "duration": 5.977129220962524,
+      "speed": 26.75,
+      "category": "systems_agentic_loop"
+    },
+    "agent_05_stock": {
+      "passed": true,
+      "duration": 5.850177526473999,
+      "speed": 26.8,
+      "category": "systems_agentic_loop"
+    },
+    "agent_06_db_update": {
+      "passed": true,
+      "duration": 5.6226208209991455,
+      "speed": 29.85,
+      "category": "systems_agentic_loop"
+    },
+    "agent_07_unit_convert": {
+      "passed": true,
+      "duration": 9.805209159851074,
+      "speed": 26.299999999999997,
+      "category": "systems_agentic_loop"
+    },
+    "agent_08_kb_search": {
+      "passed": true,
+      "duration": 5.625931739807129,
+      "speed": 27.0,
+      "category": "systems_agentic_loop"
+    },
+    "agent_09_k8s_status": {
+      "passed": true,
+      "duration": 6.0141706466674805,
+      "speed": 26.8,
+      "category": "systems_agentic_loop"
+    },
+    "agent_10_forex_triangular": {
+      "passed": false,
+      "duration": 9.44338870048523,
+      "speed": 26.5,
+      "category": "systems_agentic_loop"
+    },
+    "agent_11_auth_jwt": {
+      "passed": true,
+      "duration": 7.139115333557129,
+      "speed": 26.799999999999997,
+      "category": "systems_agentic_loop"
+    },
+    "agent_12_cve_severity": {
+      "passed": true,
+      "duration": 6.262937307357788,
+      "speed": 26.6,
+      "category": "systems_agentic_loop"
+    },
+    "agent_13_disk_cleanup": {
+      "passed": true,
+      "duration": 5.721149206161499,
+      "speed": 26.85,
+      "category": "systems_agentic_loop"
+    },
+    "code_01_regex_nfa": {
+      "passed": false,
+      "duration": 9.847279787063599,
+      "speed": 26.1,
+      "category": "systems_coding"
+    },
+    "code_02_bytecode_vm": {
+      "passed": true,
+      "duration": 10.90987777709961,
+      "speed": 26.1,
+      "category": "systems_coding"
+    },
+    "code_03_lazy_segment_tree": {
+      "passed": false,
+      "duration": 21.503788232803345,
+      "speed": 26.0,
+      "category": "systems_coding"
+    },
+    "code_04_lisp_interpreter": {
+      "passed": true,
+      "duration": 13.558104276657104,
+      "speed": 26.0,
+      "category": "systems_coding"
+    },
+    "code_05_dinic_max_flow": {
+      "passed": true,
+      "duration": 15.720540761947632,
+      "speed": 24.9,
+      "category": "systems_coding"
+    },
+    "code_06_diff_patch_engine": {
+      "passed": true,
+      "duration": 16.573482036590576,
+      "speed": 25.5,
+      "category": "systems_coding"
+    },
+    "code_07_avl_tree_invariants": {
+      "passed": false,
+      "duration": 21.422478437423706,
+      "speed": 25.5,
+      "category": "systems_coding"
+    },
+    "code_08_transactional_key_value": {
+      "passed": true,
+      "duration": 11.795467376708984,
+      "speed": 25.0,
+      "category": "systems_coding"
+    },
+    "code_09_expression_calculator_shunting_yard": {
+      "passed": false,
+      "duration": 21.40944266319275,
+      "speed": 25.0,
+      "category": "systems_coding"
+    },
+    "code_10_interval_tree_overlap": {
+      "passed": false,
+      "duration": 18.960331916809082,
+      "speed": 24.1,
+      "category": "systems_coding"
+    },
+    "code_11_topological_lexical_kahn": {
+      "passed": true,
+      "duration": 13.869477033615112,
+      "speed": 25.8,
+      "category": "systems_coding"
+    },
+    "code_12_tarjan_scc": {
+      "passed": false,
+      "duration": 13.852776527404785,
+      "speed": 25.5,
+      "category": "systems_coding"
+    },
+    "code_13_knapsack_with_reconstruction": {
+      "passed": true,
+      "duration": 17.135002613067627,
+      "speed": 25.8,
+      "category": "systems_coding"
+    },
+    "web_01_countdown": {
+      "passed": true,
+      "duration": 26.12023687362671,
+      "speed": 24.9,
+      "category": "systems_web_dev"
+    },
+    "web_02_dark_mode": {
+      "passed": true,
+      "duration": 27.611443758010864,
+      "speed": 25.9,
+      "category": "systems_web_dev"
+    },
+    "web_03_modal_esc": {
+      "passed": true,
+      "duration": 19.713297843933105,
+      "speed": 24.5,
+      "category": "systems_web_dev"
+    },
+    "web_04_responsive_nav": {
+      "passed": true,
+      "duration": 23.32437515258789,
+      "speed": 24.8,
+      "category": "systems_web_dev"
+    },
+    "web_05_debounce": {
+      "passed": true,
+      "duration": 20.59688663482666,
+      "speed": 24.7,
+      "category": "systems_web_dev"
+    },
+    "web_06_fetch_retry": {
+      "passed": true,
+      "duration": 11.322786331176758,
+      "speed": 25.5,
+      "category": "systems_web_dev"
+    },
+    "web_07_custom_tabs": {
+      "passed": true,
+      "duration": 29.750746965408325,
+      "speed": 26.0,
+      "category": "systems_web_dev"
+    },
+    "web_08_css_grid": {
+      "passed": true,
+      "duration": 6.623138189315796,
+      "speed": 26.2,
+      "category": "systems_web_dev"
+    },
+    "web_09_promise_pool": {
+      "passed": true,
+      "duration": 11.479787349700928,
+      "speed": 26.1,
+      "category": "systems_web_dev"
+    },
+    "web_10_virtual_list_calc": {
+      "passed": true,
+      "duration": 21.51681685447693,
+      "speed": 26.0,
+      "category": "systems_web_dev"
+    },
+    "web_11_fsm_state_machine": {
+      "passed": true,
+      "duration": 21.515864372253418,
+      "speed": 26.0,
+      "category": "systems_web_dev"
+    },
+    "web_12_svg_arc_path": {
+      "passed": true,
+      "duration": 21.53130340576172,
+      "speed": 26.0,
+      "category": "systems_web_dev"
+    },
+    "web_13_reactive_signal": {
+      "passed": true,
+      "duration": 14.664499521255493,
+      "speed": 26.1,
+      "category": "systems_web_dev"
+    },
+    "logic_01_bat_ball": {
+      "passed": true,
+      "duration": 4.137952566146851,
+      "speed": 31.4,
+      "category": "systems_logic"
+    },
+    "logic_02_train_speed": {
+      "passed": true,
+      "duration": 1.9925158023834229,
+      "speed": 31.2,
+      "category": "systems_logic"
+    },
+    "logic_03_snail_well": {
+      "passed": true,
+      "duration": 1.8649826049804688,
+      "speed": 48.7,
+      "category": "systems_logic"
+    },
+    "logic_04_lily_pads": {
+      "passed": false,
+      "duration": 1.8706765174865723,
+      "speed": 36.7,
+      "category": "systems_logic"
+    },
+    "logic_05_machines": {
+      "passed": true,
+      "duration": 1.8290235996246338,
+      "speed": 48.5,
+      "category": "systems_logic"
+    },
+    "logic_06_sheep": {
+      "passed": true,
+      "duration": 1.8253583908081055,
+      "speed": 48.5,
+      "category": "systems_logic"
+    },
+    "logic_07_sister_age": {
+      "passed": false,
+      "duration": 1.8490052223205566,
+      "speed": 36.7,
+      "category": "systems_logic"
+    },
+    "logic_08_monty_hall": {
+      "passed": true,
+      "duration": 2.896544933319092,
+      "speed": 26.8,
+      "category": "systems_logic"
+    },
+    "logic_09_bayesian_disease": {
+      "passed": false,
+      "duration": 11.612322568893433,
+      "speed": 26.1,
+      "category": "systems_logic"
+    },
+    "logic_10_monty_hall_4doors": {
+      "passed": true,
+      "duration": 11.651949167251587,
+      "speed": 26.1,
+      "category": "systems_logic"
+    },
+    "logic_11_water_jug_4L": {
+      "passed": true,
+      "duration": 1.8216767311096191,
+      "speed": 48.1,
+      "category": "systems_logic"
+    },
+    "logic_12_two_dice_sum8": {
+      "passed": false,
+      "duration": 11.59098744392395,
+      "speed": 26.1,
+      "category": "systems_logic"
+    },
+    "logic_13_clock_angle_315": {
+      "passed": true,
+      "duration": 1.916055679321289,
+      "speed": 33.0,
+      "category": "systems_logic"
+    },
+    "tbench_acl-permissions-inheritance": {
+      "passed": false,
+      "duration": 9.843605279922485,
+      "speed": 26.0,
+      "category": "terminal_agent"
+    },
+    "tbench_amuse-install": {
+      "passed": false,
+      "duration": 7.164512634277344,
+      "speed": 26.2,
+      "category": "terminal_agent"
+    },
+    "tbench_analyze-access-logs": {
+      "passed": true,
+      "duration": 10.526631355285645,
+      "speed": 26.1,
+      "category": "terminal_agent"
+    },
+    "tbench_bank-trans-filter": {
+      "passed": false,
+      "duration": 9.181395769119263,
+      "speed": 26.0,
+      "category": "terminal_agent"
+    },
+    "tbench_broken-python": {
+      "passed": true,
+      "duration": 19.560518741607666,
+      "speed": 25.4,
+      "category": "terminal_agent"
+    },
+    "tbench_cpp-compatibility": {
+      "passed": false,
+      "duration": 15.094760656356812,
+      "speed": 25.8,
+      "category": "terminal_agent"
+    },
+    "tbench_cross-entropy-method": {
+      "passed": false,
+      "duration": 22.889739990234375,
+      "speed": 25.6,
+      "category": "terminal_agent"
+    },
+    "tbench_csv-to-parquet": {
+      "passed": false,
+      "duration": 8.256843328475952,
+      "speed": 25.6,
+      "category": "terminal_agent"
+    },
+    "tbench_decommissioning-service-with-sensitive-data": {
+      "passed": false,
+      "duration": 11.222904205322266,
+      "speed": 25.5,
+      "category": "terminal_agent"
+    },
+    "tbench_fibonacci-server": {
+      "passed": false,
+      "duration": 18.309300899505615,
+      "speed": 25.3,
+      "category": "terminal_agent"
+    },
+    "tbench_fix-pandas-version": {
+      "passed": false,
+      "duration": 11.159048318862915,
+      "speed": 25.7,
+      "category": "terminal_agent"
+    },
+    "tbench_fix-permissions": {
+      "passed": false,
+      "duration": 26.38898491859436,
+      "speed": 25.4,
+      "category": "terminal_agent"
+    },
+    "tbench_flood-monitoring-basic": {
+      "passed": false,
+      "duration": 22.684967517852783,
+      "speed": 25.4,
+      "category": "terminal_agent"
+    },
+    "tbench_gomoku-planner": {
+      "passed": false,
+      "duration": 22.348539352416992,
+      "speed": 25.6,
+      "category": "terminal_agent"
+    },
+    "tbench_grid-pattern-transform": {
+      "passed": false,
+      "duration": 20.85362672805786,
+      "speed": 25.6,
+      "category": "terminal_agent"
+    },
+    "tbench_hdfs-deployment": {
+      "passed": false,
+      "duration": 22.30116558074951,
+      "speed": 25.6,
+      "category": "terminal_agent"
+    },
+    "tbench_hello-world": {
+      "passed": true,
+      "duration": 4.229655742645264,
+      "speed": 26.5,
+      "category": "terminal_agent"
+    },
+    "tbench_heterogeneous-dates": {
+      "passed": false,
+      "duration": 9.404226541519165,
+      "speed": 25.5,
+      "category": "terminal_agent"
+    },
+    "tbench_hydra-debug-slurm-mode": {
+      "passed": false,
+      "duration": 16.051392078399658,
+      "speed": 25.1,
+      "category": "terminal_agent"
+    },
+    "tbench_jq-data-processing": {
+      "passed": false,
+      "duration": 14.903978824615479,
+      "speed": 25.2,
+      "category": "terminal_agent"
+    },
+    "tbench_jsonl-aggregator": {
+      "passed": false,
+      "duration": 37.18364143371582,
+      "speed": 25.4,
+      "category": "terminal_agent"
+    },
+    "tbench_jupyter-notebook-server": {
+      "passed": false,
+      "duration": 22.83826732635498,
+      "speed": 25.4,
+      "category": "terminal_agent"
+    },
+    "tbench_log-summary": {
+      "passed": true,
+      "duration": 13.176034212112427,
+      "speed": 25.6,
+      "category": "terminal_agent"
+    },
+    "tbench_logistic-regression-divergence": {
+      "passed": false,
+      "duration": 25.697534561157227,
+      "speed": 24.6,
+      "category": "terminal_agent"
+    },
+    "tbench_mlflow-register": {
+      "passed": false,
+      "duration": 15.626700639724731,
+      "speed": 26.0,
+      "category": "terminal_agent"
+    },
+    "tbench_mnist-learning-fix": {
+      "passed": false,
+      "duration": 25.37996768951416,
+      "speed": 25.3,
+      "category": "terminal_agent"
+    },
+    "tbench_modernize-fortran-build": {
+      "passed": false,
+      "duration": 12.377695083618164,
+      "speed": 24.4,
+      "category": "terminal_agent"
+    },
+    "tbench_new-encrypt-command": {
+      "passed": false,
+      "duration": 24.675976514816284,
+      "speed": 24.9,
+      "category": "terminal_agent"
+    },
+    "tbench_pandas-etl": {
+      "passed": false,
+      "duration": 22.614941835403442,
+      "speed": 25.7,
+      "category": "terminal_agent"
+    },
+    "tbench_pandas-sql-query": {
+      "passed": false,
+      "duration": 27.593449115753174,
+      "speed": 25.0,
+      "category": "terminal_agent"
+    },
+    "tbench_png-generation": {
+      "passed": false,
+      "duration": 17.73334050178528,
+      "speed": 25.2,
+      "category": "terminal_agent"
+    },
+    "tbench_predict-customer-churn": {
+      "passed": false,
+      "duration": 24.899070739746094,
+      "speed": 25.2,
+      "category": "terminal_agent"
+    },
+    "tbench_recover-accuracy-log": {
+      "passed": false,
+      "duration": 22.834940433502197,
+      "speed": 25.1,
+      "category": "terminal_agent"
+    },
+    "tbench_recover-obfuscated-files": {
+      "passed": false,
+      "duration": 14.03308653831482,
+      "speed": 25.9,
+      "category": "terminal_agent"
+    },
+    "tbench_schedule-vacation": {
+      "passed": false,
+      "duration": 16.370179176330566,
+      "speed": 25.5,
+      "category": "terminal_agent"
+    },
+    "tbench_setup-custom-dev-env": {
+      "passed": false,
+      "duration": 23.158366441726685,
+      "speed": 25.2,
+      "category": "terminal_agent"
+    },
+    "tbench_sparql-professors-universities": {
+      "passed": false,
+      "duration": 8.541948318481445,
+      "speed": 24.8,
+      "category": "terminal_agent"
+    },
+    "tbench_spinning-up-rl": {
+      "passed": false,
+      "duration": 12.631132364273071,
+      "speed": 24.5,
+      "category": "terminal_agent"
+    },
+    "tbench_vimscript-vim-quine": {
+      "passed": false,
+      "duration": 23.586819171905518,
+      "speed": 25.3,
+      "category": "terminal_agent"
+    },
+    "harbor_atrx-vep-crispr": {
+      "passed": false,
+      "duration": 24.175468921661377,
+      "speed": 25.0,
+      "category": "heavy_systems"
+    },
+    "harbor_batched-eval-parity": {
+      "passed": false,
+      "duration": 31.19560956954956,
+      "speed": 25.0,
+      "category": "heavy_systems"
+    },
+    "harbor_biped-contact-dynamics": {
+      "passed": false,
+      "duration": 25.252793550491333,
+      "speed": 24.7,
+      "category": "heavy_systems"
+    },
+    "harbor_bun-sourcemap-leak": {
+      "passed": false,
+      "duration": 22.95478844642639,
+      "speed": 25.8,
+      "category": "heavy_systems"
+    },
+    "harbor_cad-model": {
+      "passed": false,
+      "duration": 22.036463022232056,
+      "speed": 26.0,
+      "category": "heavy_systems"
+    },
+    "harbor_cargo-flight-dispatch": {
+      "passed": false,
+      "duration": 0.0,
+      "speed": 0.0,
+      "category": "heavy_systems"
+    },
+    "harbor_coq-block-bound": {
+      "passed": false,
+      "duration": 22.362828016281128,
+      "speed": 25.9,
+      "category": "heavy_systems"
+    },
+    "harbor_ctr-optimization": {
+      "passed": false,
+      "duration": 25.748551607131958,
+      "speed": 25.8,
+      "category": "heavy_systems"
+    },
+    "harbor_cumulative-layout-shift": {
+      "passed": false,
+      "duration": 25.270399808883667,
+      "speed": 25.9,
+      "category": "heavy_systems"
+    }
+  },
+  "metadata": {
+    "model": "/home/cune/qwen2.5-coder-7b-instruct-q4_k_m.gguf",
+    "total_tasks": 100
+  }
+}

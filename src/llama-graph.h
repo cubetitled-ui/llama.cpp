@@ -1267,6 +1267,14 @@ int32_t llama_relative_position_bucket(llama_pos x, llama_pos y, uint64_t n_buck
 // [lo, hi] is silently skipped -- every layer runs either once in the prelude/coda or T times in the
 // loop. `on_entry(il, inpL)` (may be null) fires before each layer decode so callers can snapshot
 // per-layer inputs (e.g. embeddings_nextn extraction). Throws std::logic_error on a non-adjacent pair.
+using llm_decoder_kv_fn = std::function<ggml_tensor * (int il, ggml_tensor * input, bool store_kv)>;
+
+ggml_tensor * build_recurrent_core(
+        llm_graph_context & gf,
+        ggml_tensor * inpL,
+        const llm_decoder_kv_fn & decoder,
+        const std::function<void (int il, ggml_tensor * input)> & on_entry);
+
 ggml_tensor * build_recurrent_core(
         llm_graph_context & gf,
         ggml_tensor * inpL,

@@ -1,0 +1,93 @@
+# ==============================================================================
+# RLang Recurrent Theory Specification: mamba_selective_ssm.rlang
+# ==============================================================================
+# Architecture: Qwen2 / Focal / Generic Transformer (28 layers)
+# Recurrent Core Paradigm: Selective State Space Model (Mamba SSM) with Gated Channel
+#
+# Continuous-to-Discrete State Space Formulation:
+# In continuous time, an SSM maps an input signal x(t) to an output y(t) through
+# a latent state h_ssm(t):
+#     h'_ssm(t) = A * h_ssm(t) + B * x(t)
+#     y(t)      = C * h_ssm(t) + D * x(t)
+#
+# In Mamba, the parameters (Delta, B, C) are selective functions of the input:
+#     Delta_t = Softplus(Linear(x))
+#     A_bar_t = exp(Delta_t * A)
+#     B_bar_t = Delta_t * B
+#
+# Discretized Recurrence Step (Zero-Order Hold):
+#     h_ssm_{t+1} = A_bar_t * h_ssm_t + B_bar_t * x_t
+#     y_ssm       = C * h_ssm_{t+1}
+#     y_out       = y_ssm * SiLU(cur)   # Multiplicative Gated Branch
+# ==============================================================================
+
+model Mamba_Recurrent_SSM {
+    architecture: qwen2;
+    total_layers: 28;
+    epsilon: 1e-6;
+    description: "Selective State Space Recurrent Core (Mamba-style SSM with SiLU Gating)";
+}
+
+stage prelude feedforward {
+    layers: 0..12;
+}
+
+stage ssm_recurrent_core loop {
+    layers: 13..14;
+    iterations: 2;
+    system: mamba;
+
+    params {
+        a: 0.85;
+        b: 0.15;
+        gamma: 1.00;
+        dt_scale: 0.05;
+        A_diag: -0.50;
+    }
+
+    schedules {
+        a: "cosine(0.90, 0.75)";
+        gamma: "linear(1.00, 0.40)";
+    }
+
+    registers {
+        h_ssm = state(64);
+        conv_state = buffer(4);
+    }
+
+    anchors {
+        prelude_anchor: inpL;
+    }
+
+    policy {
+        kv_cache: step_overwrite;
+        delta_mode: pure_delta;
+    }
+
+    formulas {
+        # 1. Channel view (d_state=64) and selective timescale parameter Delta
+        x = view(cur, 64);
+        delta = softplus(view(combined, 64));
+        
+        # 2. Continuous-to-discrete Zero-Order Hold transformation
+        A_bar = exp(delta * A_diag);
+        B_bar = delta * 0.10;
+        
+        # 3. State-space recurrence update on h_ssm
+        h_ssm = A_bar * h_ssm + B_bar * x;
+        
+        # 4. Selective readout and full hidden-dimension broadcast
+        y_ssm = 0.25 * h_ssm;
+        y_full = repeat(y_ssm, cur);
+        
+        # 5. Multiplicative SiLU Gated Connection
+        y_gated = silu_gate(y_full, cur);
+        
+        # 6. Contractive hidden state fusion
+        h = a * h + b * anchor + gamma * y_gated;
+    }
+}
+
+stage coda feedforward {
+    layers: 15..27;
+}

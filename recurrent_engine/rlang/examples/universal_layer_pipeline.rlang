@@ -1,0 +1,27 @@
+// ==============================================================================
+// RLang Prototype: Universal Literal Layer Pipeline
+// Concept: Literally describes the sequential flow, branching, multi-pass
+// runs, and custom tensor mergers directly using run(layers, tensor) and math!
+// ==============================================================================
+
+model qwen2 {
+    layers: 28;
+    hidden_dim: 3584;
+    heads: 28;
+    norm_eps: 1e-6;
+}
+
+pipeline {
+    // 1. Run prelude layers 0 through 10
+    h = run(0..10, inpL);
+
+    // 2. Perform two distinct passes through cognitive layers 11 through 14
+    pass1 = run(11..14, h);
+    pass2 = run(11..14, pass1);
+
+    // 3. User literally merges the passes however they want!
+    h_merged = 0.35 * pass1 + 0.65 * pass2;
+
+    // 4. Run through final coda layers 15 through 27
+    out = run(15..27, h_merged);
+}

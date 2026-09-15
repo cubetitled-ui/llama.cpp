@@ -1,0 +1,103 @@
+# ==============================================================================
+# RLang Recurrent Theory Specification: deltanet_linear_attention.rlang
+# ==============================================================================
+# Architecture: Qwen2 / Focal / Generic Transformer (28 layers)
+# Recurrent Core Paradigm: DeltaNet (Fast Weight Programmer with Delta Rule)
+#
+# Mathematical Formulation (Linear Attention with Error-Correcting Delta Rule):
+# In standard Linear Attention, memory is updated additively:
+#     S_t = S_{t-1} + v_t * k_t^T
+# This leads to memory saturation and severe capacity degradation over long sequences.
+#
+# DeltaNet introduces an error-correcting associative retrieval mechanism:
+# Before writing new information, the model queries its current memory state
+# with the incoming key k_t to compute a memory prediction:
+#     v_pred = S_{t-1} * k_t
+#
+# The prediction error (innovation delta) is isolated:
+#     v_err  = v_t - v_pred
+#
+# Memory is updated using the Delta Rule (Widrow-Hoff / Least Mean Squares):
+#     S_t = alpha_t * S_{t-1} + beta_t * (v_err * k_t^T)
+#
+# Output associative retrieval for query q_t:
+#     y_t = S_t * q_t
+#
+# By writing only what memory failed to predict, DeltaNet maximizes storage capacity
+# and eliminates associative interference.
+# ==============================================================================
+
+model DeltaNet_Associative_Core {
+    architecture: qwen2;
+    total_layers: 28;
+    epsilon: 1e-6;
+    description: "DeltaNet Fast-Weight Associative Memory with Error-Correcting Delta Rule";
+}
+
+stage prelude feedforward {
+    layers: 0..12;
+}
+
+stage deltanet_core loop {
+    layers: 13..14;
+    iterations: 2;
+    system: deltanet;
+
+    params {
+        a: 0.90;
+        b: 0.10;
+        gamma: 1.00;
+        alpha: 0.95;
+        beta: 0.25;
+    }
+
+    schedules {
+        a: "cosine(0.95, 0.70)";
+        gamma: "linear(1.00, 0.30)";
+        alpha: "linear(0.98, 0.90)";
+    }
+
+    registers {
+        S = matrix(64, 64);
+    }
+
+    anchors {
+        prelude_anchor: inpL;
+    }
+
+    policy {
+        kv_cache: step_overwrite;
+        delta_mode: pure_delta;
+    }
+
+    formulas {
+        # 1. Project Query, Key, Value from transformer hidden states (d_k=64)
+        q = view(cur, 64);
+        k = norm(view(combined, 64), 1e-6);
+        v = view(block_out, 64);
+        
+        # 2. Associative Memory Retrieval: v_pred = S * k
+        v_pred = matvec(S, k);
+        
+        # 3. Innovation Error (Delta Rule): v_err = v - v_pred
+        v_err = v - v_pred;
+        
+        # 4. Outer Product Associative Memory Write: S = alpha * S + beta * (v_err (x) k^T)
+        delta_S = beta * outer_product(v_err, k);
+        S = alpha * S + delta_S;
+        
+        # 5. Associative Memory Readout for Query q: y_retrieval = S * q
+        y_retrieval = matvec(S, q);
+        
+        # 6. Broadcast across model hidden dimension and non-linear gating
+        y_full = repeat(y_retrieval, cur);
+        gate = sigmoid(1.50 * y_full);
+        
+        # 7. Contractive Latent State Update
+        h = a * h + b * anchor + gamma * (gate * y_full);
+    }
+}
+
+stage coda feedforward {
+    layers: 15..27;
+}

@@ -1,0 +1,58 @@
+{
+  "code_tarjan_scc": {
+    "baseline": {
+      "passed": false,
+      "time": 346.8951575756073,
+      "speed": 0.7,
+      "output_preview": "```python\ndef tarjan_scc(adj):\n    \"\"\"\n    Implements Tarjan's algorithm for finding strongly connected components.\n    Returns a list of lists, where"
+    },
+    "recurrent_g12": {
+      "passed": false,
+      "time": 256.8376979827881,
+      "speed": 0.5,
+      "output_preview": "//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////"
+    }
+  },
+  "logic_monty_hall_4doors": {
+    "baseline": {
+      "passed": false,
+      "time": 345.75875544548035,
+      "speed": 1.0,
+      "output_preview": "The probability of winning the car if you switch to Door 2 is **0.5** (or **1/2**).\n\n**Reasoning:**\n1. **Initial State:** There are 4 doors. One has a"
+    },
+    "recurrent_g12": {
+      "passed": false,
+      "time": 256.8755865097046,
+      "speed": 0.8,
+      "output_preview": "//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////"
+    }
+  },
+  "canary_lisp_interpreter": {
+    "baseline": {
+      "passed": false,
+      "time": 346.57109808921814,
+      "speed": 0.7,
+      "output_preview": "```python\ndef evaluate(expr: str) -> int:\n    def parse(tokens):\n        if not tokens:\n            return None\n        if isinstance(tokens[0], int):"
+    },
+    "recurrent_g12": {
+      "passed": false,
+      "time": 255.7348620891571,
+      "speed": 0.6,
+      "output_preview": "//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////"
+    }
+  },
+  "canary_transactional_kv": {
+    "baseline": {
+      "passed": false,
+      "time": 349.62974882125854,
+      "speed": 0.7,
+      "output_preview": "```python\nclass KVStore:\n    def ____init__(self):\n        self.data = {}\n        self.history = []\n\n    def set(self, k, v):\n        self.data[k] = v"
+    },
+    "recurrent_g12": {
+      "passed": false,
+      "time": 255.10391235351562,
+      "speed": 0.5,
+      "output_preview": "//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////"
+    }
+  }
+}

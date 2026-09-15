@@ -1,0 +1,180 @@
+{
+  "gamma_0.02_t2": {
+    "code_01_regex_nfa": {
+      "passed": false,
+      "reason": "AssertionError: ",
+      "duration": 41.360239028930664
+    },
+    "code_03_lazy_segment_tree": {
+      "passed": false,
+      "reason": "SyntaxError: '(' was never closed (<string>, line 34)",
+      "duration": 23.097840309143066
+    },
+    "code_05_dinic_max_flow": {
+      "passed": true,
+      "reason": "PASSED",
+      "duration": 16.584799766540527
+    },
+    "code_06_diff_patch_engine": {
+      "passed": false,
+      "reason": "TypeError: argument of type 'NoneType' is not a container or iterable",
+      "duration": 3.015667200088501
+    },
+    "code_07_avl_tree_invariants": {
+      "passed": false,
+      "reason": "SyntaxError: expected ':' (<string>, line 66)",
+      "duration": 21.108723640441895
+    },
+    "code_08_transactional_key_value": {
+      "passed": false,
+      "reason": "AssertionError: ",
+      "duration": 9.675326585769653
+    },
+    "code_09_expression_calculator_shunting_yard": {
+      "passed": false,
+      "reason": "IndentationError: expected an indented block after 'if' statement on line 80 (",
+      "duration": 21.12536120414734
+    },
+    "code_10_interval_tree_overlap": {
+      "passed": false,
+      "reason": "AssertionError: ",
+      "duration": 14.157078266143799
+    },
+    "agent_10_forex_triangular": {
+      "passed": false,
+      "reason": "Missing expected grounded answer",
+      "duration": 2.9918694496154785
+    }
+  },
+  "gamma_0.04_t2": {
+    "code_01_regex_nfa": {
+      "passed": false,
+      "reason": "IndexError: string index out of range",
+      "duration": 11.796590089797974
+    },
+    "code_03_lazy_segment_tree": {
+      "passed": false,
+      "reason": "SyntaxError: '(' was never closed (<string>, line 34)",
+      "duration": 21.134737491607666
+    },
+    "code_05_dinic_max_flow": {
+      "passed": true,
+      "reason": "PASSED",
+      "duration": 16.77451515197754
+    },
+    "code_06_diff_patch_engine": {
+      "passed": false,
+      "reason": "TypeError: argument of type 'NoneType' is not a container or iterable",
+      "duration": 3.0185256004333496
+    },
+    "code_07_avl_tree_invariants": {
+      "passed": false,
+      "reason": "SyntaxError: expected ':' (<string>, line 66)",
+      "duration": 21.519878387451172
+    },
+    "code_08_transactional_key_value": {
+      "passed": false,
+      "reason": "AssertionError: ",
+      "duration": 9.682533740997314
+    },
+    "code_09_expression_calculator_shunting_yard": {
+      "passed": false,
+      "reason": "AssertionError: ",
+      "duration": 19.00454044342041
+    },
+    "code_10_interval_tree_overlap": {
+      "passed": false,
+      "reason": "AssertionError: ",
+      "duration": 14.178142070770264
+    },
+    "agent_10_forex_triangular": {
+      "passed": false,
+      "reason": "Missing expected grounded answer",
+      "duration": 3.0033657550811768
+    }
+  },
+  "gamma_0.06_t2": {
+    "code_01_regex_nfa": {
+      "passed": false,
+      "reason": "IndexError: string index out of range",
+      "duration": 11.806146383285522
+    },
+    "code_03_lazy_segment_tree": {
+      "passed": false,
+      "reason": "SyntaxError: '(' was never closed (<string>, line 34)",
+      "duration": 21.936207056045532
+    },
+    "code_05_dinic_max_flow": {
+      "passed": false,
+      "reason": "TypeError: '>' not supported between instances of 'list' and 'int'",
+      "duration": 12.51044487953186
+    },
+    "code_06_diff_patch_engine": {
+      "passed": false,
+      "reason": "TypeError: argument of type 'NoneType' is not a container or iterable",
+      "duration": 3.217479944229126
+    },
+    "code_07_avl_tree_invariants": {
+      "passed": false,
+      "reason": "SyntaxError: expected ':' (<string>, line 66)",
+      "duration": 21.96397590637207
+    },
+    "code_08_transactional_key_value": {
+      "passed": false,
+      "reason": "AssertionError: ",
+      "duration": 10.037994384765625
+    },
+    "code_09_expression_calculator_shunting_yard": {
+      "passed": false,
+      "reason": "TimeoutExpired (>10s, infinite loop)",
+      "duration": 42.271915912628174
+    },
+    "code_10_interval_tree_overlap": {
+      "passed": true,
+      "reason": "PASSED",
+      "duration": 40.863619804382324
+    },
+    "agent_10_forex_triangular": {
+      "passed": false,
+      "reason": "Missing expected grounded answer",
+      "duration": 6.49308705329895
+    }
+  },
+  "gamma_0.08_t2": {
+    "code_01_regex_nfa": {
+      "passed": false,
+      "reason": "IndexError: string index out of range",
+      "duration": 31.710169315338135
+    },
+    "code_03_lazy_segment_tree": {
+      "passed": false,
+      "reason": "SyntaxError: '(' was never closed",
+      "duration": 58.65119934082031
+    },
+    "code_05_dinic_max_flow": {
+      "passed": false,
+      "reason": "TypeError: '>' not supported between instances of 'list' and",
+      "duration": 32.355234146118164
+    },
+    "code_06_diff_patch_engine": {
+      "passed": false,
+      "reason": "TypeError: argument of type 'NoneType' is not a container or",
+      "duration": 6.531461000442505
+    },
+    "code_07_avl_tree_invariants": {
+      "passed": false,
+      "reason": "SyntaxError: expected ':'",
+      "duration": 58.72163462638855
+    },
+    "code_08_transactional_key_value": {
+      "passed": false,
+      "reason": "AssertionError",
+      "duration": 25.78309178352356
+    },
+    "code_09_expression_calculator_shunting_yard": {
+      "passed": false,
+      "reason": "SyntaxError: expected ':'",
+      "duration": 58.595494985580444
+    }
+  }
+}

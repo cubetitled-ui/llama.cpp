@@ -253,6 +253,7 @@ llama_context::llama_context(
     cparams.recurrent_a       = params.recurrent_a;
     cparams.recurrent_b       = params.recurrent_b;
     cparams.recurrent_gate    = params.recurrent_gate;
+    cparams.recurrent_mode    = params.recurrent_mode;
 
     if (cparams.recurrent_t > 1) {
         // resolve a negative core layer to the empirical 38% reasoning-centroid heuristic
@@ -273,18 +274,7 @@ llama_context::llama_context(
                 throw std::runtime_error("recurrent layer B index out of range: " +
                         std::to_string(cparams.recurrent_layer_b) + " (n_layer=" + std::to_string(hparams.n_layer()) + ")");
             }
-            if (cparams.recurrent_layer_b == cparams.recurrent_layer) {
-                throw std::runtime_error("recurrent layer B must differ from recurrent layer A (or leave -1 for single-layer core)");
-            }
-            const int32_t ab_gap = cparams.recurrent_layer > cparams.recurrent_layer_b
-                ? cparams.recurrent_layer - cparams.recurrent_layer_b
-                : cparams.recurrent_layer_b - cparams.recurrent_layer;
-            if (ab_gap != 1) {
-                throw std::runtime_error("recurrent layers A=" + std::to_string(cparams.recurrent_layer) +
-                        " and B=" + std::to_string(cparams.recurrent_layer_b) + " must be adjacent (|A-B| == 1): " +
-                        "the A->B->A core only executes A and B in the loop, so a wider gap would silently skip " +
-                        "layer(s) between them (no intervening layers are executed inside the loop)");
-            }
+            // Block core [min(A, B) .. max(A, B)] executes all intervening layers sequentially inside the core loop.
         }
         if (!(cparams.recurrent_a >= -1.0f && cparams.recurrent_a < 1.0f)) {
             throw std::runtime_error("recurrent_a must satisfy -1 <= a < 1 for the iteration to be contractive, got " +
@@ -294,14 +284,18 @@ llama_context::llama_context(
             throw std::runtime_error("recurrent_gate must satisfy 0 <= gate <= 1, got " +
                     std::to_string(cparams.recurrent_gate));
         }
+        const char * mode_str = (cparams.recurrent_mode == 1 ? "ORSD (Gram-Schmidt Subspace)" :
+                                (cparams.recurrent_mode == 2 ? "SNC (Lyapunov Momentum Damper)" :
+                                (cparams.recurrent_mode == 3 ? "CAV (Anchor Energy Verification)" :
+                                (cparams.recurrent_mode == 4 ? "DSCC (Dual-Stream Counterpoint)" : "Vanilla LTI"))));
         if (cparams.recurrent_layer_b != -1) {
-            LLAMA_LOG_INFO("%s: llamar.cpp: alternating recurrent core enabled: T=%d layers A=%d B=%d (n_layer=%d) A=%g B=%g gate=%g\n",
+            LLAMA_LOG_INFO("%s: llamar.cpp: alternating recurrent core enabled: T=%d layers A=%d B=%d (n_layer=%d) A=%g B=%g gate=%g mode=%d (%s)\n",
                     __func__, cparams.recurrent_t, cparams.recurrent_layer, cparams.recurrent_layer_b,
-                    hparams.n_layer(), cparams.recurrent_a, cparams.recurrent_b, cparams.recurrent_gate);
+                    hparams.n_layer(), cparams.recurrent_a, cparams.recurrent_b, cparams.recurrent_gate, cparams.recurrent_mode, mode_str);
         } else {
-            LLAMA_LOG_INFO("%s: llamar.cpp: recurrent core enabled: T=%d layer=%d (n_layer=%d) A=%g B=%g gate=%g\n",
+            LLAMA_LOG_INFO("%s: llamar.cpp: recurrent core enabled: T=%d layer=%d (n_layer=%d) A=%g B=%g gate=%g mode=%d (%s)\n",
                     __func__, cparams.recurrent_t, cparams.recurrent_layer, hparams.n_layer(),
-                    cparams.recurrent_a, cparams.recurrent_b, cparams.recurrent_gate);
+                    cparams.recurrent_a, cparams.recurrent_b, cparams.recurrent_gate, cparams.recurrent_mode, mode_str);
         }
     } else if (cparams.recurrent_t != 1) {
         throw std::runtime_error("recurrent_t must be >= 1, got " + std::to_string(cparams.recurrent_t));
@@ -3573,6 +3567,7 @@ llama_context_params llama_context_default_params() {
     result.recurrent_a                 = 0.90f;
     result.recurrent_b                 = 0.10f;
     result.recurrent_gate              = 1.00f;
+    result.recurrent_mode              = 0;
     result.rope_freq_base              = 0.0f;
     result.rope_freq_scale             = 0.0f;
     result.yarn_ext_factor             = -1.0f;

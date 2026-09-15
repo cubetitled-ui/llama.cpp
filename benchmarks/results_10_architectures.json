@@ -1,0 +1,651 @@
+[
+  {
+    "id": "baseline",
+    "name": "Baseline Vanilla (T=1)",
+    "passed": 5,
+    "total": 7,
+    "total_latency": 12.86,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.89
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.82
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "24",
+        "passed": false,
+        "latency": 1.85
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.81
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "9",
+        "passed": true,
+        "latency": 1.79
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "50",
+        "passed": false,
+        "latency": 1.84
+      }
+    ],
+    "score_pct": 71.4
+  },
+  {
+    "id": "arch_1_ccmc",
+    "name": "Arch 1: Canonical Contractive Mid-Core (CCMC-2)",
+    "passed": 6,
+    "total": 7,
+    "total_latency": 13.2,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.89
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.87
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "47",
+        "passed": true,
+        "latency": 1.99
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.85
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "9",
+        "passed": true,
+        "latency": 1.84
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "50",
+        "passed": false,
+        "latency": 1.9
+      }
+    ],
+    "score_pct": 85.7
+  },
+  {
+    "id": "arch_2_mwqc",
+    "name": "Arch 2: Meso-Window Quad-Core (MWQC-4)",
+    "passed": 5,
+    "total": 7,
+    "total_latency": 13.16,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.9
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.87
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "24",
+        "passed": false,
+        "latency": 1.91
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "9",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "50",
+        "passed": false,
+        "latency": 1.9
+      }
+    ],
+    "score_pct": 71.4
+  },
+  {
+    "id": "arch_3_hocl",
+    "name": "Arch 3: High-Order Cognitive Loop (HOCL-3)",
+    "passed": 6,
+    "total": 7,
+    "total_latency": 13.19,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.87
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.9
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.87
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "47",
+        "passed": true,
+        "latency": 1.92
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "9",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "50",
+        "passed": false,
+        "latency": 1.91
+      }
+    ],
+    "score_pct": 85.7
+  },
+  {
+    "id": "arch_4_cadc",
+    "name": "Arch 4: Conservative Attractor Damped Core (CADC-2)",
+    "passed": 5,
+    "total": 7,
+    "total_latency": 13.15,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.88
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "24",
+        "passed": false,
+        "latency": 1.92
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "9",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "50",
+        "passed": false,
+        "latency": 1.91
+      }
+    ],
+    "score_pct": 71.4
+  },
+  {
+    "id": "arch_5_aiec",
+    "name": "Arch 5: Aggressive Innovation Exploration Core (AIEC-2)",
+    "passed": 6,
+    "total": 7,
+    "total_latency": 13.29,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.88
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.9
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "47",
+        "passed": true,
+        "latency": 1.91
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "9",
+        "passed": true,
+        "latency": 1.93
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "50",
+        "passed": false,
+        "latency": 1.95
+      }
+    ],
+    "score_pct": 85.7
+  },
+  {
+    "id": "arch_6_lslc",
+    "name": "Arch 6: Late-Semantic Pre-Logit Core (LSLC-2)",
+    "passed": 5,
+    "total": 7,
+    "total_latency": 13.12,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.85
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.89
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "24",
+        "passed": false,
+        "latency": 1.91
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.85
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "9",
+        "passed": true,
+        "latency": 1.87
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "95",
+        "passed": false,
+        "latency": 1.89
+      }
+    ],
+    "score_pct": 71.4
+  },
+  {
+    "id": "arch_7_ebsc",
+    "name": "Arch 7: Early-Bridge Syntactic-Semantic Core (EBSC-2)",
+    "passed": 5,
+    "total": 7,
+    "total_latency": 13.27,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.85
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.89
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.87
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "24",
+        "passed": false,
+        "latency": 1.9
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.91
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "8",
+        "passed": false,
+        "latency": 1.95
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "98",
+        "passed": true,
+        "latency": 1.9
+      }
+    ],
+    "score_pct": 71.4
+  },
+  {
+    "id": "arch_8_slfb",
+    "name": "Arch 8: Single-Layer Focused Bottleneck (SLFB-1)",
+    "passed": 6,
+    "total": 7,
+    "total_latency": 13.17,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.84
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.88
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "47",
+        "passed": true,
+        "latency": 1.89
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.84
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "9",
+        "passed": true,
+        "latency": 1.91
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "50",
+        "passed": false,
+        "latency": 1.95
+      }
+    ],
+    "score_pct": 85.7
+  },
+  {
+    "id": "arch_9_bcdc",
+    "name": "Arch 9: Balanced Critical Damping Core (BCDC-2)",
+    "passed": 5,
+    "total": 7,
+    "total_latency": 13.38,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.91
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.97
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.96
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "24",
+        "passed": false,
+        "latency": 1.93
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "9",
+        "passed": true,
+        "latency": 1.85
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "50",
+        "passed": false,
+        "latency": 1.9
+      }
+    ],
+    "score_pct": 71.4
+  },
+  {
+    "id": "arch_10_afac",
+    "name": "Arch 10: Asymmetric Frozen-Anchor Dominant Core (AFAC-2)",
+    "passed": 5,
+    "total": 7,
+    "total_latency": 13.11,
+    "details": [
+      {
+        "id": "bat_and_ball",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.84
+      },
+      {
+        "id": "train_speed",
+        "expected": "48",
+        "output": "48",
+        "passed": true,
+        "latency": 1.89
+      },
+      {
+        "id": "snail_in_well",
+        "expected": "8",
+        "output": "8",
+        "passed": true,
+        "latency": 1.87
+      },
+      {
+        "id": "lily_pads",
+        "expected": "47",
+        "output": "24",
+        "passed": false,
+        "latency": 1.91
+      },
+      {
+        "id": "widget_machines",
+        "expected": "5",
+        "output": "5",
+        "passed": true,
+        "latency": 1.86
+      },
+      {
+        "id": "sheep_puzzle",
+        "expected": "9",
+        "output": "9",
+        "passed": true,
+        "latency": 1.85
+      },
+      {
+        "id": "sister_age",
+        "expected": "98",
+        "output": "50",
+        "passed": false,
+        "latency": 1.89
+      }
+    ],
+    "score_pct": 71.4
+  }
+]

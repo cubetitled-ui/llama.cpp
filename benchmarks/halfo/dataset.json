@@ -1,0 +1,104 @@
+{
+  "benchmark_name": "Halfo Benchmark Suite",
+  "version": "1.0.0",
+  "description": "Standardized evaluation suite for logic, tool-calling schema compliance, and multilingual idiomatic translation.",
+  "tasks": {
+    "logic": [
+      {
+        "id": "logic_01",
+        "prompt": "A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost in cents? Respond with only the final number of cents.",
+        "expected": "5",
+        "validation_type": "contains"
+      },
+      {
+        "id": "logic_02",
+        "prompt": "A train travels 120 kilometers in 2.5 hours. What is its average speed in kilometers per hour? Respond with only the number.",
+        "expected": "48",
+        "validation_type": "contains"
+      },
+      {
+        "id": "logic_03",
+        "prompt": "A snail is at the bottom of a 10-meter well. Each day it climbs up 3 meters, and each night it slips back down 2 meters. On which day does the snail reach the top of the well? Respond with only the number.",
+        "expected": "8",
+        "validation_type": "contains"
+      },
+      {
+        "id": "logic_04",
+        "prompt": "In a lake, there is a patch of lily pads. Every day, the patch doubles in size. If it takes 48 days for the patch to cover the entire lake, how many days would it take for the patch to cover half of the lake? Respond with only the number.",
+        "expected": "47",
+        "validation_type": "contains"
+      },
+      {
+        "id": "logic_05",
+        "prompt": "If 5 machines take 5 minutes to make 5 widgets, how many minutes would it take 100 machines to make 100 widgets? Respond with only the number.",
+        "expected": "5",
+        "validation_type": "contains"
+      },
+      {
+        "id": "logic_06",
+        "prompt": "Farmer John has 17 sheep. All but 9 run away. How many sheep does Farmer John have left? Respond with only the number.",
+        "expected": "9",
+        "validation_type": "contains"
+      }
+    ],
+    "tool_calling": [
+      {
+        "id": "tool_01",
+        "prompt": "Available tools:\n- get_current_weather(location: str, unit: str = 'celsius')\n- search_web(query: str)\nUser: What is the current temperature in Tokyo in celsius? Call the tool as valid JSON: {\"name\": ..., \"arguments\": {...}}",
+        "expected_tool": "get_current_weather",
+        "required_keys": ["location"],
+        "required_values": {"location": "Tokyo"},
+        "validation_type": "json_tool_call"
+      },
+      {
+        "id": "tool_02",
+        "prompt": "Available tools:\n- execute_sql(database: str, query: str)\n- fetch_logs(service: str, lines: int)\nUser: Retrieve the top 5 users by creation date from the 'production' database. Call the tool as valid JSON: {\"name\": ..., \"arguments\": {...}}",
+        "expected_tool": "execute_sql",
+        "required_keys": ["database", "query"],
+        "required_values": {"database": "production"},
+        "validation_type": "json_tool_call"
+      },
+      {
+        "id": "tool_03",
+        "prompt": "Available tools:\n- calculate_mortgage(principal: float, annual_rate: float, tenure_years: int)\n- convert_currency(amount: float, from_curr: str, to_curr: str)\nUser: Calculate the monthly payment for a $300,000 mortgage at 4.5% annual interest over 30 years. Call the tool as valid JSON: {\"name\": ..., \"arguments\": {...}}",
+        "expected_tool": "calculate_mortgage",
+        "required_keys": ["principal", "annual_rate", "tenure_years"],
+        "validation_type": "json_tool_call"
+      },
+      {
+        "id": "tool_04",
+        "prompt": "Available tools:\n- search_codebase(pattern: str, file_extension: str, max_results: int = 50)\n- list_directory(path: str)\nUser: Search for all occurrences of 'build_recurrent_core' in cpp files. Call the tool as valid JSON: {\"name\": ..., \"arguments\": {...}}",
+        "expected_tool": "search_codebase",
+        "required_keys": ["pattern", "file_extension"],
+        "required_values": {"pattern": "build_recurrent_core", "file_extension": "cpp"},
+        "validation_type": "json_tool_call"
+      }
+    ],
+    "multilingual_translation": [
+      {
+        "id": "trans_01",
+        "prompt": "Translate the Russian idiom 'Он на этом собаку съел' into natural English conveying its true idiomatic meaning. Keep the explanation to one concise sentence.",
+        "keywords": ["expert", "experienced", "seasoned", "knows inside", "knows his stuff", "mastered"],
+        "validation_type": "keywords"
+      },
+      {
+        "id": "trans_02",
+        "prompt": "Translate the Russian idiom 'Хватит бить баклуши' into natural English conveying its true idiomatic meaning. Keep the response to one concise sentence.",
+        "keywords": ["loafing", "twiddle", "slacking", "idling", "wasting time", "fooling around"],
+        "validation_type": "keywords"
+      },
+      {
+        "id": "trans_03",
+        "prompt": "Translate the English idiom 'To bite the bullet' into natural Russian conveying its true figurative meaning. Provide the exact Russian equivalent.",
+        "keywords": ["стиснуть зубы", "перетерпеть", "решиться", "пойти на"],
+        "validation_type": "keywords"
+      },
+      {
+        "id": "trans_04",
+        "prompt": "Translate the Chinese four-character idiom (chengyu) '画蛇添足' (draw snake add feet) into English explaining its figurative meaning in one sentence.",
+        "keywords": ["superfluous", "unnecessary", "ruin", "spoil", "overdo"],
+        "validation_type": "keywords"
+      }
+    ]
+  }
+}

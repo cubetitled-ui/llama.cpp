@@ -1,0 +1,41 @@
+{
+  "architecture": "qwen2",
+  "total_layers": 28,
+  "description": "Cascaded Multi-Stage Recurrence: Stage 1 feature abstraction on layers 8-9 followed by Stage 2 reasoning refinement on layers 13-14",
+  "blocks": [
+    {
+      "type": "feedforward",
+      "layers": [0, 7]
+    },
+    {
+      "type": "recurrent_loop",
+      "name": "stage1_abstraction",
+      "layers": [8, 9],
+      "iterations": 2,
+      "recurrent_a": 0.90,
+      "recurrent_b": 0.10,
+      "recurrent_gate": 1.00,
+      "delta_mode": "pure_delta",
+      "kv_mode": "step_overwrite"
+    },
+    {
+      "type": "feedforward",
+      "layers": [10, 12]
+    },
+    {
+      "type": "recurrent_loop",
+      "name": "stage2_synthesis",
+      "layers": [13, 14],
+      "iterations": 2,
+      "recurrent_a": 0.85,
+      "recurrent_b": 0.15,
+      "recurrent_gate": 1.00,
+      "delta_mode": "pure_delta",
+      "kv_mode": "step_overwrite"
+    },
+    {
+      "type": "feedforward",
+      "layers": [15, 27]
+    }
+  ]
+}

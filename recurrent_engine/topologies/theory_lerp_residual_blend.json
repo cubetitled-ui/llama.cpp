@@ -1,0 +1,32 @@
+{
+  "architecture": "qwen2",
+  "total_layers": 28,
+  "description": "Smooth Lerp & Swish Residual Blend: uses mathematical interpolation helper functions to blend nonlinear thoughts",
+  "blocks": [
+    {
+      "type": "feedforward",
+      "layers": [0, 12]
+    },
+    {
+      "type": "recurrent_loop",
+      "name": "lerp_swish_core",
+      "layers": [13, 14],
+      "iterations": 2,
+      "custom_params": {
+        "alpha": 0.25
+      },
+      "custom_formulas": [
+        "delta = block_out - combined",
+        "h = lerp(h, swish(delta), alpha)",
+        "h = rms_norm(h, eps=1e-6)"
+      ],
+      "kv_mode": "step_overwrite",
+      "norm_eps": 1e-6,
+      "save_state": true
+    },
+    {
+      "type": "feedforward",
+      "layers": [15, 27]
+    }
+  ]
+}
