@@ -2697,13 +2697,15 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
     ).set_env("LLAMA_ARG_RECURRENT_GATE"));
     add_opt(common_arg(
         {"--recurrent-mode", "--recurrent-strategy"}, "MODE",
-        "recurrent algorithm: 0/vanilla, 1/orsd (Gram-Schmidt), 2/snc (Lyapunov momentum), 3/cav (anchor verification), 4/dscc (dual stream)",
+        "recurrent algorithm: 0/vanilla, 1/orsd (Gram-Schmidt), 2/snc (Lyapunov momentum), 3/cav (anchor verification), 4/dscc (dual stream), 5/hybrid (ortho-momentum), 6/akr (adaptive kinetic)",
         [](common_params & params, const std::string & value) {
             if (value == "vanilla" || value == "0") params.recurrent_mode = 0;
             else if (value == "orsd" || value == "1") params.recurrent_mode = 1;
             else if (value == "snc" || value == "momentum" || value == "2") params.recurrent_mode = 2;
             else if (value == "cav" || value == "anchor" || value == "3") params.recurrent_mode = 3;
             else if (value == "dscc" || value == "dual" || value == "4") params.recurrent_mode = 4;
+            else if (value == "hybrid" || value == "ortho-momentum" || value == "5") params.recurrent_mode = 5;
+            else if (value == "akr" || value == "adaptive-kinetic" || value == "6") params.recurrent_mode = 6;
             else {
                 try {
                     params.recurrent_mode = std::stoi(value);

@@ -103,11 +103,7 @@ Recurrence parameters are configured via CLI flags, environment variables, or co
 
 ---
 
-## Silicon-Verified Empirical Results & Academic Research
-
-> [!NOTE]
-> **Academic Preprint Available**: Complete mathematical derivations, proofs of spectral manifold collapse, and ablation studies are detailed in our paper:  
-> 📄 **[Read arXiv Preprint (Markdown)](docs/recurrent/arxiv_preprint.md)** | **[Download Preprint PDF](docs/recurrent/arxiv_preprint.pdf)** | **[LaTeX Source](docs/recurrent/arxiv_preprint.tex)**
+## Silicon-Verified Empirical Results
 
 **Target Hardware**: NVIDIA GeForce RTX 3050 Laptop GPU (GA107, 6.09 GB VRAM, sm_86 Ampere, CUDA Backend)  
 **Evaluated Model**: `Qwen2.5-Coder-7B-Instruct-Q4_K_M` + `qwen_recurrent_step100.gguf`
@@ -120,8 +116,8 @@ Evaluated across hardened algorithmic systems coding challenges and probabilisti
 |:---|:---:|:---:|:---:|:---|
 | **Base ($T=1$, Vanilla No-LoRA)** | 5 / 9 | 55.6% | 167.3s | Fails AVL OOP interface & NFA recursion |
 | **LoRA ($T=1$, Step-100)** | 5 / 9 | 55.6% | 182.8s | Fixes AVL OOP (`insert(self, val)`); regresses Interval Tree |
-| **LoRA Recurrent ORSD ($T=2$, $\gamma=0.20$, Mode 1)** | **6 / 9** | **66.7%** 🚀 | **201.6s** | **Fixes AVL OOP + Restores Interval Tree (+11.1% Net Gain)** |
-| **LoRA Recurrent Vanilla ($T=2$, $\gamma=0.50$, Mode 0)** | 2 / 9 | 22.2% 💥 | 195.2s | **Catastrophic Collapse**: Bytecode VM, Lisp, and Tarjan fail |
+| **LoRA Recurrent ORSD ($T=2$, $\gamma=0.20$, Mode 1)** | **6 / 9** | **66.7%** | **201.6s** | **Fixes AVL OOP + Restores Interval Tree (+11.1% Net Gain)** |
+| **LoRA Recurrent Vanilla ($T=2$, $\gamma=0.50$, Mode 0)** | 2 / 9 | 22.2% | 195.2s | **Catastrophic Collapse**: Bytecode VM, Lisp, and Tarjan fail |
 
 ### 2. Spectral Manifold Collapse (SVD Audit on Layer 13)
 

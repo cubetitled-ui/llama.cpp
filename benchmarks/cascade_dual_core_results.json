@@ -1,0 +1,281 @@
+{
+  "config": {
+    "id": "cascade_dual_core_14_16",
+    "name": "Cascade Dual-Core MSRD (Mode 5, L=[14, 16], g=0.0331, T=2)",
+    "layer": 14,
+    "layer_b": 16,
+    "gamma": 0.0331,
+    "mode": 5,
+    "t": 2
+  },
+  "passed": 41,
+  "total": 52,
+  "categories": {
+    "agentic_loop": "12/13",
+    "coding": "8/13",
+    "web_dev": "13/13",
+    "logic": "8/13"
+  },
+  "tasks": {
+    "agent_01_calc": {
+      "passed": true,
+      "duration": 6.21,
+      "category": "agentic_loop"
+    },
+    "agent_02_sql": {
+      "passed": true,
+      "duration": 5.84,
+      "category": "agentic_loop"
+    },
+    "agent_03_file": {
+      "passed": true,
+      "duration": 5.13,
+      "category": "agentic_loop"
+    },
+    "agent_04_weather": {
+      "passed": true,
+      "duration": 6.6,
+      "category": "agentic_loop"
+    },
+    "agent_05_stock": {
+      "passed": true,
+      "duration": 6.16,
+      "category": "agentic_loop"
+    },
+    "agent_06_db_update": {
+      "passed": true,
+      "duration": 5.89,
+      "category": "agentic_loop"
+    },
+    "agent_07_unit_convert": {
+      "passed": true,
+      "duration": 11.41,
+      "category": "agentic_loop"
+    },
+    "agent_08_kb_search": {
+      "passed": true,
+      "duration": 6.12,
+      "category": "agentic_loop"
+    },
+    "agent_09_k8s_status": {
+      "passed": true,
+      "duration": 6.38,
+      "category": "agentic_loop"
+    },
+    "agent_10_forex_triangular": {
+      "passed": false,
+      "duration": 12.1,
+      "category": "agentic_loop"
+    },
+    "agent_11_auth_jwt": {
+      "passed": true,
+      "duration": 7.89,
+      "category": "agentic_loop"
+    },
+    "agent_12_cve_severity": {
+      "passed": true,
+      "duration": 8.56,
+      "category": "agentic_loop"
+    },
+    "agent_13_disk_cleanup": {
+      "passed": true,
+      "duration": 16.2,
+      "category": "agentic_loop"
+    },
+    "code_01_regex_nfa": {
+      "passed": false,
+      "duration": 12.07,
+      "category": "coding"
+    },
+    "code_02_bytecode_vm": {
+      "passed": true,
+      "duration": 17.6,
+      "category": "coding"
+    },
+    "code_03_lazy_segment_tree": {
+      "passed": false,
+      "duration": 34.91,
+      "category": "coding"
+    },
+    "code_04_lisp_interpreter": {
+      "passed": true,
+      "duration": 21.58,
+      "category": "coding"
+    },
+    "code_05_dinic_max_flow": {
+      "passed": true,
+      "duration": 21.0,
+      "category": "coding"
+    },
+    "code_06_diff_patch_engine": {
+      "passed": true,
+      "duration": 23.51,
+      "category": "coding"
+    },
+    "code_07_avl_tree_invariants": {
+      "passed": false,
+      "duration": 23.98,
+      "category": "coding"
+    },
+    "code_08_transactional_key_value": {
+      "passed": true,
+      "duration": 10.32,
+      "category": "coding"
+    },
+    "code_09_expression_calculator_shunting_yard": {
+      "passed": false,
+      "duration": 18.92,
+      "category": "coding"
+    },
+    "code_10_interval_tree_overlap": {
+      "passed": false,
+      "duration": 14.93,
+      "category": "coding"
+    },
+    "code_11_topological_lexical_kahn": {
+      "passed": true,
+      "duration": 11.52,
+      "category": "coding"
+    },
+    "code_12_tarjan_scc": {
+      "passed": true,
+      "duration": 12.71,
+      "category": "coding"
+    },
+    "code_13_knapsack_with_reconstruction": {
+      "passed": true,
+      "duration": 11.63,
+      "category": "coding"
+    },
+    "web_01_countdown": {
+      "passed": true,
+      "duration": 16.51,
+      "category": "web_dev"
+    },
+    "web_02_dark_mode": {
+      "passed": true,
+      "duration": 17.23,
+      "category": "web_dev"
+    },
+    "web_03_modal_esc": {
+      "passed": true,
+      "duration": 16.8,
+      "category": "web_dev"
+    },
+    "web_04_responsive_nav": {
+      "passed": true,
+      "duration": 21.27,
+      "category": "web_dev"
+    },
+    "web_05_debounce": {
+      "passed": true,
+      "duration": 18.29,
+      "category": "web_dev"
+    },
+    "web_06_fetch_retry": {
+      "passed": true,
+      "duration": 11.64,
+      "category": "web_dev"
+    },
+    "web_07_custom_tabs": {
+      "passed": true,
+      "duration": 21.26,
+      "category": "web_dev"
+    },
+    "web_08_css_grid": {
+      "passed": true,
+      "duration": 7.25,
+      "category": "web_dev"
+    },
+    "web_09_promise_pool": {
+      "passed": true,
+      "duration": 11.09,
+      "category": "web_dev"
+    },
+    "web_10_virtual_list_calc": {
+      "passed": true,
+      "duration": 21.25,
+      "category": "web_dev"
+    },
+    "web_11_fsm_state_machine": {
+      "passed": true,
+      "duration": 21.24,
+      "category": "web_dev"
+    },
+    "web_12_svg_arc_path": {
+      "passed": true,
+      "duration": 21.27,
+      "category": "web_dev"
+    },
+    "web_13_reactive_signal": {
+      "passed": true,
+      "duration": 14.72,
+      "category": "web_dev"
+    },
+    "logic_01_bat_ball": {
+      "passed": false,
+      "duration": 1.76,
+      "category": "logic"
+    },
+    "logic_02_train_speed": {
+      "passed": true,
+      "duration": 1.77,
+      "category": "logic"
+    },
+    "logic_03_snail_well": {
+      "passed": true,
+      "duration": 1.61,
+      "category": "logic"
+    },
+    "logic_04_lily_pads": {
+      "passed": false,
+      "duration": 1.65,
+      "category": "logic"
+    },
+    "logic_05_machines": {
+      "passed": true,
+      "duration": 1.59,
+      "category": "logic"
+    },
+    "logic_06_sheep": {
+      "passed": true,
+      "duration": 1.6,
+      "category": "logic"
+    },
+    "logic_07_sister_age": {
+      "passed": false,
+      "duration": 1.64,
+      "category": "logic"
+    },
+    "logic_08_monty_hall": {
+      "passed": true,
+      "duration": 2.69,
+      "category": "logic"
+    },
+    "logic_09_bayesian_disease": {
+      "passed": true,
+      "duration": 24.23,
+      "category": "logic"
+    },
+    "logic_10_monty_hall_4doors": {
+      "passed": false,
+      "duration": 19.27,
+      "category": "logic"
+    },
+    "logic_11_water_jug_4L": {
+      "passed": true,
+      "duration": 1.61,
+      "category": "logic"
+    },
+    "logic_12_two_dice_sum8": {
+      "passed": false,
+      "duration": 18.15,
+      "category": "logic"
+    },
+    "logic_13_clock_angle_315": {
+      "passed": true,
+      "duration": 1.67,
+      "category": "logic"
+    }
+  }
+}
