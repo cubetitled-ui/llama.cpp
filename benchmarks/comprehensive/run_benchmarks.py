@@ -106,6 +106,8 @@ def main():
     parser.add_argument("--cli", default="/home/cune/llama.cpp/build-cuda-vnni/bin/llama-cli", help="Path to llama-cli")
     parser.add_argument("--dataset", default="/home/cune/llama.cpp/benchmarks/comprehensive/dataset.json", help="Path to dataset.json")
     parser.add_argument("--category", choices=["all", "agentic_loop", "tool_calling", "logic", "coding", "web_dev"], default="all")
+    parser.add_argument("--use-chatml", action="store_true", help="Wrap prompts in ChatML format")
+    parser.add_argument("--raw-prompt", action="store_true", help="Force raw prompt even for instruct models")
     parser.add_argument("--extra-args", nargs=argparse.REMAINDER, default=[], help="Extra arguments for llama-cli")
 
     args = parser.parse_args()
@@ -129,6 +131,8 @@ def main():
     total_passed = 0
     total_tasks = 0
 
+    is_instruct = (args.use_chatml or ("instruct" in args.model.lower())) and not args.raw_prompt
+
     for cat in categories:
         cat_tasks = tasks_dict.get(cat, [])
         passed = 0
@@ -136,9 +140,19 @@ def main():
         for item in cat_tasks:
             total_tasks += 1
             tid = item["id"]
-            prompt = item.get("prompt", item.get("turn1_prompt", ""))
+            raw_prompt = item.get("prompt", item.get("turn1_prompt", ""))
             vtype = item.get("validation_type", "contains")
-            max_tok = 512 if cat in ["coding", "web_dev"] else 128
+            max_tok = 1024 if cat in ["coding", "web_dev"] else 128
+
+            if is_instruct and vtype != "agentic_multi_turn":
+                if cat in ["coding", "web_dev"]:
+                    prompt = f"<|im_start|>system\nYou are an expert software engineer. Follow all API contracts, invariants, and edge cases strictly. Output only valid code in a markdown block.\n<|im_end|>\n<|im_start|>user\n{raw_prompt}\n<|im_end|>\n<|im_start|>assistant\n"
+                elif cat == "logic":
+                    prompt = f"<|im_start|>system\nYou are a precise mathematical and logical reasoning assistant. Analyze the problem step by step and provide the concise final answer.\n<|im_end|>\n<|im_start|>user\n{raw_prompt}\n<|im_end|>\n<|im_start|>assistant\n"
+                else:
+                    prompt = f"<|im_start|>user\n{raw_prompt}\n<|im_end|>\n<|im_start|>assistant\n"
+            else:
+                prompt = raw_prompt
 
             t0 = time.time()
             output = run_inference(args.cli, args.model, args.extra_args, prompt, max_tokens=max_tok)
