@@ -3571,6 +3571,20 @@ ggml_tensor * build_recurrent_core(
     const int32_t lo = has_b ? std::min(recurrent_layer, recurrent_layer_b) : recurrent_layer;
     const int32_t hi = has_b ? std::max(recurrent_layer, recurrent_layer_b) : recurrent_layer;
 
+    // Sandwich Skip Topology: if |A - B| == 2 (e.g. 12 and 14), cycle only {lo, hi} inside the
+    // recurrent deliberation loop, and pass the converged state through bridge_layer (lo + 1 = 13)
+    // before the coda.
+    const bool is_sandwich = has_b && (lo + 2 == hi);
+    const int32_t bridge_layer = is_sandwich ? (lo + 1) : -1;
+    std::vector<int> core_layers;
+    if (is_sandwich) {
+        core_layers = { lo, hi };
+    } else {
+        for (int il = lo; il <= hi; ++il) {
+            core_layers.push_back(il);
+        }
+    }
+
     // 1. prelude: layers [0, lo) straight through
     for (int il = 0; il < lo; ++il) {
         if (on_entry) on_entry(il, inpL);
@@ -3580,10 +3594,10 @@ ggml_tensor * build_recurrent_core(
     // 2. frozen anchor = prelude output
     ggml_tensor * anchor_e = inpL;
 
-    // 3. Pass 0: 100% pristine baseline forward pass through compound core [lo..hi]
+    // 3. Pass 0: 100% pristine baseline forward pass through compound core
     // store_kv = true: stores pristine K and V in cache for current token
     ggml_tensor * cur = anchor_e;
-    for (int il = lo; il <= hi; ++il) {
+    for (int il : core_layers) {
         if (on_entry) on_entry(il, cur);
         cur = decoder(il, cur, true);
     }
@@ -3599,7 +3613,7 @@ ggml_tensor * build_recurrent_core(
     for (int t = 1; t < recurrent_t; ++t) {
         ggml_tensor * step_in = h;
         cur = step_in;
-        for (int il = lo; il <= hi; ++il) {
+        for (int il : core_layers) {
             if (on_entry) on_entry(il, cur);
             cur = decoder(il, cur, false); // <--- store_kv = false!
         }
@@ -3625,34 +3639,13 @@ ggml_tensor * build_recurrent_core(
 
             // Scale-Invariant Relative Energy Matching:
             // 1. Normalize delta_ortho to unit RMS (energy-normalized direction)
-            // 2. Scale by baseline thought Delta_0's per-token RMS energy (past_u[0])
-            // 3. Dynamic Uncertainty-Gating (Entropy / Ambiguity proxy):
-            //    Measures alignment between candidate orthogonal direction and current state.
-            //    High cosine alignment / projection indicates a confident single trajectory (dampen to avoid over-smoothing).
-            //    High orthogonality indicates state conflict / ambiguity (allow higher deliberation energy).
+            // 2. Scale by baseline thought Delta_0's per-token RMS energy (past_u[0]) so that recurrent_gate represents exact invariant energy percentage relative to the core's baseline step size
             ggml_tensor * delta_normed = ggml_rms_norm(gf.ctx0, delta_ortho, gf.hparams.f_norm_rms_eps);
             ggml_tensor * u0           = past_u[0];
             ggml_tensor * u0_sq        = ggml_mul(gf.ctx0, u0, u0);
             ggml_tensor * u0_mean      = ggml_scale(gf.ctx0, ggml_sum_rows(gf.ctx0, u0_sq), 1.0f / float(gf.n_embd));
             ggml_tensor * u0_rms       = ggml_sqrt(gf.ctx0, ggml_clamp(gf.ctx0, u0_mean, 1e-7f, INFINITY));
-
-            // Dynamic Uncertainty Weighting:
-            // sigma_uncertainty = 1.0 - clamp(|<delta_raw, u0>| / (||delta_raw|| * ||u0||), 0, 0.95)
-            // When delta_raw is in conflict with u0 (low cosine similarity), uncertainty is high -> full gate.
-            // When delta_raw merely repeats u0 (high cosine similarity), uncertainty is low -> dampened gate (prevents pseudo-smooth collapse).
-            ggml_tensor * dot_du0    = ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, delta_thought, u0));
-            ggml_tensor * norm_d_sq  = ggml_clamp(gf.ctx0, ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, delta_thought, delta_thought)), 1e-7f, INFINITY);
-            ggml_tensor * norm_u0_sq = ggml_clamp(gf.ctx0, ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, u0, u0)), 1e-7f, INFINITY);
-            ggml_tensor * norm_prod  = ggml_sqrt(gf.ctx0, ggml_mul(gf.ctx0, norm_d_sq, norm_u0_sq));
-            ggml_tensor * cos_sim    = ggml_div(gf.ctx0, dot_du0, norm_prod);
-            ggml_tensor * cos_abs    = ggml_sqr(gf.ctx0, cos_sim); // cos^2 in [0, 1]
-            // conflict_gate = 1.0 - 0.75 * cos^2  --> clamp in [0.25, 1.0] via 1.0 - ggml_scale(cos_abs)
-            ggml_tensor * scaled_cos = ggml_scale(gf.ctx0, cos_abs, 0.75f);
-            ggml_tensor * unit_one   = ggml_div(gf.ctx0, norm_prod, norm_prod); // exact [1, n_tokens] tensor with value 1.0
-            ggml_tensor * conflict_gate = ggml_sub(gf.ctx0, unit_one, scaled_cos);
-
-            ggml_tensor * scaled_delta = ggml_mul(gf.ctx0, delta_normed, u0_rms);
-            delta_thought              = ggml_mul(gf.ctx0, scaled_delta, conflict_gate);
+            delta_thought              = ggml_mul(gf.ctx0, delta_normed, u0_rms);
         } else if (recurrent_mode == 2) {
             // =========================================================================
             // PILLAR 5: SNC-MD (Spectral-Norm Lyapunov Momentum Damper)
@@ -3696,6 +3689,12 @@ ggml_tensor * build_recurrent_core(
         h = ggml_add(gf.ctx0, h, ggml_scale(gf.ctx0, delta_thought, recurrent_gate));
     }
     inpL = h;
+
+    // Bridge bottleneck layer (e.g. layer 13 after 12<->14 recurrence)
+    if (bridge_layer >= 0) {
+        if (on_entry) on_entry(bridge_layer, inpL);
+        inpL = decoder(bridge_layer, inpL, true);
+    }
 
     // 5. coda: layers (hi, n_layer) straight through.
     for (int il = hi + 1; il < n_layer; ++il) {
