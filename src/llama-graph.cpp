@@ -3625,13 +3625,31 @@ ggml_tensor * build_recurrent_core(
 
             // Scale-Invariant Relative Energy Matching:
             // 1. Normalize delta_ortho to unit RMS (energy-normalized direction)
-            // 2. Scale by baseline thought Delta_0's per-token RMS energy (past_u[0]) so that recurrent_gate represents exact invariant energy percentage relative to the core's baseline step size
+            // 2. Scale by baseline thought Delta_0's per-token RMS energy (past_u[0])
+            // 3. Dynamic Uncertainty-Gating (Entropy / Ambiguity proxy):
+            //    Measures alignment between candidate orthogonal direction and current state.
+            //    High cosine alignment / projection indicates a confident single trajectory (dampen to avoid over-smoothing).
+            //    High orthogonality indicates state conflict / ambiguity (allow higher deliberation energy).
             ggml_tensor * delta_normed = ggml_rms_norm(gf.ctx0, delta_ortho, gf.hparams.f_norm_rms_eps);
             ggml_tensor * u0           = past_u[0];
             ggml_tensor * u0_sq        = ggml_mul(gf.ctx0, u0, u0);
             ggml_tensor * u0_mean      = ggml_scale(gf.ctx0, ggml_sum_rows(gf.ctx0, u0_sq), 1.0f / float(gf.n_embd));
             ggml_tensor * u0_rms       = ggml_sqrt(gf.ctx0, ggml_clamp(gf.ctx0, u0_mean, 1e-7f, INFINITY));
-            delta_thought              = ggml_mul(gf.ctx0, delta_normed, u0_rms);
+
+            // Dynamic Uncertainty Weighting:
+            // sigma_uncertainty = 1.0 - clamp(|<delta_raw, u0>| / (||delta_raw|| * ||u0||), 0, 0.95)
+            // When delta_raw is in conflict with u0 (low cosine similarity), uncertainty is high -> full gate.
+            // When delta_raw merely repeats u0 (high cosine similarity), uncertainty is low -> dampened gate (prevents pseudo-smooth collapse).
+            ggml_tensor * dot_du0    = ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, delta_thought, u0));
+            ggml_tensor * norm_d_sq  = ggml_clamp(gf.ctx0, ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, delta_thought, delta_thought)), 1e-7f, INFINITY);
+            ggml_tensor * norm_u0_sq = ggml_clamp(gf.ctx0, ggml_sum_rows(gf.ctx0, ggml_mul(gf.ctx0, u0, u0)), 1e-7f, INFINITY);
+            ggml_tensor * norm_prod  = ggml_sqrt(gf.ctx0, ggml_mul(gf.ctx0, norm_d_sq, norm_u0_sq));
+            ggml_tensor * cos_sim    = ggml_div(gf.ctx0, dot_du0, norm_prod);
+            ggml_tensor * cos_abs    = ggml_sqr(gf.ctx0, cos_sim); // cos^2 in [0, 1]
+            ggml_tensor * conflict_gate = ggml_sub(gf.ctx0, ggml_new_f32(gf.ctx0, 1.0f), ggml_scale(gf.ctx0, cos_abs, 0.75f)); // in [0.25, 1.0]
+
+            ggml_tensor * scaled_delta = ggml_mul(gf.ctx0, delta_normed, u0_rms);
+            delta_thought              = ggml_mul(gf.ctx0, scaled_delta, conflict_gate);
         } else if (recurrent_mode == 2) {
             // =========================================================================
             // PILLAR 5: SNC-MD (Spectral-Norm Lyapunov Momentum Damper)
