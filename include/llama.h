@@ -368,6 +368,7 @@ extern "C" {
         int32_t recurrent_t;       // number of passes through the recurrent core layer per token (1 = vanilla)
         int32_t recurrent_layer;   // 0-indexed core layer A; -1 = use 38% of model depth when recurrent_t > 1
         int32_t recurrent_layer_b; // 0-indexed core layer B for A->B->A alternation; -1 = single-layer core (default). If set, must be adjacent to A (|A-B| == 1) so no intervening layers are skipped
+        int32_t recurrent_bridge;  // 0-indexed bridge layer to execute between recurrent loop and coda (-1 = none)
         float   recurrent_a;       // LTI decay scalar; |a| < 1 required for contraction when enabled
         float   recurrent_b;       // LTI anchor injection scalar
         float   recurrent_gate;    // scale of the nonlinear block output per loop (1 = legacy unscaled)

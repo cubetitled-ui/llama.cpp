@@ -539,6 +539,7 @@ struct common_params {
     int32_t recurrent_t                = 1;     // passes through the recurrent core layer per token (1 = vanilla)
     int32_t recurrent_layer            = -1;    // core layer A index; -1 = 38% of model depth when recurrent_t > 1
     int32_t recurrent_layer_b          = -1;    // core layer B for A->B->A; -1 = single-layer core (if set, must be adjacent to A)
+    int32_t recurrent_bridge           = -1;    // bridge layer index executed between loop and coda (-1 = none)
     float   recurrent_a                = 0.90f; // LTI decay scalar (|a| < 1)
     float   recurrent_b                = 0.10f; // LTI anchor injection scalar
     float   recurrent_gate             = 1.00f; // block-output scale per loop

@@ -2669,11 +2669,18 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
     ).set_env("LLAMA_ARG_RECURRENT_LAYER"));
     add_opt(common_arg(
         {"--recurrent-layer-b"}, "N",
-        "0-indexed recurrent core layer B for A->B->A alternation; -1 (default) = single-layer core (if set, must be adjacent to A, |A-B| == 1, else rejected so no layers are skipped)",
+        "0-indexed recurrent core layer B for A->B->A alternation; -1 (default) = single-layer core",
         [](common_params & params, const std::string & value) {
             params.recurrent_layer_b = std::stoi(value);
         }
     ).set_env("LLAMA_ARG_RECURRENT_LAYER_B"));
+    add_opt(common_arg(
+        {"--recurrent-bridge"}, "N",
+        "0-indexed bridge/intermediate bottleneck layer to execute after recurrent loop before coda (-1 = none/auto)",
+        [](common_params & params, const std::string & value) {
+            params.recurrent_bridge = std::stoi(value);
+        }
+    ).set_env("LLAMA_ARG_RECURRENT_BRIDGE"));
     add_opt(common_arg(
         {"-ra", "--recurrent-a"}, "FLOAT",
         "recurrent core LTI decay scalar (must satisfy |a| < 1; default 0.90)",
@@ -2830,14 +2837,31 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
                 if (std::regex_search(line, match, std::regex(R"(\b(?:iterations|recurrent_t|recurrent-t|t)\s*[:=]\s*(\d+))", std::regex::icase))) {
                     params.recurrent_t = std::stoi(match[1]);
                 }
-                if (std::regex_search(line, match, std::regex(R"(\blayers\s*[:=]\s*(\d+)\s*\.\.\s*(\d+))", std::regex::icase))) {
+                // Route syntax: e.g. "route: 12 -> 14 -> 13" (A -> B -> Bridge)
+                if (std::regex_search(line, match, std::regex(R"(\b(?:route|path)\s*[:=]\s*(\d+)\s*->\s*(\d+)(?:\s*->\s*(\d+))?)", std::regex::icase))) {
                     params.recurrent_layer = std::stoi(match[1]);
                     params.recurrent_layer_b = std::stoi(match[2]);
-                } else if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_layer|layer)\s*[:=]\s*(\d+))", std::regex::icase))) {
+                    if (match[3].matched) {
+                        params.recurrent_bridge = std::stoi(match[3]);
+                    }
+                }
+                // Loop / Sandwich syntax: e.g. "loop: 12, 14" or "loop: 12 -> 14"
+                else if (std::regex_search(line, match, std::regex(R"(\b(?:loop|cycle|sandwich)\s*[:=]\s*(\d+)\s*(?:,|\.\.|->|\s+)\s*(\d+))", std::regex::icase))) {
+                    params.recurrent_layer = std::stoi(match[1]);
+                    params.recurrent_layer_b = std::stoi(match[2]);
+                }
+                else if (std::regex_search(line, match, std::regex(R"(\blayers\s*[:=]\s*(\d+)\s*\.\.\s*(\d+))", std::regex::icase))) {
+                    params.recurrent_layer = std::stoi(match[1]);
+                    params.recurrent_layer_b = std::stoi(match[2]);
+                } else if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_layer|layer|start|from)\s*[:=]\s*(\d+))", std::regex::icase))) {
                     params.recurrent_layer = std::stoi(match[1]);
                 }
-                if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_layer_b|layer_b)\s*[:=]\s*(\d+))", std::regex::icase))) {
+                if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_layer_b|layer_b|end|to)\s*[:=]\s*(\d+))", std::regex::icase))) {
                     params.recurrent_layer_b = std::stoi(match[1]);
+                }
+                // Bridge syntax: e.g. "bridge: 13" or "intermediate: 13"
+                if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_bridge|bridge|intermediate|bottleneck)\s*[:=]\s*(\d+))", std::regex::icase))) {
+                    params.recurrent_bridge = std::stoi(match[1]);
                 }
                 if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_a|recurrent-a|a)\s*[:=]\s*([-+]?[0-9]*\.?[0-9]+))", std::regex::icase))) {
                     params.recurrent_a = std::stof(match[1]);
@@ -2862,8 +2886,8 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
                     params.lora_adapters.push_back({ match[1].str(), 1.0, "", "", nullptr });
                 }
             }
-            fprintf(stderr, "Loaded recurrent configuration (Script/Conf) from '%s': T=%d, layers=[%d..%d], a=%.2f, b=%.2f, gate=%.2f, mode=%d\n",
-                    value.c_str(), params.recurrent_t, params.recurrent_layer, params.recurrent_layer_b, params.recurrent_a, params.recurrent_b, params.recurrent_gate, params.recurrent_mode);
+            fprintf(stderr, "Loaded recurrent configuration (Script/Conf) from '%s': T=%d, loop=[%d..%d], bridge=%d, a=%.2f, b=%.2f, gate=%.2f, mode=%d\n",
+                    value.c_str(), params.recurrent_t, params.recurrent_layer, params.recurrent_layer_b, params.recurrent_bridge, params.recurrent_a, params.recurrent_b, params.recurrent_gate, params.recurrent_mode);
         }
     ).set_env("LLAMA_ARG_RECURRENT_CONFIG"));
     GGML_ASSERT(params.n_gpu_layers < 0); // string_format would need to be extended for a default >= 0

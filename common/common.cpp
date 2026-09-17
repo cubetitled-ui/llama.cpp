@@ -1664,6 +1664,7 @@ struct llama_context_params common_context_params_to_llama(const common_params &
     cparams.recurrent_t       = params.recurrent_t;
     cparams.recurrent_layer   = params.recurrent_layer;
     cparams.recurrent_layer_b = params.recurrent_layer_b;
+    cparams.recurrent_bridge  = params.recurrent_bridge;
     cparams.recurrent_a       = params.recurrent_a;
     cparams.recurrent_b       = params.recurrent_b;
     cparams.recurrent_gate    = params.recurrent_gate;

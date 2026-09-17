@@ -250,6 +250,7 @@ llama_context::llama_context(
     cparams.recurrent_t       = params.recurrent_t;
     cparams.recurrent_layer   = params.recurrent_layer;
     cparams.recurrent_layer_b = params.recurrent_layer_b;
+    cparams.recurrent_bridge  = params.recurrent_bridge;
     cparams.recurrent_a       = params.recurrent_a;
     cparams.recurrent_b       = params.recurrent_b;
     cparams.recurrent_gate    = params.recurrent_gate;
@@ -3564,6 +3565,7 @@ llama_context_params llama_context_default_params() {
     result.recurrent_t                 = 1;
     result.recurrent_layer             = -1;
     result.recurrent_layer_b           = -1;
+    result.recurrent_bridge            = -1;
     result.recurrent_a                 = 0.90f;
     result.recurrent_b                 = 0.10f;
     result.recurrent_gate              = 1.00f;

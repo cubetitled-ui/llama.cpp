@@ -3571,11 +3571,15 @@ ggml_tensor * build_recurrent_core(
     const int32_t lo = has_b ? std::min(recurrent_layer, recurrent_layer_b) : recurrent_layer;
     const int32_t hi = has_b ? std::max(recurrent_layer, recurrent_layer_b) : recurrent_layer;
 
-    // Sandwich Skip Topology: if |A - B| == 2 (e.g. 12 and 14), cycle only {lo, hi} inside the
-    // recurrent deliberation loop, and pass the converged state through bridge_layer (lo + 1 = 13)
-    // before the coda.
-    const bool is_sandwich = has_b && (lo + 2 == hi);
-    const int32_t bridge_layer = is_sandwich ? (lo + 1) : -1;
+    // Sandwich / Bridge Topology:
+    // If recurrent_bridge is explicitly specified, or if |A - B| == 2 (e.g. 12 and 14),
+    // cycle only {lo, hi} inside the recurrent deliberation loop, and pass the converged state
+    // through bridge_layer (e.g. 13) before the coda.
+    int32_t bridge_layer = gf.cparams.recurrent_bridge;
+    if (bridge_layer < 0 && has_b && (lo + 2 == hi)) {
+        bridge_layer = lo + 1; // auto-detect sandwich gap
+    }
+    const bool is_sandwich = (bridge_layer >= 0) && has_b;
     std::vector<int> core_layers;
     if (is_sandwich) {
         core_layers = { lo, hi };
