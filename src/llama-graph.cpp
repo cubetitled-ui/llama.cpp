@@ -3646,7 +3646,10 @@ ggml_tensor * build_recurrent_core(
             ggml_tensor * norm_prod  = ggml_sqrt(gf.ctx0, ggml_mul(gf.ctx0, norm_d_sq, norm_u0_sq));
             ggml_tensor * cos_sim    = ggml_div(gf.ctx0, dot_du0, norm_prod);
             ggml_tensor * cos_abs    = ggml_sqr(gf.ctx0, cos_sim); // cos^2 in [0, 1]
-            ggml_tensor * conflict_gate = ggml_sub(gf.ctx0, ggml_new_f32(gf.ctx0, 1.0f), ggml_scale(gf.ctx0, cos_abs, 0.75f)); // in [0.25, 1.0]
+            // conflict_gate = 1.0 - 0.75 * cos^2  --> clamp in [0.25, 1.0] via 1.0 - ggml_scale(cos_abs)
+            ggml_tensor * scaled_cos = ggml_scale(gf.ctx0, cos_abs, 0.75f);
+            ggml_tensor * unit_one   = ggml_div(gf.ctx0, norm_prod, norm_prod); // exact [1, n_tokens] tensor with value 1.0
+            ggml_tensor * conflict_gate = ggml_sub(gf.ctx0, unit_one, scaled_cos);
 
             ggml_tensor * scaled_delta = ggml_mul(gf.ctx0, delta_normed, u0_rms);
             delta_thought              = ggml_mul(gf.ctx0, scaled_delta, conflict_gate);
