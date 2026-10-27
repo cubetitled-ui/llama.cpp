@@ -141,8 +141,6 @@ class RecurrentGraphCompiler:
                     f"--recurrent-layer", str(lo),
                     f"--recurrent-layer-b", str(hi),
                     f"--recurrent-t", str(block.iterations),
-                    f"--recurrent-a", f"{block.recurrent_a:.2f}",
-                    f"--recurrent-b", f"{block.recurrent_b:.2f}",
                     f"--recurrent-gate", f"{block.recurrent_gate:.2f}",
                 ]
         return ["--recurrent-t", "1"]

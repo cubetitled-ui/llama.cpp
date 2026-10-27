@@ -53,7 +53,7 @@ class DiscoveryEngine:
         )
         print(f"[AutoTuner] Calibrated parameters for {self.model_path}:")
         print(f"  - Layers: {cfg['recurrent_layer']}..{cfg['recurrent_layer_b']}")
-        print(f"  - Stability: a={cfg['recurrent_a']:.2f}, b={cfg['recurrent_b']:.2f}, gate={cfg['recurrent_gate']:.2f} (spectral_radius={cfg['spectral_radius']})")
+        print(f"  - Update: mode={cfg['recurrent_mode']}, gate={cfg['recurrent_gate']:.2f} (unmeasured preset, no stability proof)")
         print(f"  - LoRA: {cfg['lora_path']}\n")
 
         res = execute_llama_cli(self.model_path, prompt, cfg["cli_flags"], max_tokens=max_tokens)

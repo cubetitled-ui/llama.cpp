@@ -1256,18 +1256,40 @@ struct llm_graph_context {
 int32_t llama_relative_position_bucket(llama_pos x, llama_pos y, uint64_t n_buckets, bool bidirectional);
 
 // Weight-tied recurrent core (OpenMythos-style, llamar.cpp).
-// Follows the resolved cparams (recurrent_t / recurrent_layer / recurrent_layer_b / recurrent_a /
-// recurrent_b / recurrent_gate) set at context creation. With recurrent_t == 1 this is a plain straight loop over all
-// layers and an exact no-op on the graph. Otherwise the graph is split into a prelude [0, lo), a
-// weight-tied loop of the core layer(s) with LTI injection h_{t+1} = A*h_t + B*e + decoder(h_t + e),
-// and a coda (hi, n_layer). Single-layer core (recurrent_layer_b == -1): the core layer is applied T
-// times. Alternating core (recurrent_layer_b >= 0): layers A and B alternate A->B->A... for T passes
-// (lo = min(A,B), hi = max(A,B)). A and B must be adjacent (|A-B| == 1, enforced at context creation
-// and re-checked here): the loop executes only A and B, so adjacency is what guarantees no layer in
-// [lo, hi] is silently skipped -- every layer runs either once in the prelude/coda or T times in the
-// loop. `on_entry(il, inpL)` (may be null) fires before each layer decode so callers can snapshot
-// per-layer inputs (e.g. embeddings_nextn extraction). Throws std::logic_error on a non-adjacent pair.
+// Follows the resolved cparams (recurrent_t / recurrent_layer / recurrent_layer_b / recurrent_bridge /
+// recurrent_gate / recurrent_mode) set at context creation; the values are validated in
+// llama_context constructor (src/llama-context.cpp). With recurrent_t == 1 this is a plain straight loop
+// over all layers and an exact no-op on the graph. Otherwise the graph is split into a prelude [0, lo),
+// a weight-tied loop of the core layer(s), and a coda (hi+1, n_layer):
+//   pass 0 runs the core with store_kv = true (the only KV write for the token), then passes
+//   t = 1 .. T-1 run the same core with store_kv = false and apply
+//   h_{t+1} = h_t + recurrent_gate * modify_mode(block(h_t) - h_t),
+//   where modify_mode is the identity for mode 0 and the documented experimental transform for
+//   modes 1-4 in build_recurrent_core. Single-layer core (recurrent_layer_b == -1): the core layer is
+//   applied T times. Alternating core (recurrent_layer_b >= 0): lo = min(A,B), hi = max(A,B) and every
+//   layer in [lo, hi] runs inside the loop (A and B need not be adjacent). The window is always
+//   contiguous: the former sandwich topology, which looped only {lo, hi} and ran an intermediate
+//   layer after the loop (order 12, 14, 13 for A=12 B=14), has been removed, and the context
+//   constructor now rejects --recurrent-bridge outright.
+//   `on_entry(il, inpL)` (may be null) fires before each layer decode so callers can snapshot per-layer
+//   inputs (e.g. embeddings_nextn extraction). The function itself does not throw; all index/mode
+//   rejection happens in the context constructor.
 using llm_decoder_kv_fn = std::function<ggml_tensor * (int il, ggml_tensor * input, bool store_kv)>;
+
+// Research probe for latent recurrence (see the block comment in llama-graph.cpp). Only active
+// when LLAMA_RECURRENT_PROBE is set; otherwise every entry point below is a no-op. Records tensor
+// handles along one trajectory; the consumer reads them back after graph execution.
+bool        recurrent_probe_enabled();
+void        recurrent_probe_reset();
+void        recurrent_probe_record(const char * name, ggml_tensor * t, ggml_context * ctx);
+
+// Returns the recorded (name, tensor) identities. The handles are valid only during graph
+// evaluation; the consumer must copy the data from inside a ggml eval callback.
+struct recurrent_probe_entry {
+    std::string name;
+    ggml_tensor * t;
+};
+const std::vector<recurrent_probe_entry> & recurrent_probe_slots_get();
 
 ggml_tensor * build_recurrent_core(
         llm_graph_context & gf,

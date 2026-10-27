@@ -339,6 +339,66 @@ static bool parse_bool_value(const std::string & value) {
     }
 }
 
+// recurrent_mode values that actually have an implementation in
+// llm_graph_context::build_recurrent_core (src/llama-graph.cpp). Anything outside
+// [0, LLAMA_RECURRENT_MODE_MAX] is rejected here instead of being silently mapped onto
+// vanilla LTI: a nonexistent mode that falls through to mode 0 measures vanilla and
+// reports the number as if it measured the requested algorithm.
+static const int LLAMA_RECURRENT_MODE_MAX = 7;
+
+static int32_t parse_recurrent_mode(const std::string & value) {
+    if (value == "vanilla" || value == "0") {
+        return 0;
+    }
+    if (value == "orsd" || value == "1") {
+        return 1;
+    }
+    if (value == "snc" || value == "momentum" || value == "2") {
+        return 2;
+    }
+    if (value == "cav" || value == "anchor" || value == "3") {
+        return 3;
+    }
+    if (value == "dscc" || value == "dual" || value == "4") {
+        return 4;
+    }
+    // Mode 5 (damped sub-stepping) has a real branch in build_recurrent_core: it integrates the
+    // window residual field F_g = g - x at step 1/K so the endpoint stays at t=1, optionally blended
+    // toward the pristine one-shot output with --recurrent-anchor-beta. See rnd/RESULTS.md.
+    if (value == "damped" || value == "substep" || value == "euler" || value == "5") {
+        return 5;
+    }
+
+    // Mode 6 = per-pass depth-order rotation inside the fixed window (implemented, see the branch
+    // in build_recurrent_core). It attacks the measured rank-1 collapse: naive looping is power
+    // iteration on ONE map, and power iteration converges to a rank-1 fixed point by construction,
+    // so giving each pass a different order over the same layers removes the self-composition.
+    if (value == "shuffle" || value == "rotate" || value == "6") {
+        return 6;
+    }
+
+    // Mode 7 = per-pass deterministic orthogonal (sign) transform of the increment. Exactly
+    // length- and RMS-preserving, unlike modes 1/2/4 which unit-RMS the increment and destroy the
+    // model's native per-token magnitude.
+    if (value == "ortho" || value == "signed" || value == "7") {
+        return 7;
+    }
+
+    int32_t mode;
+    try {
+        mode = std::stoi(value);
+    } catch (const std::exception &) {
+        throw std::invalid_argument(
+            "unknown recurrent mode '" + value + "': expected 0/vanilla, 1/orsd, 2/snc, 3/cav, 4/dscc, 5/damped, 6/shuffle, 7/ortho");
+    }
+    if (mode < 0 || mode > LLAMA_RECURRENT_MODE_MAX) {
+        throw std::invalid_argument(
+            "recurrent mode " + std::to_string(mode) + " is not implemented: only 0/vanilla, 1/orsd, 2/snc, "
+            "3/cav, 4/dscc, 5/damped, 6/shuffle, 7/ortho exist (valid range 0.." + std::to_string(LLAMA_RECURRENT_MODE_MAX) + ")");
+    }
+    return mode;
+}
+
 [[noreturn]] static void arg_removed(const std::string & msg) {
     throw std::invalid_argument("the argument has been removed. " + msg);
 }
@@ -1896,11 +1956,30 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
     ).set_examples({LLAMA_EXAMPLE_SERVER}));
     add_opt(common_arg(
         {"--samplers"}, "SAMPLERS",
-        string_format("samplers that will be used for generation in the order, separated by \';\'\n(default: %s)", sampler_type_names.c_str()),
+        string_format("samplers that will be used for generation in the order, separated by \';\'\n"
+                      "note: \'quasi\' replaces ancestral sampling with arithmetic (quasi-random) sampling, "
+                      "see --samplers-quasi\n(default: %s)", sampler_type_names.c_str()),
         [](common_params & params, const std::string & value) {
             const auto sampler_names = string_split<std::string>(value, ';');
             params.sampling.samplers = common_sampler_types_from_names(sampler_names);
             params.sampling.user_sampling_config |= common_params_sampling_config::COMMON_PARAMS_SAMPLING_CONFIG_SAMPLERS;
+        }
+    ).set_sampling());
+    add_opt(common_arg(
+        {"--samplers-quasi"}, "F",
+        string_format("weight of the arithmetic (quasi-random) sampler at the end of the sampling chain, "
+                      "in [0, 1]. 0.0 = off (plain ancestral sampling, default: %.2f), 1.0 = always. "
+                      "the token is picked from a persistent code in [0, 1) that is renormalized after every "
+                      "step instead of a fresh uniform draw, which makes N codes cover the distribution "
+                      "more evenly (arXiv:2210.15458, arXiv:2411.06251). same cost as ancestral sampling. "
+                      "--seed determines the initial code",
+                      (double) params.sampling.samplers_quasi),
+        [](common_params & params, const std::string & value) {
+            const float f = std::stof(value);
+            if (!(f >= 0.0f && f <= 1.0f)) {
+                throw std::invalid_argument("--samplers-quasi must be in [0, 1], got: " + value);
+            }
+            params.sampling.samplers_quasi = f;
         }
     ).set_sampling());
     add_opt(common_arg(
@@ -2676,25 +2755,11 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
     ).set_env("LLAMA_ARG_RECURRENT_LAYER_B"));
     add_opt(common_arg(
         {"--recurrent-bridge"}, "N",
-        "0-indexed bridge/intermediate bottleneck layer to execute after recurrent loop before coda (-1 = none/auto)",
+        "removed: the core window is contiguous, so a bridge would have to run a layer out of forward order",
         [](common_params & params, const std::string & value) {
             params.recurrent_bridge = std::stoi(value);
         }
     ).set_env("LLAMA_ARG_RECURRENT_BRIDGE"));
-    add_opt(common_arg(
-        {"-ra", "--recurrent-a"}, "FLOAT",
-        "recurrent core LTI decay scalar (must satisfy |a| < 1; default 0.90)",
-        [](common_params & params, const std::string & value) {
-            params.recurrent_a = std::stof(value);
-        }
-    ).set_env("LLAMA_ARG_RECURRENT_A"));
-    add_opt(common_arg(
-        {"-rb", "--recurrent-b"}, "FLOAT",
-        "recurrent core LTI anchor injection scalar (default 0.10)",
-        [](common_params & params, const std::string & value) {
-            params.recurrent_b = std::stof(value);
-        }
-    ).set_env("LLAMA_ARG_RECURRENT_B"));
     add_opt(common_arg(
         {"--recurrent-gate"}, "FLOAT",
         "recurrent core block-output scale per loop, 0..1 (default 1.0 = legacy; use <1 with RMSNorm to bound growth)",
@@ -2703,23 +2768,22 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
         }
     ).set_env("LLAMA_ARG_RECURRENT_GATE"));
     add_opt(common_arg(
-        {"--recurrent-mode", "--recurrent-strategy"}, "MODE",
-        "recurrent algorithm: 0/vanilla, 1/orsd (Gram-Schmidt), 2/snc (Lyapunov momentum), 3/cav (anchor verification), 4/dscc (dual stream), 5/hybrid (ortho-momentum), 6/akr (adaptive kinetic)",
+        {"--recurrent-anchor-beta"}, "FLOAT",
+        "mode 5 only: blend weight on the pristine one-shot state, 0..1 (1 = exact T=1 no-op)",
         [](common_params & params, const std::string & value) {
-            if (value == "vanilla" || value == "0") params.recurrent_mode = 0;
-            else if (value == "orsd" || value == "1") params.recurrent_mode = 1;
-            else if (value == "snc" || value == "momentum" || value == "2") params.recurrent_mode = 2;
-            else if (value == "cav" || value == "anchor" || value == "3") params.recurrent_mode = 3;
-            else if (value == "dscc" || value == "dual" || value == "4") params.recurrent_mode = 4;
-            else if (value == "hybrid" || value == "ortho-momentum" || value == "5") params.recurrent_mode = 5;
-            else if (value == "akr" || value == "adaptive-kinetic" || value == "6") params.recurrent_mode = 6;
-            else {
-                try {
-                    params.recurrent_mode = std::stoi(value);
-                } catch (...) {
-                    fprintf(stderr, "warning: unknown recurrent mode '%s', defaulting to 0 (vanilla)\n", value.c_str());
-                }
-            }
+            params.recurrent_anchor_beta = std::stof(value);
+        }
+    ).set_env("LLAMA_ARG_RECURRENT_ANCHOR_BETA"));
+    add_opt(common_arg(
+        {"--recurrent-mode", "--recurrent-strategy"}, "MODE",
+        "recurrent algorithm: 0/vanilla, 1/orsd (Gram-Schmidt), 2/snc (momentum), 3/cav (anchor gate), 4/dscc (dual stream), "
+        "5/damped (sub-stepped F_g = g - x at 1/T, anchored; see --recurrent-anchor-beta), "
+        "6/shuffle (per-pass depth-order rotation inside the window: different map per pass), "
+        "7/ortho (per-pass deterministic sign-orthogonal transform of the increment). "
+        "All of 1-4 are experimental and measured to strictly damage held-out perplexity; 5 is the damped formulation; "
+        "6 and 7 are the pass-diversification experiments and have no quality measurement behind them",
+        [](common_params & params, const std::string & value) {
+            params.recurrent_mode = parse_recurrent_mode(value);
         }
     ).set_env("LLAMA_ARG_RECURRENT_MODE"));
     add_opt(common_arg(
@@ -2728,15 +2792,41 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
         [](common_params & params, const std::string & value) {
             std::ifstream file(value);
             if (!file.is_open()) {
-                fprintf(stderr, "error: failed to open recurrent config/script file '%s'\n", value.c_str());
-                return;
+                // fail closed: an unreadable config file must not silently leave the core at
+                // whatever the command line said, the run would be attributed to the wrong arm
+                throw std::invalid_argument("error: failed to open recurrent config/script file '" + value + "'");
             }
             std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
             size_t first_non_ws = content.find_first_not_of(" \t\r\n");
             if (first_non_ws != std::string::npos && content[first_non_ws] == '{') {
+                // A file that starts with '{' is handled as JSON or not at all. The field
+                // extraction below is deliberately outside the parse try/catch: a config whose
+                // mode does not exist has to abort the run, not fall through to the regex scanner
+                // (which does not match the "mode": 5 spelling and would leave the core on mode 0
+                // while the file says otherwise).
+                nlohmann::json j;
+                bool json_ok = true;
                 try {
-                    auto j = nlohmann::json::parse(content);
+                    j = nlohmann::json::parse(content);
+                } catch (const nlohmann::json::exception &) {
+                    json_ok = false;
+                }
+                if (json_ok) {
+                    // Keys that used to be meaningful are refused rather than ignored. A config
+                    // that sets recurrent_a and gets mode-0 LTI anyway would have its result
+                    // attributed to a knob that does not exist in the build.
+                    for (const char * dead : { "recurrent_a", "recurrent_b" }) {
+                        if (j.contains(dead)) {
+                            throw std::invalid_argument(
+                                std::string("error: recurrent config '") + value + "' sets \"" + dead +
+                                "\", which was removed from llama_context_params together with the LTI state "
+                                "update it parameterised. There is no code left that reads it, so the run would "
+                                "be attributed to a parameter that does not exist; delete the key or use "
+                                "\"recurrent_gate\" to scale the applied update");
+                        }
+                    }
+
                     if (j.contains("recurrent_t")) params.recurrent_t = j["recurrent_t"].get<int32_t>();
                     else if (j.contains("t")) params.recurrent_t = j["t"].get<int32_t>();
                     else if (j.contains("iterations")) params.recurrent_t = j["iterations"].get<int32_t>();
@@ -2752,46 +2842,30 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
                         params.recurrent_layer_b = j["layers"][1].get<int32_t>();
                     }
 
-                    if (j.contains("recurrent_a")) params.recurrent_a = j["recurrent_a"].get<float>();
-                    else if (j.contains("a")) params.recurrent_a = j["a"].get<float>();
-
-                    if (j.contains("recurrent_b")) params.recurrent_b = j["recurrent_b"].get<float>();
-                    else if (j.contains("b")) params.recurrent_b = j["b"].get<float>();
-
                     if (j.contains("recurrent_gate")) params.recurrent_gate = j["recurrent_gate"].get<float>();
                     else if (j.contains("gate")) params.recurrent_gate = j["gate"].get<float>();
                     else if (j.contains("gamma")) params.recurrent_gate = j["gamma"].get<float>();
 
-                    if (j.contains("recurrent_mode")) {
-                        if (j["recurrent_mode"].is_number()) params.recurrent_mode = j["recurrent_mode"].get<int32_t>();
-                        else {
-                            std::string m = j["recurrent_mode"].get<std::string>();
-                            if (m == "orsd" || m == "1") params.recurrent_mode = 1;
-                            else if (m == "snc" || m == "momentum" || m == "2") params.recurrent_mode = 2;
-                            else if (m == "cav" || m == "anchor" || m == "3") params.recurrent_mode = 3;
-                            else if (m == "dscc" || m == "dual" || m == "4") params.recurrent_mode = 4;
-                            else params.recurrent_mode = 0;
-                        }
-                    } else if (j.contains("mode")) {
-                        if (j["mode"].is_number()) params.recurrent_mode = j["mode"].get<int32_t>();
-                        else {
-                            std::string m = j["mode"].get<std::string>();
-                            if (m == "orsd" || m == "1") params.recurrent_mode = 1;
-                            else if (m == "snc" || m == "momentum" || m == "2") params.recurrent_mode = 2;
-                            else if (m == "cav" || m == "anchor" || m == "3") params.recurrent_mode = 3;
-                            else if (m == "dscc" || m == "dual" || m == "4") params.recurrent_mode = 4;
-                            else params.recurrent_mode = 0;
-                        }
+                    // The bridge changes the layer topology, so it cannot be left to the -1 default
+                    // just because no key spelled it out.
+                    if (j.contains("recurrent_bridge")) params.recurrent_bridge = j["recurrent_bridge"].get<int32_t>();
+                    else if (j.contains("bridge")) params.recurrent_bridge = j["bridge"].get<int32_t>();
+
+                    if (j.contains("recurrent_mode") || j.contains("mode")) {
+                        const nlohmann::json & jm = j.contains("recurrent_mode") ? j["recurrent_mode"] : j["mode"];
+                        // numbers are stringified through the integer representation so that a JSON
+                        // "mode": 5 is rejected by the same code path as --recurrent-mode 5
+                        params.recurrent_mode = parse_recurrent_mode(
+                            jm.is_number() ? std::to_string(jm.get<int64_t>()) : jm.get<std::string>());
                     }
 
                     if (j.contains("lora") && j["lora"].is_string()) {
                         params.lora_adapters.push_back({ j["lora"].get<std::string>(), 1.0, "", "", nullptr });
                     }
-                    fprintf(stderr, "Loaded recurrent configuration (JSON) from '%s': T=%d, layers=[%d..%d], a=%.2f, b=%.2f, gate=%.2f, mode=%d\n",
-                            value.c_str(), params.recurrent_t, params.recurrent_layer, params.recurrent_layer_b, params.recurrent_a, params.recurrent_b, params.recurrent_gate, params.recurrent_mode);
+                    fprintf(stderr, "Loaded recurrent configuration (JSON) from '%s': T=%d, layers=[%d..%d], bridge=%d, gate=%.2f, mode=%d\n",
+                            value.c_str(), params.recurrent_t, params.recurrent_layer, params.recurrent_layer_b,
+                            params.recurrent_bridge, params.recurrent_gate, params.recurrent_mode);
                     return;
-                } catch (const std::exception & e) {
-                    // fall back to regex parsing
                 }
             }
 
@@ -2863,31 +2937,18 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
                 if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_bridge|bridge|intermediate|bottleneck)\s*[:=]\s*(\d+))", std::regex::icase))) {
                     params.recurrent_bridge = std::stoi(match[1]);
                 }
-                if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_a|recurrent-a|a)\s*[:=]\s*([-+]?[0-9]*\.?[0-9]+))", std::regex::icase))) {
-                    params.recurrent_a = std::stof(match[1]);
-                }
-                if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_b|recurrent-b|b)\s*[:=]\s*([-+]?[0-9]*\.?[0-9]+))", std::regex::icase))) {
-                    params.recurrent_b = std::stof(match[1]);
-                }
                 if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_gate|recurrent-gate|gate|gamma)\s*[:=]\s*([-+]?[0-9]*\.?[0-9]+))", std::regex::icase))) {
                     params.recurrent_gate = std::stof(match[1]);
                 }
                 if (std::regex_search(line, match, std::regex(R"(\b(?:recurrent_mode|mode|strategy)\s*[:=]\s*(\w+))", std::regex::icase))) {
-                    std::string m = match[1];
-                    if (m == "orsd" || m == "1") params.recurrent_mode = 1;
-                    else if (m == "snc" || m == "momentum" || m == "2") params.recurrent_mode = 2;
-                    else if (m == "cav" || m == "anchor" || m == "3") params.recurrent_mode = 3;
-                    else if (m == "dscc" || m == "dual" || m == "4") params.recurrent_mode = 4;
-                    else {
-                        try { params.recurrent_mode = std::stoi(m); } catch (...) { params.recurrent_mode = 0; }
-                    }
+                    params.recurrent_mode = parse_recurrent_mode(match[1].str());
                 }
                 if (std::regex_search(line, match, std::regex(R"(\blora\s*[:=]\s*["']?([^"';\s\r\n]+)["']?)", std::regex::icase))) {
                     params.lora_adapters.push_back({ match[1].str(), 1.0, "", "", nullptr });
                 }
             }
-            fprintf(stderr, "Loaded recurrent configuration (Script/Conf) from '%s': T=%d, loop=[%d..%d], bridge=%d, a=%.2f, b=%.2f, gate=%.2f, mode=%d\n",
-                    value.c_str(), params.recurrent_t, params.recurrent_layer, params.recurrent_layer_b, params.recurrent_bridge, params.recurrent_a, params.recurrent_b, params.recurrent_gate, params.recurrent_mode);
+            fprintf(stderr, "Loaded recurrent configuration (Script/Conf) from '%s': T=%d, loop=[%d..%d], bridge=%d, gate=%.2f, mode=%d\n",
+                    value.c_str(), params.recurrent_t, params.recurrent_layer, params.recurrent_layer_b, params.recurrent_bridge, params.recurrent_gate, params.recurrent_mode);
         }
     ).set_env("LLAMA_ARG_RECURRENT_CONFIG"));
     GGML_ASSERT(params.n_gpu_layers < 0); // string_format would need to be extended for a default >= 0

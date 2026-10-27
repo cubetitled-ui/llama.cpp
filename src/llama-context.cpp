@@ -251,10 +251,20 @@ llama_context::llama_context(
     cparams.recurrent_layer   = params.recurrent_layer;
     cparams.recurrent_layer_b = params.recurrent_layer_b;
     cparams.recurrent_bridge  = params.recurrent_bridge;
-    cparams.recurrent_a       = params.recurrent_a;
-    cparams.recurrent_b       = params.recurrent_b;
     cparams.recurrent_gate    = params.recurrent_gate;
+    cparams.recurrent_anchor_beta = params.recurrent_anchor_beta;
     cparams.recurrent_mode    = params.recurrent_mode;
+
+    // Mode 6 (shuffle / per-pass depth-order rotation) and mode 7 (ortho / per-pass deterministic
+    // sign-orthogonal transform of the increment) now have real branches in build_recurrent_core;
+    // see the comments there for the measurement that motivates them. They exist to test whether
+    // diversifying the passes breaks the measured rank-1 collapse, and neither has a quality
+    // measurement behind it.
+    if (cparams.recurrent_mode < 0 || cparams.recurrent_mode > 7) {
+        throw std::runtime_error("recurrent_mode " + std::to_string(cparams.recurrent_mode) +
+                " is not implemented: only 0/vanilla, 1/orsd, 2/snc, 3/cav, 4/dscc, 5/damped, "
+                "6/shuffle, 7/ortho exist");
+    }
 
     if (cparams.recurrent_t > 1) {
         // resolve a negative core layer to the empirical 38% reasoning-centroid heuristic
@@ -265,38 +275,51 @@ llama_context::llama_context(
             throw std::runtime_error("recurrent layer index out of range: " +
                     std::to_string(cparams.recurrent_layer) + " (n_layer=" + std::to_string(hparams.n_layer()) + ")");
         }
-        // optional second core layer B: -1 = single-layer core; otherwise must be a distinct valid layer
-        // Minimal-experiment constraint: A and B must be adjacent (|A-B| == 1). The alternating core
-        // only ever executes layers A and B inside the loop, with prelude [0, lo) and coda (hi, n_layer).
-        // A non-adjacent pair would therefore silently skip every layer strictly between A and B, so we
-        // reject it here instead of building a graph with missing layers.
+        // Optional second core layer B: -1 = single-layer core, otherwise a distinct layer in
+        // [0, n_layer). Layers lo..hi are all executed inside the core loop (the block core runs
+        // the whole [lo, hi] range sequentially), so a wide A/B pair is not a hole in the graph
+        // as long as B is a valid index. A gap of exactly 2 additionally triggers the sandwich
+        // topology (loop {lo, hi}, bridge lo+1) unless --recurrent-bridge says otherwise; that
+        // choice is made in build_recurrent_core, not here.
         if (cparams.recurrent_layer_b != -1) {
             if (cparams.recurrent_layer_b < 0 || cparams.recurrent_layer_b >= (int32_t) hparams.n_layer()) {
                 throw std::runtime_error("recurrent layer B index out of range: " +
                         std::to_string(cparams.recurrent_layer_b) + " (n_layer=" + std::to_string(hparams.n_layer()) + ")");
             }
-            // Block core [min(A, B) .. max(A, B)] executes all intervening layers sequentially inside the core loop.
         }
-        if (!(cparams.recurrent_a >= -1.0f && cparams.recurrent_a < 1.0f)) {
-            throw std::runtime_error("recurrent_a must satisfy -1 <= a < 1 for the iteration to be contractive, got " +
-                    std::to_string(cparams.recurrent_a));
+        // Bridge layer: the sandwich topology is gone, so a bridge has nothing to do.
+        //
+        // The previous check demanded that an explicit bridge lie strictly inside (lo, hi), which
+        // is precisely the configuration that forced the mid-window layer to be skipped during the
+        // deliberation pass and run afterwards. With lo=12, hi=14, bridge=13 the executed order was
+        // 12, 14, 13: layer 14 feeding into layer 13, and the coda at 15 reading layer 13's output.
+        // That is not a forward pass of the network, and it was not opt-in -- the bridge was
+        // auto-detected for any |A - B| == 2 pair, so "--recurrent-layer 12 --recurrent-layer-b
+        // 14" produced 12, 14, 13 with no --recurrent-bridge on the command line at all.
+        //
+        // Refuse the flag instead of keeping a knob whose only effect was a transposed network.
+        if (cparams.recurrent_bridge != -1) {
+            throw std::runtime_error("recurrent bridge layer " + std::to_string(cparams.recurrent_bridge) +
+                    " is not supported: the core window is contiguous, so a bridge would have to run a "
+                    "layer out of forward order (12, 14, 13 for A=12 B=14). Widen the window with "
+                    "--recurrent-layer-b, or drop --recurrent-bridge");
         }
         if (!(cparams.recurrent_gate >= 0.0f && cparams.recurrent_gate <= 1.0f)) {
             throw std::runtime_error("recurrent_gate must satisfy 0 <= gate <= 1, got " +
                     std::to_string(cparams.recurrent_gate));
         }
-        const char * mode_str = (cparams.recurrent_mode == 1 ? "ORSD (Gram-Schmidt Subspace)" :
-                                (cparams.recurrent_mode == 2 ? "SNC (Lyapunov Momentum Damper)" :
-                                (cparams.recurrent_mode == 3 ? "CAV (Anchor Energy Verification)" :
-                                (cparams.recurrent_mode == 4 ? "DSCC (Dual-Stream Counterpoint)" : "Vanilla LTI"))));
+        const char * mode_str = (cparams.recurrent_mode == 1 ? "orsd (Gram-Schmidt projection, experimental)" :
+                                (cparams.recurrent_mode == 2 ? "snc (EMA momentum + rms rescale, experimental)" :
+                                (cparams.recurrent_mode == 3 ? "cav (cosine anchor gate, experimental)" :
+                                (cparams.recurrent_mode == 4 ? "dscc (dual stream, experimental)" : "vanilla LTI"))));
         if (cparams.recurrent_layer_b != -1) {
-            LLAMA_LOG_INFO("%s: llamar.cpp: alternating recurrent core enabled: T=%d layers A=%d B=%d (n_layer=%d) A=%g B=%g gate=%g mode=%d (%s)\n",
+            LLAMA_LOG_INFO("%s: llamar.cpp: alternating recurrent core enabled: T=%d layers A=%d B=%d (n_layer=%d) gate=%g mode=%d (%s)\n",
                     __func__, cparams.recurrent_t, cparams.recurrent_layer, cparams.recurrent_layer_b,
-                    hparams.n_layer(), cparams.recurrent_a, cparams.recurrent_b, cparams.recurrent_gate, cparams.recurrent_mode, mode_str);
+                    hparams.n_layer(), cparams.recurrent_gate, cparams.recurrent_mode, mode_str);
         } else {
-            LLAMA_LOG_INFO("%s: llamar.cpp: recurrent core enabled: T=%d layer=%d (n_layer=%d) A=%g B=%g gate=%g mode=%d (%s)\n",
+            LLAMA_LOG_INFO("%s: llamar.cpp: recurrent core enabled: T=%d layer=%d (n_layer=%d) gate=%g mode=%d (%s)\n",
                     __func__, cparams.recurrent_t, cparams.recurrent_layer, hparams.n_layer(),
-                    cparams.recurrent_a, cparams.recurrent_b, cparams.recurrent_gate, cparams.recurrent_mode, mode_str);
+                    cparams.recurrent_gate, cparams.recurrent_mode, mode_str);
         }
     } else if (cparams.recurrent_t != 1) {
         throw std::runtime_error("recurrent_t must be >= 1, got " + std::to_string(cparams.recurrent_t));
@@ -3566,8 +3589,6 @@ llama_context_params llama_context_default_params() {
     result.recurrent_layer             = -1;
     result.recurrent_layer_b           = -1;
     result.recurrent_bridge            = -1;
-    result.recurrent_a                 = 0.90f;
-    result.recurrent_b                 = 0.10f;
     result.recurrent_gate              = 1.00f;
     result.recurrent_mode              = 0;
     result.rope_freq_base              = 0.0f;

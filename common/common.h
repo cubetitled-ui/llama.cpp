@@ -10,6 +10,7 @@
 
 #include <set>
 #include <sstream>
+#include <cstddef>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -125,6 +126,7 @@ enum common_sampler_type {
     COMMON_SAMPLER_TYPE_PENALTIES   = 10,
     COMMON_SAMPLER_TYPE_TOP_N_SIGMA = 11,
     COMMON_SAMPLER_TYPE_ADAPTIVE_P  = 12,
+   COMMON_SAMPLER_TYPE_QUASI       = 13,
 };
 
 // dimensionality reduction methods, used by cvector-generator
@@ -254,6 +256,8 @@ struct common_params_sampling {
     bool    timing_per_token   = false;
 
     uint64_t user_sampling_config = 0; // bitfield to track user-specified samplers
+
+    float   samplers_quasi       = 0.0f; // weight of the arithmetic (quasi-random) sampler, 0.0 = off, 1.0 = always
 
     std::vector<std::string> dry_sequence_breakers = {"\n", ":", "\"", "*"};     // default sequence breakers for DRY
 
@@ -540,10 +544,9 @@ struct common_params {
     int32_t recurrent_layer            = -1;    // core layer A index; -1 = 38% of model depth when recurrent_t > 1
     int32_t recurrent_layer_b          = -1;    // core layer B for A->B->A; -1 = single-layer core (if set, must be adjacent to A)
     int32_t recurrent_bridge           = -1;    // bridge layer index executed between loop and coda (-1 = none)
-    float   recurrent_a                = 0.90f; // LTI decay scalar (|a| < 1)
-    float   recurrent_b                = 0.10f; // LTI anchor injection scalar
     float   recurrent_gate             = 1.00f; // block-output scale per loop
-    int32_t recurrent_mode             = 0;     // recurrence mode: 0=vanilla, 1=ORSD, 2=SNC, 3=CAV, 4=DSCC
+    float   recurrent_anchor_beta    = 0.00f; // mode 5: anchor blend on the pristine one-shot state
+    int32_t recurrent_mode             = 0;     // recurrence mode: 0=vanilla, 1=orsd, 2=snc, 3=cav, 4=dscc (validated in common/arg.cpp)
 
     int32_t ppl_stride      = 0;     // stride for perplexity calculations. If left at 0, the pre-existing approach will be used.
     int32_t ppl_output_type = 0;     // = 0 -> ppl output is as usual, = 1 -> ppl output is num_tokens, ppl, one per line
@@ -751,6 +754,32 @@ struct common_params {
     void *                  load_progress_callback_user_data = NULL;
     bool no_alloc = false; // Don't allocate model buffers
 };
+
+// ABI guard for the libllama-common.so boundary.
+//
+// Each tool builds a separate *-impl.so and hands a common_params & to
+// libllama-common, but nothing in the type system pins that layout. An object
+// compiled against an older common.h still links cleanly against a newer
+// libllama-common and then reads every field at the wrong offset. The symptom
+// is always the same: common_params_parser_init eagerly formats a help string
+// for *every* registered option (common/arg.cpp) before filtering by
+// LLAMA_EXAMPLE_*, so a single mis-offset field is dereferenced as a pointer
+// and the process dies in strlen() before printing anything -- e.g.
+// std::string::c_str() landing on four floats of an unrelated field.
+//
+// common_params has no #ifdef members, so its layout is a pure function of
+// this header. abi-fingerprint.h records that layout as literals; the
+// static_asserts below fire in *every* translation unit, so a change to
+// common_params cannot be compiled against a stale fingerprint.
+#include "abi-fingerprint.h"
+
+static_assert(sizeof(common_params) == COMMON_PARAMS_ABI_SIZE,
+    "common_params changed size but common/abi-fingerprint.h was not updated - "
+    "every prebuilt *-impl.so is now ABI-incompatible with libllama-common");
+static_assert(offsetof(common_params, chunk_separator) == COMMON_PARAMS_ABI_CHUNK_SEPARATOR_OFFSET,
+    "common_params::chunk_separator moved - update common/abi-fingerprint.h");
+static_assert(offsetof(common_params, cache_type_k) == COMMON_PARAMS_ABI_CACHE_TYPE_K_OFFSET,
+    "common_params::cache_type_k moved - update common/abi-fingerprint.h");
 
 // call once at the start of a program if it uses libcommon
 // initializes the logging system and prints info about the build

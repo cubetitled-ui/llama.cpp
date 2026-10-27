@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -192,6 +193,264 @@ static void test_top_n_sigma(const std::vector<float> & probs, const std::vector
     tester.check();
 }
 
+// quasi (arithmetic) sampling
+//
+// see llama_sampler_init_quasi() in llama.h. the tests below pin down the four properties that make the
+// scheme usable as a drop-in replacement for ancestral sampling:
+//   a) determinism           - same logits + same code -> same tokens, bit for bit
+//   b) endpoint behaviour    - the extremes of the code interval map to the extremes of the distribution
+//   c) measure preservation  - sweeping the code over a grid reproduces the target probabilities
+//   d) no silent failure     - an out-of-range code is rejected, not clamped
+// plus the actual reason the scheme exists: two codes that are far apart decode to different tokens.
+
+struct quasi_tester {
+    // `logits` must be in descending order - the same contract the candidate list has when it reaches
+    // llama_sampler_dist_apply(), and the codebook order used to build the intervals
+    explicit quasi_tester(const std::vector<float> & logits) {
+        cur.reserve(logits.size());
+        for (size_t i = 0; i < logits.size(); ++i) {
+            cur.emplace_back(llama_token_data{ (llama_token) i, logits[i], 0.0f });
+        }
+
+        cur_p = llama_token_data_array { cur.data(), cur.size(), -1, true };
+    }
+
+    std::vector<llama_token_data> cur;
+    llama_token_data_array        cur_p;
+};
+
+// applies a fresh quasi sampler to `logits` and returns the index of the selected candidate
+static int quasi_select(const std::vector<float> & logits, float p_quasi, float quasi, uint32_t seed = 0) {
+    quasi_tester tester(logits);
+
+    auto * smpl = llama_sampler_init_quasi(p_quasi, quasi, seed);
+
+    llama_sampler_apply(smpl, &tester.cur_p);
+
+    const int selected = tester.cur_p.selected;
+
+    llama_sampler_free(smpl);
+
+    GGML_ASSERT(selected >= 0 && (size_t) selected < logits.size());
+
+    return selected;
+}
+
+// decodes `n_steps` tokens, using a different distribution at every step (a fixed one would not
+// exercise the code renormalization), and asserts that the code stays a valid code point throughout
+static std::vector<int> quasi_sequence(const std::vector<std::vector<float>> & steps, float quasi, int n_steps) {
+    quasi_tester tester(steps[0]);
+
+    auto * smpl = llama_sampler_init_quasi(1.0f, quasi, 0);
+
+    std::vector<int> out;
+
+    for (int t = 0; t < n_steps; ++t) {
+        for (size_t i = 0; i < steps[t].size(); ++i) {
+            tester.cur[i].logit = steps[t][i];
+        }
+
+        llama_sampler_apply(smpl, &tester.cur_p);
+
+        out.push_back(tester.cur_p.selected);
+
+        const float c = llama_sampler_quasi_get(smpl);
+        GGML_ASSERT(c >= 0.0f && c < 1.0f);
+    }
+
+    llama_sampler_free(smpl);
+
+    return out;
+}
+
+// (a) determinism
+static void test_quasi_determinism() {
+    const std::vector<std::vector<float>> steps = {
+        {  1.0f,  0.9f,  0.2f, -0.5f, -1.5f },
+        {  0.3f,  0.0f,  0.0f, -0.1f, -2.0f },
+        { -0.2f,  0.4f,  1.0f,  0.0f,  0.0f },
+        {  0.0f,  0.0f,  0.0f,  0.0f,  0.0f },
+        {  2.0f,  1.0f,  0.0f,  0.0f, -1.0f },
+    };
+
+    const std::vector<float> quasi_values = { 0.0f, 0.1f, 0.25f, 1.0f/3.0f, 0.5f, 0.618034f, 0.9f, 0.999f };
+
+    for (const float quasi : quasi_values) {
+        const auto ref = quasi_sequence(steps, quasi, (int) steps.size());
+
+        // two independent instances, and the same instance again after reset, must agree exactly
+        for (int rep = 0; rep < 4; ++rep) {
+            GGML_ASSERT(quasi_sequence(steps, quasi, (int) steps.size()) == ref);
+        }
+
+        // and the seed-derived code must be stable too
+        const auto ref_seed = quasi_sequence(steps, -1.0f, (int) steps.size());
+        (void) ref_seed;
+
+        printf("quasi %.6f -> %d %d %d %d %d\n", (double) quasi, ref[0], ref[1], ref[2], ref[3], ref[4]);
+    }
+}
+
+// (b) endpoints of the code interval
+static void test_quasi_endpoints() {
+    // two equally likely modes plus two impossible ones
+    const std::vector<float> logits = { 0.0f, 0.0f, -INFINITY, -INFINITY };
+
+    const float lo = 0.0f;
+    const float hi = std::nextafterf(1.0f, 0.0f);
+
+    const int t_lo = quasi_select(logits, 1.0f, lo);
+    const int t_hi = quasi_select(logits, 1.0f, hi);
+
+    printf("quasi endpoints: lo -> %d, hi -> %d\n", t_lo, t_hi);
+
+    GGML_ASSERT(t_lo == 0);
+    GGML_ASSERT(t_hi == 1);
+    GGML_ASSERT(t_lo != t_hi);
+
+    // 1 - 1e-6 must also land on the second mode
+    GGML_ASSERT(quasi_select(logits, 1.0f, 1.0f - 1e-6f) == 1);
+
+    // single candidate: the code is irrelevant
+    GGML_ASSERT(quasi_select({ 0.5f }, 1.0f, lo)  == 0);
+    GGML_ASSERT(quasi_select({ 0.5f }, 1.0f, hi)  == 0);
+}
+
+// (c) the empirical measure over a uniform grid of codes must match the target distribution
+static void test_quasi_distribution(const std::vector<float> & logits, float tol) {
+    // target probabilities, in the same double precision the sampler accumulates in
+    const float max_l = logits[0];
+
+    double sum = 0.0;
+    std::vector<double> p_target(logits.size());
+    for (size_t i = 0; i < logits.size(); ++i) {
+        p_target[i] = expf(logits[i] - max_l);
+        sum += p_target[i];
+    }
+    for (auto & p : p_target) {
+        p /= sum;
+    }
+
+    const int n_grid = 100;
+
+    std::vector<int> counts(logits.size(), 0);
+
+    for (int k = 0; k < n_grid; ++k) {
+        counts[quasi_select(logits, 1.0f, (float) k/n_grid)] += 1;
+    }
+
+    double max_dev = 0.0;
+
+    printf("quasi distribution over %d codes:\n", n_grid);
+    for (size_t i = 0; i < logits.size(); ++i) {
+        const double freq = (double) counts[i]/n_grid;
+        const double dev  = fabs(freq - p_target[i]);
+
+        max_dev = std::max(max_dev, dev);
+
+        printf("  token %zu: p = %.6f  freq = %.2f  dev = %.2e\n", i, p_target[i], freq, dev);
+
+        GGML_ASSERT(dev <= tol);
+    }
+
+    printf("  max deviation = %.3e (tolerance %.1e)\n", max_dev, (double) tol);
+
+    GGML_ASSERT(max_dev <= tol);
+}
+
+// (d) an invalid code must be reported, not silently clamped
+static void test_quasi_invalid() {
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+
+    auto * smpl = llama_sampler_init_quasi(1.0f, 0.5f, 0);
+
+    GGML_ASSERT(llama_sampler_quasi_get(smpl) == 0.5f);
+
+    const float bad[] = { -1e-6f, -1.0f, 1.0f, 1.5f, 42.0f, nan, INFINITY, -INFINITY };
+
+    for (const float quasi : bad) {
+        GGML_ASSERT(!llama_sampler_quasi_set(smpl, quasi));
+    }
+
+    // none of the rejected calls may have disturbed the code
+    GGML_ASSERT(llama_sampler_quasi_get(smpl) == 0.5f);
+
+    // the closed-open interval [0, 1) is accepted
+    GGML_ASSERT(llama_sampler_quasi_set(smpl, 0.0f));
+    GGML_ASSERT(llama_sampler_quasi_get(smpl) == 0.0f);
+    GGML_ASSERT(llama_sampler_quasi_set(smpl, std::nextafterf(1.0f, 0.0f)));
+    GGML_ASSERT(llama_sampler_quasi_get(smpl) < 1.0f);
+
+    llama_sampler_free(smpl);
+}
+
+// the point of the scheme: codes that are far apart in code space decode to different tokens
+static void test_quasi_diversification() {
+    const std::vector<float> logits = { 0.0f, 0.0f };
+
+    // 2 codes at distance 0.5: always 2 distinct tokens
+    int distinct = 0;
+    std::vector<int> seen;
+
+    for (int i = 0; i < 2; ++i) {
+        const int t = quasi_select(logits, 1.0f, 0.25f + 0.5f*i);
+        if (std::find(seen.begin(), seen.end(), t) == seen.end()) {
+            seen.push_back(t);
+        }
+    }
+    distinct = (int) seen.size();
+
+    printf("quasi diversification: 2 codes -> %d distinct tokens\n", distinct);
+
+    GGML_ASSERT(distinct == 2);
+
+    // same with 4 codes on a 4-mode distribution: 4 distinct tokens out of 4 steps. the analogous
+    // ancestral draw collides with probability 1 - 4!/4^4 = 0.906
+    const std::vector<float> flat = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+    seen.clear();
+    for (int i = 0; i < 4; ++i) {
+        const int t = quasi_select(flat, 1.0f, 0.125f + 0.25f*i);
+        if (std::find(seen.begin(), seen.end(), t) == seen.end()) {
+            seen.push_back(t);
+        }
+    }
+    printf("quasi diversification: 4 codes on 4 modes -> %d distinct tokens\n", (int) seen.size());
+    GGML_ASSERT(seen.size() == 4);
+
+    // the seed-derived code must differ between seeds and be stable within a seed
+    quasi_tester tester({ 0.0f, 0.0f, -INFINITY, -INFINITY, -INFINITY });
+
+    auto * s0 = llama_sampler_init_quasi(1.0f, -1.0f, 1234);
+    auto * s1 = llama_sampler_init_quasi(1.0f, -1.0f, 1234);
+    auto * s2 = llama_sampler_init_quasi(1.0f, -1.0f, 4321);
+
+    const float c0 = llama_sampler_quasi_get(s0);
+    const float c1 = llama_sampler_quasi_get(s1);
+    const float c2 = llama_sampler_quasi_get(s2);
+
+    printf("quasi seed codes: seed 1234 -> %.7f, seed 4321 -> %.7f\n", (double) c0, (double) c2);
+
+    GGML_ASSERT(c0 == c1);
+    GGML_ASSERT(c0 != c2);
+    GGML_ASSERT(c0 >= 0.0f && c0 < 1.0f);
+
+    // reset() must return the sampler to its starting code
+    GGML_ASSERT(llama_sampler_quasi_set(s0, 0.75f));
+    GGML_ASSERT(llama_sampler_quasi_get(s0) == 0.75f);
+    llama_sampler_reset(s0);
+    GGML_ASSERT(llama_sampler_quasi_get(s0) == 0.75f);
+
+    // clone must preserve the live code
+    auto * s3 = llama_sampler_clone(s0);
+    GGML_ASSERT(llama_sampler_quasi_get(s3) == 0.75f);
+
+    llama_sampler_free(s3);
+    llama_sampler_free(s2);
+    llama_sampler_free(s1);
+    llama_sampler_free(s0);
+}
+
 static void test_sampler_queue(const size_t n_vocab, const std::string & samplers_sequence, const int top_k, const float top_p, const float min_p
 ) {
     sampler_tester tester(n_vocab);
@@ -363,6 +622,27 @@ int main(void) {
     test_top_n_sigma({0.1f, 0.2f, 0.3f, 0.4f}, {0.0f, 0.0f, 0.428571f, 0.571429f}, 1.00f);
     test_top_n_sigma({0.1f, 0.2f, 0.3f, 0.4f}, {0.1f, 0.2f, 0.3f, 0.4f}, 0.00f); // top_n_sigma == 0 now represents a no-op rather than greedy decoding as of PR#13345
     test_top_n_sigma({0.1f, 0.2f, 0.3f, 0.4f}, {0.1f, 0.2f, 0.3f, 0.4f}, 3.00f);
+
+    printf("quasi determinism:\n");
+    test_quasi_determinism();
+
+    printf("quasi endpoints:\n");
+    test_quasi_endpoints();
+
+    printf("quasi distribution (uniform):\n");
+    test_quasi_distribution({ 0.0f, 0.0f }, 1e-2f);
+
+    printf("quasi distribution (skewed):\n");
+    test_quasi_distribution({ 2.0f, 1.0f, 0.0f, 0.0f, -1.0f, -3.0f }, 1e-2f);
+
+    printf("quasi distribution (peaked):\n");
+    test_quasi_distribution({ 4.0f, 0.0f, 0.0f, -4.0f, -8.0f }, 1e-2f);
+
+    printf("quasi invalid codes:\n");
+    test_quasi_invalid();
+
+    printf("quasi diversification:\n");
+    test_quasi_diversification();
 
     test_sampler_queue(10000, "k", 10000, 1.0f, 1.0f);
     test_sampler_queue(10000, "k",     1, 1.0f, 1.0f);

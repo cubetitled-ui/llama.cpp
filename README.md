@@ -1,8 +1,8 @@
 # llamar.cpp
 
-`llamar.cpp` is a high-performance research extension of [llama.cpp](https://github.com/ggml-org/llama.cpp) implementing **inference-time latent recurrence** and **Orthogonal Residual Subspace Decomposition (ORSD-Core)** for deep autoregressive reasoning. 
+`llamar.cpp` is a research extension of [llama.cpp](https://github.com/ggml-org/llama.cpp) implementing **inference-time latent recurrence**: a designated layer interval $[L_{\text{lo}} \dots L_{\text{hi}}]$ is re-applied $T$ times per token inside the forward pass, instead of spending more output tokens on a chain-of-thought scratchpad.
 
-Rather than allocating more output tokens to a chain-of-thought scratchpad (which linearly expands KV cache consumption and inference latency), `llamar.cpp` deliberates in latent space across a designated layer interval $[L_{\text{lo}} \dots L_{\text{hi}}]$ for $T$ iterations per token. The implementation adds zero weight parameters, requires no fine-tuning, introduces zero memory bloat, and is disabled by default (`recurrent_t = 1` yields byte-for-byte identical upstream output).
+The implementation adds no weight parameters, requires no fine-tuning, and is off by default: at `recurrent_t = 1` `build_recurrent_core()` takes the plain single-pass path and builds the same graph upstream builds. **Status: experimental.** Modes 1-4 below change the deliberation update and carry no measured quality claim in this repository; see [Measurement status](#measurement-status).
 
 ---
 
@@ -26,61 +26,47 @@ Token t:
 │   └── Core [lo .. hi] with store_kv = false
 │       └── Attends to full history + pristine K_0, V_0 WITHOUT modifying cache
 │       └── Computes raw candidate delta_t = Decoder(h^(t-1)) - h^(t-1)
-│       └── Dispatches delta_t to Recurrent Decomposition Engine (ORSD / SNC / CAV / DSCC)
+│       └── Dispatches delta_t to the recurrence mode (0 vanilla / 1 orsd / 2 snc / 3 cav / 4 dscc)
 │       └── Updates h^(t) = h^(t-1) + gamma * delta_deliberation
 └── Coda [hi+1 .. n_layer-1]:
     └── Forward pass straight through from h^(T-1) to final logits
 ```
 
 - **Pass 0 ($t=0$, `store_kv = true`)**: Computes nominal forward pass representations and commits pristine $K_0, V_0$ vectors to the KV cache for the current token position.
-- **Passes $t \ge 1$ (`store_kv = false`)**: Deliberation passes execute self-attention reading from the pristine KV cache, but **never write to or corrupt** the KV memory. Downstream tokens retain 100% pristine attention history.
+- **Passes $t \ge 1$ (`store_kv = false`)**: Deliberation passes execute self-attention reading from the KV cache, but **never write to it**. Because pass 0 is the only writer for the token, downstream tokens see exactly the history a single-pass forward pass would have left.
+
+The only per-token cost of a deliberation pass is the read bandwidth of the attention it performs against the existing cache; no additional cache cells are allocated.
 
 ---
 
-### 2. ORSD-Core: Orthogonal Residual Subspace Decomposition (Mode 1)
+### 2. Recurrence modes (mode 1 = ORSD-Core)
 
-In naive recurrence, candidate updates $\Delta_t = \text{Decoder}(h_t) - h_t$ exhibit high cosine similarity ($\cos(\Delta_t, \Delta_0) \approx 0.85 - 0.95$) with prior passes. Over 90% of the additional compute is wasted re-evaluating already extracted features, leading to collinear feature collapse and activation norm runaway.
+Each deliberation pass $t \ge 1$ produces a block difference $\Delta_t = \text{Decoder}(h_t) - h_t$, and the state is updated as $h_{t+1} = h_t + \gamma\,\Delta^{\text{used}}_t$ with $\gamma$ = `--recurrent-gate`. The modes differ only in how $\Delta^{\text{used}}_t$ is derived from $\Delta_t$.
 
-**ORSD-Core** enforces Modified Gram-Schmidt Orthogonalization against the historical thought subspace $\mathcal{U}_{t-1} = \text{span}\{u_0, \dots, u_{t-1}\}$ (where $u_0 = \Delta_0$):
+**Mode 1 (ORSD)** removes the directions the previous passes already used, then resets the magnitude. With $u_0 = \Delta_0$ and $u_j$ the already-projected difference of pass $j$:
 
-$$\Delta_t^\perp = \Delta_t - \sum_{j < t} \frac{\langle \Delta_t, u_j \rangle}{\|u_j\|^2 + \epsilon} u_j$$
+$$\Delta_t^\perp = \Delta_t - \sum_{j < t} \frac{\langle \Delta_t, u_j \rangle}{\max(\langle u_j, u_j \rangle, 10^{-7})} u_j \qquad
+\Delta^{\text{used}}_t = \mathrm{RMSNorm}(\Delta_t^\perp) \cdot \mathrm{RMS}(\Delta_0)$$
 
-#### Scale-Invariant Relative Energy Matching
+`RMSNorm` here is `ggml_rms_norm` (plain RMS, no learned weight), so the applied update always has per-token RMS equal to $\mathrm{RMS}(\Delta_0)$ regardless of the real block difference: the magnitude of the update is set by pass 0, not by the layer. Once $\mathrm{span}\{u_0 \dots u_{t-1}\}$ fills $\mathbb{R}^{n_{\text{embd}}}$, the residual is numerical noise and the update decays toward zero — it cannot grow without bound, because `ggml_rms_norm` bounds its gain by $1/\sqrt{\epsilon}$.
 
-Static scalar updates ($h \leftarrow h + \gamma \Delta^\perp$) suffer from high-Q resonance fragility due to token-level norm variance ($\|\Delta^\perp\|$ varies from 0.8 to 25.0 across tokens). ORSD-Core normalizes the orthogonal increment and scales it to the RMS energy of the current hidden state:
-
-$$\Delta_{\text{norm}} = \text{RMSNorm}(\Delta_t^\perp, \epsilon)$$
-$$\Delta_{\text{scaled}} = \Delta_{\text{norm}} \odot \|h\|_{\text{rms}}$$
-$$h_{t+1} = h_t + \gamma \cdot \Delta_{\text{scaled}}$$
-
-The parameter $\gamma$ (`--recurrent-gate`, default `0.08`) controls the exact invariant percentage of hidden state energy injected during deliberation, providing robust convergence across arbitrary sequence lengths and prompts.
+Modes 2, 3 and 4 are described in the mode table. All of them discard the true magnitude of the block difference as well; the only external scale knob is `--recurrent-gate`.
 
 ---
 
-### 3. Recurrence Modes
+### 3. Recurrence modes
 
-| Mode ID | Name | Mathematical Formulation | Target Failure Mode |
+All formulas are per token. $\gamma$ is `--recurrent-gate`, default `1.0`.
+
+| Mode | Name | What the code computes | Known property |
 |:---:|:---|:---|:---|
-| **0** | **Vanilla LTI** | $h_{t+1} = A \cdot h_t + B \cdot e + \gamma \cdot \Delta_t$ | Baseline linear time-invariant anchor injection |
-| **1** | **ORSD-Core** | $\Delta_t^\perp = \Delta_t - \text{proj}_{\mathcal{U}_{t-1}}(\Delta_t)$; RMS energy matched | 90% Collinear feature collapse & activation runaway |
-| **2** | **SNC-MD** | $m_t = \mu m_{t-1} + (1-\mu)\Delta_t$; $\text{RMSNorm}(m_t)$ | Heavy-ball Lyapunov momentum damping |
-| **3** | **REG-CAV** | $\Delta_{\text{gated}} = \Delta_t \cdot \text{clamp}(\cos(h, e), 0, 1)$ | Bilinear contrastive anchor verification |
-| **4** | **DSCC-Engine** | Fast stream $h$ coupled with slow latent integrator $v_{\text{slow}}$ | Working memory preservation & dual-rate synthesis |
+| **0** | `vanilla` | $\Delta^{\text{used}}_t = \Delta_t$ | The layer is re-applied to its own output and the difference is fed back once. Reference for every other mode. |
+| **1** | `orsd` | $\Delta_t^\perp$ by Gram-Schmidt against $\mathrm{span}\{u_0 \dots u_{t-1}\}$, then $\mathrm{RMSNorm}(\Delta_t^\perp)\cdot\mathrm{RMS}(\Delta_0)$ | Update magnitude fixed by pass 0; direction loses the previous passes' span. Decays, cannot blow up. |
+| **2** | `snc` | $m_t = 0.6\,m_{t-1} + 0.4\,\Delta_t$ (with $m_0 = \Delta_0$), $\Delta^{\text{used}}_t = \mathrm{RMSNorm}(m_t)$ | Unit-RMS update: the magnitude is set by $1/\sqrt{\epsilon}$, not by the model. $\mu = 0.6$ is a hard-coded literal, not tunable. |
+| **3** | `cav` | $g_t = \mathrm{clamp}(\cos(h_t, \text{anchor}_e), 0, 1)$, $\Delta^{\text{used}}_t = \Delta_t \cdot g_t$ | A per-token scale in $[0,1]$ on the *true* difference: it can only shrink the update, never redirect it. Evaluated on $h_t$, the state *before* this pass, so a state that drifts from the anchor switches the update off. |
+| **4** | `dscc` | $v \leftarrow \mathrm{RMSNorm}(0.65\,v + 0.35\,\Delta_t)$, $\Delta^{\text{used}}_t = \Delta_t + 0.2\,(v - h_t)$ | Scale defect: $v$ is resealed to unit RMS while $h$ is the full residual stream, so $v \approx -h$ after the first pass and the update is effectively $\Delta_t - 0.2\,h_t$ — a fixed shrink of the state, not a second stream. $\alpha = 0.35$ and the `0.2` feedback are literals. |
 
----
-
-#### 4. Formal Mathematical Stability (Lean 4 Verified)
-
-The stability of the recurrent latent operator is formally machine-verified in **Lean 4** (`RecurrentStability.lean`, zero custom axioms, zero unclosed `sorry`s, relying solely on Lean 4 / Mathlib core axioms):
-
-1. **Strict Metric Contraction**:
-   For any $L$-Lipschitz, $m$-dissipative latent operator $G$ ($m \le L$), the Krasnoselskii-Mann step $T_\gamma(x) = (1-\gamma)x + \gamma(x + G(x))$ is a strict contraction on a real Hilbert space:
-   $$\|T_\gamma(x) - T_\gamma(y)\| \le \sqrt{1 - 2\gamma m + \gamma^2 L^2} \|x - y\|$$
-   whenever the damping parameter satisfies $\gamma \in \left(0, \frac{2m}{L^2}\right)$.
-2. **Existence and Uniqueness of Semantic Equilibrium ($x^*$)**:
-   By the Banach Fixed-Point Theorem (`krasnoselskiiMann_unique_fixed_point`), the latent sequence converges exponentially to a unique fixed point $x^*$, ensuring bounded representations with no activation runaway.
-3. **Formal Proof of Undamped Instability**:
-   When $\gamma = 1.0$ (undamped standard residual) and $L^2 > 2m$, the step operator is strictly expansive ($\|T(x) - T(y)\| > \|x - y\|$), formally explaining why un-damped multi-pass inference triggers gradient and activation explosion (NaNs).
+Modes 1-4 are experimental: they change the update rule, and no measurement in this repository supports a quality claim for any of them. They are kept (with their numbers) so existing runs stay reproducible. Modes 5 (`hybrid`) and 6 (`akr`) **do not exist** — they have no branch in `build_recurrent_core()` and would silently run mode 0. Both the argument parser and `llama_context` refuse them.
 
 ---
 
@@ -90,90 +76,56 @@ Recurrence parameters are configured via CLI flags, environment variables, or co
 
 | Flag | Default | Description |
 |---|:---:|---|
-| `--recurrent-t <T>` | `1` | Total applications of core layers per token ($1 = \text{vanilla disabled}$, $2 = 1 \text{ deliberation pass}$). |
-| `--recurrent-layer <L>` | `-1` | Start index of the recurrent core (defaults to reasoning centroid $\approx 0.38 \cdot N$). |
-| `--recurrent-layer-b <L_b>` | `-1` | End index for compound core $[L \dots L_b]$ (e.g. layers 13 and 14). |
-| `--recurrent-mode <mode>` | `0` | Recurrence algorithm: `0` (LTI), `1` or `orsd` (ORSD-Core), `2` (SNC), `3` (CAV), `4` (DSCC). |
-| `--recurrent-gate <gamma>` | `1.0` | Deliberation injection factor $\gamma$ (use `0.08` for energy-matched ORSD). |
-| `--recurrent-config <path>` | `""` | Path to JSON or `.rlang` structured configuration. |
+| `--recurrent-t <T>` | `1` | Passes of the core layers per token. `1` = recurrence off; `2` = one deliberation pass. |
+| `--recurrent-layer <L>` | `-1` | Core layer A. `-1` resolves to `0.38 * n_layer` when `T > 1`. |
+| `--recurrent-layer-b <L_b>` | `-1` | Core layer B. With B set, the core spans `[min(A,B) .. max(A,B)]` and every layer in that span runs each pass. A gap of exactly 2 additionally switches to the sandwich topology (loop over `{lo, hi}`, layer `lo+1` as bridge) unless `--recurrent-bridge` is given. |
+| `--recurrent-bridge <L>` | `-1` | Layer executed once between the loop and the coda. Must be a valid layer index **strictly inside** `[lo, hi]`; anything else is refused at context creation (a bridge inside the loop range would run that layer twice and double-write its KV entries). |
+| `--recurrent-mode <mode>` | `0` | `0` vanilla, `1` orsd, `2` snc, `3` cav, `4` dscc. Modes 1-4 experimental. `5`/`6` are rejected. |
+| `--recurrent-gate <gamma>` | `1.0` | Scale of the applied update, `0 <= gamma <= 1`. There is no tuned value for any mode in this repository; the default is what the modes were written against. |
+| `--recurrent-config <path>` | `""` | Path to a JSON or `.rlang` configuration file. |
+
+`llama-bench` exposes only `--recurrent-t` and `--recurrent-layer`; the rest is inference-only.
 
 ### Example CLI Invocations
 
 ```sh
-# 1. Nominal upstream baseline (byte-for-byte identical to stock llama.cpp)
-./build-cuda-vnni/bin/llama-cli -m model.gguf -p "Implement Tarjan's SCC algorithm"
+# 1. Nominal baseline (T=1 takes the plain single-pass path)
+./build/bin/llama-cli -m model.gguf -p "Implement Tarjan's SCC algorithm"
 
-# 2. ORSD-Core with KV Cache Isolation (Qwen2.5-Coder-7B, layers 13-14, gamma=0.08)
-./build-cuda-vnni/bin/llama-cli -m qwen2.5-coder-7b-instruct-q4_k_m.gguf \
+# 2. ORSD on a two-layer core, 13<->15 sandwich with layer 14 as the bridge
+./build/bin/llama-cli -m qwen2.5-coder-7b-instruct-q4_k_m.gguf \
     --recurrent-t 2 \
     --recurrent-layer 13 \
-    --recurrent-layer-b 14 \
+    --recurrent-layer-b 15 \
     --recurrent-mode 1 \
-    --recurrent-gate 0.08 \
     -p "..."
 
 # 3. Via configuration file
-./build-cuda-vnni/bin/llama-cli -m model.gguf --recurrent-config recurrent_configs/orsd_balanced.json -p "..."
+./build/bin/llama-cli -m model.gguf --recurrent-config recurrent_configs/recurrent_t2_step300.json -p "..."
 ```
 
 ---
 
-## Silicon-Verified Empirical Results
+## Measurement status
 
-**Target Hardware**: NVIDIA GeForce RTX 3050 Laptop GPU (GA107, 6.09 GB VRAM, sm_86 Ampere, CUDA Backend)  
-**Evaluated Model**: `Qwen2.5-Coder-7B-Instruct-Q4_K_M`
+**There is currently no publishable measurement of the recurrent core in this repository, and the tables that used to claim otherwise have been removed.** This section is the reason; the machinery to fix it is described in [`benchmarks/README-BENCHMARKS.md`](benchmarks/README-BENCHMARKS.md).
 
-### 1. Comparative Evaluation: Baseline vs. LoRA vs. ORSD Deliberation
+What the removed tables claimed, and why each claim could not stand:
 
-Evaluated across hardened algorithmic systems coding challenges and probabilistic logic deduction:
+| Removed claim | Why it is not a result |
+|---|---|
+| `5/9 → 6/9` accuracy for ORSD vs base on a 9-task set, with latency per arm | No driver, grader, prompt or results file for this set is in the repository. A 1-task difference on 9 tasks is not distinguishable from run-to-run variance. |
+| `9-task` "vanilla collapses to 22.2%" vs ORSD `66.7%` | Same, and it is the mode 0 baseline, so the two arms differ in more than the mode under test. |
+| SVD audit: $\kappa = 42\,487$, $\sigma_{\max} = 17.38$, `srank 102.6/3584` | The numbers existed only as literals in a paper-builder script. No script in this repository loads Qwen2.5-Coder weights and factorises $W_{\text{down}}W_{\text{gate}}$. |
+| Norm/rank table `59.87 → 241.15 → 1823.08`, rank `14.2 → 1.8` | No measuring script; the "rank" is over a 16-token window with no stated estimator, and `docs/openmythos/openmythos_results_rtx3050.md` records the same kind of configuration (the LTI variant, since removed) degrading to perplexity `1292` at `T=2` and `NaN` at `T=3`, which the table does not mention. That trace does not measure the current update rule either. |
+| 13-task `7/13 (53.8%) → 11/13 (84.6%)`, "+30.8% verified silicon gain" | The delta comes from a change in generation length (`512 → 1024` tokens) plus prompt framing, not from the recurrent core — the baseline row has `T=1`. Attributing it to the feature is a confound, and the `+30.8%` is a relative figure presented as a gain. |
+| "`26.2 to 34.0 t/s` at `T=2`", "minimal latency impact" | No benchmark log or harness output is stored, and the range is given without `n` or a variance. `T=2` re-runs the core layer, so the cost is strictly additive on the core; it is not a free 1.0-1.3x. |
+| "solves `tarjan_scc` and `interval_tree` without hallucination" | A per-task pass is not a mechanism claim. |
+| "machine-verified in Lean 4, zero unclosed `sorry`s" | `RecurrentStability.lean` proved properties of an abstract Krasnoselskii-Mann operator, not of the code in this repository. It was referenced only from this README, no CI ever built it, and it has been deleted together with the rest of the unverifiable material. |
 
-| Configuration | Passed Tasks | Accuracy (%) | Deliberation Latency | Key Empirical Finding |
-|:---|:---:|:---:|:---:|:---|
-| **Base ($T=1$, Vanilla No-LoRA)** | 5 / 9 | 55.6% | 167.3s | Fails AVL OOP interface & NFA recursion |
-| **LoRA ($T=1$, Step-100)** | 5 / 9 | 55.6% | 182.8s | Fixes AVL OOP (`insert(self, val)`); regresses Interval Tree |
-| **LoRA Recurrent ORSD ($T=2$, $\gamma=0.20$, Mode 1)** | **6 / 9** | **66.7%** | **201.6s** | **Fixes AVL OOP + Restores Interval Tree (+11.1% Net Gain)** |
-| **LoRA Recurrent Vanilla ($T=2$, $\gamma=0.50$, Mode 0)** | 2 / 9 | 22.2% | 195.2s | **Catastrophic Collapse**: Bytecode VM, Lisp, and Tarjan fail |
+The 52-task suite in `benchmarks/` is the closest thing to a real harness. It is also not a result yet: the reference arm contradicted itself (`passed=40 total=52` while its own categories summed to 52/66, because stored counters were incremented on top of cached verdicts), three of the four "improvement" arms claimed modes 5 and 6, which never existed, and the arms that reported a gain also ran with a looser grader and a 3x logic budget. Those files are quarantined in `benchmarks/unverified/`, the drivers now refuse a mode that does not exist, and every arm must stamp the grader revision, the per-category token budget and the model/binary/dataset hashes it ran under before its score can be cited.
 
-### 2. Spectral Manifold Collapse (SVD Audit on Layer 13)
-
-SVD analysis on Qwen2.5-Coder-7B weights ($W_{\text{down}} W_{\text{gate}}$, $\kappa = 42{,}487$, $\sigma_{\max} = 17.38$) proves that unconstrained recurrence behaves as power iteration toward dominant singular vectors:
-
-| Recurrence Iteration | Vector Norm $\|h\|$ | Cosine Sim vs $h^{(0)}$ | Token Matrix Rank | Degradation Mechanism |
-|:---|:---:|:---:|:---:|:---|
-| Nominal ($T=1$) | 59.87 | 1.000 | 14.2 / 16 | Pristine Baseline |
-| Naive Loop ($T=2$) | 241.15 | 0.412 | 6.4 / 16 | Collinear Feature Drift |
-| Naive Loop ($T=4$) | 982.40 | 0.142 | 2.1 / 16 | Severe Manifold Collapse |
-| Naive Loop ($T=8$) | 1823.08 | 0.089 | 1.8 / 16 | Catastrophic Norm Explosion |
-| **ORSD ($T=2$, Ours)** | **61.20** | **0.965** | **14.0 / 16** | **Invariant Representation Protected** |
-| **ORSD ($T=4$, Ours)** | **63.85** | **0.912** | **13.7 / 16** | **Full Rank Preserved via Gram-Schmidt** |
-
-### 3. The 13 Brutal Systems Coding Benchmark (`benchmarks/comprehensive/dataset.json`)
-
-Verified directly on RTX 3050 hardware under instruction-aligned ChatML protocol and full 1024-token generation window:
-
-| # | Task ID & System Description | Raw Baseline ($n=512$) | ChatML + $n=1024$ | Status & Mechanism |
-|:---:|---|:---:|:---:|:---|
-| 1 | `code_01_regex_nfa` (Custom recursive NFA engine) | ❌ FAIL | ❌ FAIL | Greedily misses `[...]` tokenization |
-| 2 | `code_02_bytecode_vm` (Stack-based VM with jumps/ALU) | ✅ PASS | ✅ PASS | Preserved (100% stable) |
-| 3 | `code_03_lazy_segment_tree` (Range updates & sums) | ❌ FAIL | ✅ PASS | **Recovered** (pushdown + no truncation) |
-| 4 | `code_04_lisp_interpreter` (Lexical closures & AST) | ✅ PASS | ✅ PASS | Preserved (100% stable) |
-| 5 | `code_05_dinic_max_flow` (Network maximum flow) | ✅ PASS | ✅ PASS | Preserved (100% stable) |
-| 6 | `code_06_diff_patch_engine` (LCS shortest edit script) | ✅ PASS | ✅ PASS | Preserved (100% stable) |
-| 7 | `code_07_avl_tree_invariants` (Strict balance factor $\le 1$) | ❌ FAIL | ✅ PASS | **Recovered** (OOP API contract preserved) |
-| 8 | `code_08_transactional_key_value` (Nested commit/rollback) | ✅ PASS | ✅ PASS | Preserved (100% stable) |
-| 9 | `code_09_expression_calculator` (Shunting-yard precedence) | ❌ FAIL | ❌ FAIL | Unary minus greedy operator precedence |
-| 10 | `code_10_interval_tree_overlap` (Range overlap queries) | ❌ FAIL | ✅ PASS | **Recovered** (Fixed NoneType string concat) |
-| 11 | `code_11_topological_lexical_kahn` (Min-heap Kahn sort) | ✅ PASS | ✅ PASS | Preserved (100% stable) |
-| 12 | `code_12_tarjan_scc` (Strongly connected components) | ❌ FAIL | ✅ PASS | **Recovered** (Correct DFS lowlink logic) |
-| 13 | `code_13_knapsack_with_reconstruction` (0/1 DP backtrace) | ✅ PASS | ✅ PASS | Preserved (100% stable) |
-| **SUM** | **Total Solved Systems Coding Tasks** | **7 / 13 (53.8%)** | **11 / 13 (84.6%)** | **+30.8% Verified Silicon Gain** |
-
-### 4. Key Systems Takeaways
-
-1. **Zero-Overhead KV Cache Isolation**: Writing secondary key-value projections into the autoregressive KV cache poisons the history for future tokens. Enforcing `store_kv = false` on passes $t \ge 1$ completely prevents historical corruption with 0 extra VRAM footprint.
-2. **Instruction Alignment & Honest Token Limits**: Instruct models require native ChatML framing to prevent reverting to procedural C-style GitHub priors. Removing artificial 512-token truncation unlocks an immediate jump from 7/13 (53.8%) to **11/13 (84.6%)** on LeetCode Hard systems coding on real silicon.
-3. **Inductive Depth via Orthogonality**: Standard recurrence produces redundant collinear activations. ORSD-Core projects the deliberation delta onto the orthogonal complement of previous passes, giving the model the exact mathematical depth required to solve `tarjan_scc` and `interval_tree` without hallucination.
-4. **Hardware Throughput**: On RTX 3050 Laptop GPU, executing $T=2$ on layer 13 sustains **26.2 to 34.0 t/s**, achieving deep deliberation with minimal latency impact.
+To produce a real number: run `benchmarks/eval_baseline_t1.py` and `benchmarks/eval_optuna_champion.py` on the same binary in the same session, `n >= 3` per arm, and compare per-task deltas on the discordant pairs rather than the totals.
 
 ---
 
@@ -185,7 +137,7 @@ Verified directly on RTX 3050 hardware under instruction-aligned ChatML protocol
 
 ## Build
 
-Builds follow upstream llama.cpp. The recurrence feature lives entirely in the model graph builders (`src/models/*.cpp`) and needs no special compile-time flag.
+Builds follow upstream llama.cpp. The recurrence feature lives in the graph builder `build_recurrent_core()` (`src/llama-graph.cpp`) and needs no compile-time flag.
 
 ```sh
 mkdir build && cd build

@@ -1,38 +1,39 @@
 #!/usr/bin/env python3
 """
-benchmarks/eval_optuna_champion.py
-Lightweight, non-freezing benchmark for Optuna Champion:
-  Config: Mode 2 (SNC-MD Momentum), Layer 14, Gamma 0.0331, T=2
-Evaluates the 52 Comprehensive Hardened Tasks across:
-  - Agentic Loop (13)
-  - Systems Coding Unit Tests (13)
-  - Web Dev (13)
-  - Logic & Reasoning (13)
+Arm: recurrent mode 2 (snc -- EMA momentum + RMS rescale, experimental), layer 14, gate 0.0331,
+T=2, on the 52-task suite.
 
-Includes gentle execution (throttling 0.5s between runs) to prevent GPU thermal throttling or laptop UI freezes.
+Same grader and same per-category token budget as the reference arm
+(benchmarks/eval_baseline_t1.py): any deviation is refused by bench_contract.check_arm() before
+inference starts, and the results file records the contract so a cached verdict can be attributed
+to this arm. See benchmarks/README-BENCHMARKS.md -- a single run of one arm on one GPU is not a
+result, it is one sample.
 """
 
-import os
-import sys
-import json
-import time
 import re
 import subprocess
+import sys
+import time
 from typing import Dict, Any, Tuple
 
-CLI_BIN = "/home/cune/llama.cpp/build-cuda-vnni/bin/llama-cli"
-MODEL_PATH = "/home/cune/qwen2.5-coder-7b-instruct-q4_k_m.gguf"
-DATASET_PATH = "/home/cune/llama.cpp/benchmarks/comprehensive/dataset.json"
-OUTPUT_FILE = "/home/cune/llama.cpp/benchmarks/champion_momentum_benchmark_results.json"
+import bench_contract
+from bench_contract import CLI_BIN, MODEL_PATH, OUTPUT_FILE_DIR, REF_BUDGET, REF_LOGIC_ACCEPT
+
+DATASET_PATH = bench_contract.DATASET_PATH
+OUTPUT_FILE = OUTPUT_FILE_DIR + "champion_momentum_benchmark_results.json"
 
 CONFIG = {
     "id": "champion_momentum_t2",
-    "name": "Optuna Champion (Mode 2 SNC-MD, L=14, g=0.0331, T=2)",
+    "name": "Optuna Champion (Mode 2 snc, L=14, gate=0.0331, T=2)",
     "layer": 14,
     "gamma": 0.0331,
     "mode": 2,
     "t": 2
 }
+
+# Reference grader and reference budget: this arm must stay comparable with the baseline.
+BUDGET = dict(REF_BUDGET)
+LOGIC_ACCEPT = dict(REF_LOGIC_ACCEPT)
 
 def clean_output(prompt: str, raw_out: str) -> str:
     ans = raw_out.strip()
@@ -83,17 +84,17 @@ def run_inference(prompt: str, max_tokens: int = 512) -> Tuple[str, float]:
 def eval_task(cat: str, task: dict) -> Tuple[bool, float, str]:
     if cat == "agentic_loop":
         t1_prompt = task["turn1_prompt"]
-        out1, d1 = run_inference(t1_prompt, max_tokens=128)
+        out1, d1 = run_inference(t1_prompt, max_tokens=BUDGET[cat])
         tool_called = (task["tool_name"].lower() in out1.lower())
-        
+
         t2_prompt = task["turn2_prompt"]
-        out2, d2 = run_inference(t2_prompt, max_tokens=128)
+        out2, d2 = run_inference(t2_prompt, max_tokens=BUDGET[cat])
         grounded = any(exp.lower() in out2.lower() for exp in task.get("expected_final", []))
         return (tool_called and grounded), d1 + d2, out2[:120]
 
     elif cat == "coding":
         prompt = task["prompt"]
-        out, dur = run_inference(prompt, max_tokens=512)
+        out, dur = run_inference(prompt, max_tokens=BUDGET[cat])
         code = extract_code(out)
         lines = [l for l in code.split("\n") if not l.startswith("#!") and not l.startswith("```")]
         sanitized = "\n".join(lines)
@@ -107,7 +108,7 @@ def eval_task(cat: str, task: dict) -> Tuple[bool, float, str]:
 
     elif cat == "logic":
         prompt = task["prompt"]
-        out, dur = run_inference(prompt, max_tokens=256)
+        out, dur = run_inference(prompt, max_tokens=BUDGET[cat])
         exp = str(task.get("expected", "")).strip().lower()
         cleaned = out.lower().replace("$", "").replace(",", "").replace("%", "")
         ok = exp in cleaned
@@ -115,7 +116,7 @@ def eval_task(cat: str, task: dict) -> Tuple[bool, float, str]:
 
     elif cat == "web_dev":
         prompt = task["prompt"]
-        out, dur = run_inference(prompt, max_tokens=512)
+        out, dur = run_inference(prompt, max_tokens=BUDGET[cat])
         keywords = task.get("keywords", [])
         ok = any(kw.lower() in out.lower() for kw in keywords)
         return ok, dur, out[:120]
@@ -123,78 +124,7 @@ def eval_task(cat: str, task: dict) -> Tuple[bool, float, str]:
     return False, 0.0, ""
 
 def main():
-    print(f"Loading dataset: {DATASET_PATH}", flush=True)
-    with open(DATASET_PATH) as f:
-        ds = json.load(f)
-
-    results = {
-        "config": CONFIG,
-        "passed": 0,
-        "total": 0,
-        "categories": {},
-        "tasks": {}
-    }
-    if os.path.exists(OUTPUT_FILE):
-        try:
-            with open(OUTPUT_FILE) as f:
-                results = json.load(f)
-        except Exception:
-            pass
-
-    total_tasks_count = sum(len(tasks) for tasks in ds["tasks"].values())
-    print(f"Total tasks: {total_tasks_count} across {list(ds['tasks'].keys())}", flush=True)
-
-    passed_count = 0
-    total_evaled = 0
-
-    for cat, task_list in ds["tasks"].items():
-        if cat not in results["categories"]:
-            results["categories"][cat] = {"passed": 0, "total": 0}
-        
-        print(f"\n--- Category: {cat} ({len(task_list)} tasks) ---", flush=True)
-        for idx, task in enumerate(task_list):
-            tid = task["id"]
-            results["categories"][cat]["total"] += 1
-            total_evaled += 1
-
-            if tid in results["tasks"]:
-                ok = results["tasks"][tid]["passed"]
-                dur = results["tasks"][tid]["duration"]
-                if ok:
-                    passed_count += 1
-                    results["categories"][cat]["passed"] += 1
-                print(f"[{total_evaled}/{total_tasks_count}] {tid:<35} -> (Cached) {'PASS' if ok else 'FAIL'}", flush=True)
-                continue
-
-            ok, dur, preview = eval_task(cat, task)
-            if ok:
-                passed_count += 1
-                results["categories"][cat]["passed"] += 1
-
-            results["tasks"][tid] = {
-                "passed": ok,
-                "duration": round(dur, 2),
-                "category": cat
-            }
-
-            status = "PASS" if ok else "FAIL"
-            print(f"[{total_evaled}/{total_tasks_count}] {tid:<35} -> {status} ({dur:.1f}s)", flush=True)
-
-            results["passed"] = passed_count
-            results["total"] = total_evaled
-            with open(OUTPUT_FILE, "w") as f:
-                json.dump(results, f, indent=2)
-
-            # Gentle sleep to let OS and GPU breathe without any GUI freeze
-            time.sleep(0.3)
-
-    print("\n========================================================", flush=True)
-    pct = (passed_count / total_tasks_count) * 100
-    print(f"BENCHMARK COMPLETE: {passed_count}/{total_tasks_count} ({pct:.1f}%)", flush=True)
-    for cat, stats in results["categories"].items():
-        cat_pct = (stats["passed"] / stats["total"]) * 100 if stats["total"] > 0 else 0
-        print(f"  {cat:<15}: {stats['passed']}/{stats['total']} ({cat_pct:.1f}%)", flush=True)
-    print("========================================================", flush=True)
+    bench_contract.run_suite(CONFIG, BUDGET, LOGIC_ACCEPT, OUTPUT_FILE, eval_task)
 
 if __name__ == "__main__":
     main()

@@ -328,6 +328,7 @@ struct common_sampler * common_sampler_init(const struct llama_model * model, st
     if (params.mirostat == 0) {
 
         bool use_adaptive_p = false; // see below
+        bool use_quasi      = false; // see below
 
         for (const auto & cnstr : params.samplers) {
             switch (cnstr) {
@@ -375,6 +376,10 @@ struct common_sampler * common_sampler_init(const struct llama_model * model, st
                     // so we know to add the sampler at the very end.
                     use_adaptive_p = true;
                     break;
+                case COMMON_SAMPLER_TYPE_QUASI:
+                    // same as `adaptive-p`: selects a single token, so it goes at the very end
+                    use_quasi = true;
+                    break;
                 default:
                     GGML_ASSERT(false && "unknown sampler type");
             }
@@ -382,6 +387,12 @@ struct common_sampler * common_sampler_init(const struct llama_model * model, st
         if (use_adaptive_p) {
             // only if user explicitly included adaptive-p sampler
             samplers.push_back(llama_sampler_init_adaptive_p(params.adaptive_target, params.adaptive_decay, params.seed));
+        } else if (use_quasi || params.samplers_quasi > 0.0f) {
+            // arithmetic (quasi-random) sampling: the token is a deterministic function of a persistent
+            // code in [0, 1) that gets renormalized after every step, instead of a fresh i.i.d. draw.
+            // it costs the same as `dist`. the initial code is derived from the seed.
+            const float p_quasi = params.samplers_quasi > 0.0f ? params.samplers_quasi : 1.0f;
+            samplers.push_back(llama_sampler_init_quasi(p_quasi, -1.0f, params.seed));
         } else {
             // default: sample from distribution
             samplers.push_back(llama_sampler_init_dist(params.seed));
@@ -773,6 +784,7 @@ char common_sampler_type_to_chr(enum common_sampler_type cnstr) {
         case COMMON_SAMPLER_TYPE_INFILL:      return 'i';
         case COMMON_SAMPLER_TYPE_PENALTIES:   return 'e';
         case COMMON_SAMPLER_TYPE_ADAPTIVE_P:  return 'a';
+        case COMMON_SAMPLER_TYPE_QUASI:       return 'q';
         default : return '?';
     }
 }
@@ -790,6 +802,7 @@ std::string common_sampler_type_to_str(enum common_sampler_type cnstr) {
         case COMMON_SAMPLER_TYPE_INFILL:      return "infill";
         case COMMON_SAMPLER_TYPE_PENALTIES:   return "penalties";
         case COMMON_SAMPLER_TYPE_ADAPTIVE_P:  return "adaptive_p";
+        case COMMON_SAMPLER_TYPE_QUASI:       return "quasi";
         default : return "";
     }
 }
@@ -809,7 +822,8 @@ std::vector<common_sampler_type> common_sampler_types_from_names(const std::vect
             { "xtc",         COMMON_SAMPLER_TYPE_XTC         },
             { "infill",      COMMON_SAMPLER_TYPE_INFILL      },
             { "penalties",   COMMON_SAMPLER_TYPE_PENALTIES   },
-            { "adaptive_p",  COMMON_SAMPLER_TYPE_ADAPTIVE_P  }
+            { "adaptive_p",  COMMON_SAMPLER_TYPE_ADAPTIVE_P  },
+            { "quasi",       COMMON_SAMPLER_TYPE_QUASI       }
         };
         std::unordered_map<std::string, common_sampler_type> alias_name_map;
         for (const auto & entry : canonical_name_map) {
@@ -869,6 +883,7 @@ std::vector<common_sampler_type> common_sampler_types_from_chars(const std::stri
         { common_sampler_type_to_chr(COMMON_SAMPLER_TYPE_INFILL),      COMMON_SAMPLER_TYPE_INFILL },
         { common_sampler_type_to_chr(COMMON_SAMPLER_TYPE_PENALTIES),   COMMON_SAMPLER_TYPE_PENALTIES },
         { common_sampler_type_to_chr(COMMON_SAMPLER_TYPE_ADAPTIVE_P),  COMMON_SAMPLER_TYPE_ADAPTIVE_P },
+        { common_sampler_type_to_chr(COMMON_SAMPLER_TYPE_QUASI),       COMMON_SAMPLER_TYPE_QUASI      },
     };
 
     std::vector<common_sampler_type> samplers;

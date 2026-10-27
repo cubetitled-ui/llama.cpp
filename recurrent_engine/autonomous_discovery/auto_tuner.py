@@ -82,46 +82,33 @@ class AutoTuner:
         }
 
     @classmethod
-    def solve_lyapunov_stability(
+    def solve_gate(
         cls,
-        mode: str = "balanced",
-        stability_margin: float = 0.03
+        mode: str = "balanced"
     ) -> Dict[str, float]:
         """
-        Analytically solves contractive parameters (a, b, gamma) such that
-        the spectral radius rho satisfies:
-            rho = a + b * gamma <= 1.0 - stability_margin < 1.0
-        ensuring asymptotic convergence to the Banach fixed point.
+        Picks the only update-scale knob the current build actually has: --recurrent-gate.
+
+        This used to be solve_lyapunov_stability() and it solved for (a, b, gamma) with
+        a + b*gamma < 1, i.e. contractivity of the LTI state update h <- a*h + b*e + gamma*F(...).
+        That update is gone from llama_context_params and from build_recurrent_core(), so a
+        "spectral radius" computed here described nothing the engine does. There is no
+        convergence proof behind any of these numbers: they are presets, and the repository
+        contains no measurement that prefers one over another.
         """
-        target_norm = 1.0 - stability_margin
-
+        # the gate values are the ones the old (a, b, gamma) solver produced for these presets,
+        # kept unchanged so the flags it emits are the ones it emitted before
         if mode == "exploratory":
-            # Higher delta injection, slightly lower state persistence
-            a = 0.78
-            b = 0.20
-            gamma = min(1.0, (target_norm - a) / b)
+            gate = 0.95
         elif mode == "conservative":
-            # High state persistence, gentle thought perturbation
-            a = 0.94
-            b = 0.05
-            gamma = min(0.70, (target_norm - a) / b)
+            gate = 0.60
         elif mode == "high_order_deep":
-            # Calibrated for T=3 or T=4 passes
-            a = 0.88
-            b = 0.10
-            gamma = 0.90
-        else: # "balanced"
-            a = 0.88
-            b = 0.10
-            gamma = min(1.0, (target_norm - a) / b)
+            gate = 0.90
+        else:  # "balanced"
+            gate = 0.90
 
-        actual_contraction = round(a + b * gamma, 4)
         return {
-            "a": round(a, 2),
-            "b": round(b, 2),
-            "gate": round(gamma, 2),
-            "spectral_radius": actual_contraction,
-            "is_contractive": actual_contraction < 1.0
+            "gate": round(min(1.0, max(0.0, gate)), 2),
         }
 
     @classmethod
@@ -152,7 +139,7 @@ class AutoTuner:
             lo, hi = centroids["semantic_centroid"]
             t = 2
 
-        stability = cls.solve_lyapunov_stability(mode)
+        stability = cls.solve_gate(mode)
 
         config = {
             "model_path": model_path,
@@ -161,17 +148,14 @@ class AutoTuner:
             "recurrent_layer": lo,
             "recurrent_layer_b": hi,
             "recurrent_t": t,
-            "recurrent_a": stability["a"],
-            "recurrent_b": stability["b"],
+            "recurrent_mode": 0,
             "recurrent_gate": stability["gate"],
-            "spectral_radius": stability["spectral_radius"],
             "lora_path": lora_path,
             "cli_flags": [
                 "--recurrent-layer", str(lo),
                 "--recurrent-layer-b", str(hi),
                 "--recurrent-t", str(t),
-                "--recurrent-a", f"{stability['a']:.2f}",
-                "--recurrent-b", f"{stability['b']:.2f}",
+                "--recurrent-mode", "0",
                 "--recurrent-gate", f"{stability['gate']:.2f}"
             ]
         }

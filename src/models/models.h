@@ -2345,6 +2345,13 @@ static inline float get_recurrent_block_exit_alpha(llm_arch arch = LLM_ARCH_UNKN
     return ea;
 }
 
+// Per-iteration anchor blend for the model-side recurrence (the loop built in the arch's
+// build() with iters > 1, e.g. llama/qwen3/gemma2), NOT the build_recurrent_core path.
+// gamma == 0 unless the RECURRENT_GAMMA environment variable is set, so with the default
+// environment the `if (gamma > 0)` branch in the arch code is not taken and the step is
+// cur <- alpha*cur + (1-alpha)*inp unchanged. Setting RECURRENT_GAMMA=g in (0,1] mixes the
+// layer's input-embedding anchor into the step: cur <- (1-g)*step + g*anchor. There is no CLI
+// flag and no measurement backing the g > 0 branch; it is an untested manual knob.
 static inline float get_recurrent_gamma() {
     if (const char * env_g = std::getenv("RECURRENT_GAMMA")) {
         return std::atof(env_g);

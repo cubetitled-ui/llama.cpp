@@ -150,8 +150,8 @@ def run_model_inference(
     recurrent_t: int = 1,
     recurrent_layer: int = -1,
     recurrent_layer_b: int = -1,
-    recurrent_a: float = 0.90,
-    recurrent_b: float = 0.10,
+    recurrent_bridge: int = -1,
+    recurrent_mode: int = 0,
     recurrent_gate: float = 1.00,
     recurrent_config: Optional[str] = None,
     lora_path: Optional[str] = None,
@@ -165,12 +165,13 @@ def run_model_inference(
         flags.extend([
             "--recurrent-layer", str(recurrent_layer),
             "--recurrent-t", str(recurrent_t),
-            "--recurrent-a", f"{recurrent_a:.2f}",
-            "--recurrent-b", f"{recurrent_b:.2f}",
+            "--recurrent-mode", str(recurrent_mode),
             "--recurrent-gate", f"{recurrent_gate:.2f}",
         ])
         if recurrent_layer_b >= 0:
             flags.extend(["--recurrent-layer-b", str(recurrent_layer_b)])
+        if recurrent_bridge >= 0:
+            flags.extend(["--recurrent-bridge", str(recurrent_bridge)])
 
     if lora_path:
         flags.extend(["--lora", lora_path])
@@ -183,8 +184,8 @@ def benchmark_logic_fast(
     recurrent_t: int = 1,
     recurrent_layer: int = -1,
     recurrent_layer_b: int = -1,
-    recurrent_a: float = 0.90,
-    recurrent_b: float = 0.10,
+    recurrent_bridge: int = -1,
+    recurrent_mode: int = 0,
     recurrent_gate: float = 1.00,
     recurrent_config: Optional[str] = None,
     lora_path: Optional[str] = None
@@ -200,12 +201,13 @@ def benchmark_logic_fast(
         flags.extend([
             "--recurrent-layer", str(recurrent_layer),
             "--recurrent-t", str(recurrent_t),
-            "--recurrent-a", f"{recurrent_a:.2f}",
-            "--recurrent-b", f"{recurrent_b:.2f}",
+            "--recurrent-mode", str(recurrent_mode),
             "--recurrent-gate", f"{recurrent_gate:.2f}",
         ])
         if recurrent_layer_b >= 0:
             flags.extend(["--recurrent-layer-b", str(recurrent_layer_b)])
+        if recurrent_bridge >= 0:
+            flags.extend(["--recurrent-bridge", str(recurrent_bridge)])
 
     if lora_path:
         flags.extend(["--lora", lora_path])
@@ -249,8 +251,8 @@ def benchmark_logic_fast(
             "t": recurrent_t,
             "layer_lo": recurrent_layer,
             "layer_hi": recurrent_layer_b,
-            "a": recurrent_a,
-            "b": recurrent_b,
+            "bridge": recurrent_bridge,
+            "mode": recurrent_mode,
             "gate": recurrent_gate
         },
         "questions": details

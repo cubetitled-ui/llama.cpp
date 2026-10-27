@@ -367,12 +367,11 @@ extern "C" {
         // Weight-tied recurrent core (llamar.cpp). Applied at graph-construction time.
         int32_t recurrent_t;       // number of passes through the recurrent core layer per token (1 = vanilla)
         int32_t recurrent_layer;   // 0-indexed core layer A; -1 = use 38% of model depth when recurrent_t > 1
-        int32_t recurrent_layer_b; // 0-indexed core layer B for A->B->A alternation; -1 = single-layer core (default). If set, must be adjacent to A (|A-B| == 1) so no intervening layers are skipped
-        int32_t recurrent_bridge;  // 0-indexed bridge layer to execute between recurrent loop and coda (-1 = none)
-        float   recurrent_a;       // LTI decay scalar; |a| < 1 required for contraction when enabled
-        float   recurrent_b;       // LTI anchor injection scalar
+        int32_t recurrent_layer_b; // 0-indexed core layer B for A->B->A alternation; -1 = single-layer core (default); every layer in [min(A,B), max(A,B)] runs inside the core loop
+        int32_t recurrent_bridge;  // 0-indexed bridge layer to execute between recurrent loop and coda (-1 = none); must be strictly inside the core range
         float   recurrent_gate;    // scale of the nonlinear block output per loop (1 = legacy unscaled)
-        int32_t recurrent_mode;    // recurrence mode: 0=vanilla (LTI), 1=ORSD (Gram-Schmidt), 2=SNC (Lyapunov Momentum), 3=CAV (Anchor Verification), 4=DSCC (Dual Stream)
+        float   recurrent_anchor_beta; // mode 5: blend weight on the pristine one-shot state (1 = exact T=1)
+        int32_t recurrent_mode;    // recurrence mode: 0=vanilla, 1=orsd (experimental), 2=snc (experimental), 3=cav (experimental), 4=dscc (experimental)
 
         // ref: https://github.com/ggml-org/llama.cpp/pull/2054
         float    rope_freq_base;   // RoPE base frequency, 0 = from model
@@ -1351,6 +1350,32 @@ extern "C" {
 
     /// seed == LLAMA_DEFAULT_SEED to use a random seed.
     LLAMA_API struct llama_sampler * llama_sampler_init_dist(uint32_t seed);
+
+    /// @details Arithmetic (quasi-random) sampling, Algorithm 1 of "Arithmetic Sampling: Parallel Diverse
+    ///          Decoding for Large Language Models" https://arxiv.org/abs/2210.15458, evaluated as
+    ///          "arithmetic sampling" in https://arxiv.org/abs/2411.06251.
+    ///
+    ///          Same cost as llama_sampler_init_dist() (one softmax + one inverse-CDF pass, no rejection),
+    ///          but the token is selected from a *persistent* code c in [0, 1) that is renormalized into
+    ///          the selected sub-interval after every step, instead of from a fresh i.i.d. uniform draw.
+    ///          The renormalization makes c a genuine arithmetic code over the implicit codebook, so two
+    ///          codes that are far apart decode to different prefixes - a distance guarantee that
+    ///          independent ancestral draws do not have. That is the property multi-sample decoders
+    ///          (self-consistency, MBR) need in order to cover the distribution better.
+    ///
+    ///          p_quasi: mixing weight in [0, 1]. 1.0f = always take the arithmetic path, 0.0f = never
+    ///                   (plain ancestral sampling). Values in between pick per step using the seeded
+    ///                   RNG, so the result is reproducible for a given seed.
+    ///          quasi:   initial code in [0, 1). Negative -> derive it from seed (no global RNG state).
+    ///          seed:    LLAMA_DEFAULT_SEED to use a random seed.
+    ///
+    ///          Aborts if p_quasi is not in [0, 1] or quasi is NaN or not in [0, 1).
+    LLAMA_API struct llama_sampler * llama_sampler_init_quasi(float p_quasi, float quasi, uint32_t seed);
+
+    /// @details Read / write the current arithmetic code. llama_sampler_quasi_set() returns false and
+    ///          leaves the code untouched if quasi is NaN or outside [0, 1).
+    LLAMA_API bool  llama_sampler_quasi_set  (      struct llama_sampler * smpl, float quasi);
+    LLAMA_API float llama_sampler_quasi_get  (const struct llama_sampler * smpl);
 
     /// @details Top-K sampling described in academic paper "The Curious Case of Neural Text Degeneration" https://arxiv.org/abs/1904.09751
     /// Setting k <= 0 makes this a noop

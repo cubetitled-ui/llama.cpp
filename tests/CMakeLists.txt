@@ -336,3 +336,6 @@ if (TARGET gguf-model-data)
     target_link_libraries(test-export-graph-ops PRIVATE gguf-model-data)
     target_compile_definitions(test-export-graph-ops PRIVATE LLAMA_HF_FETCH)
 endif()
+
+# guards the common_params layout that crosses the libllama-common .so boundary
+llama_build_and_test(test-arg-common-params-abi.cpp)

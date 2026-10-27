@@ -1250,6 +1250,259 @@ struct llama_sampler * llama_sampler_init_dist(uint32_t seed) {
     );
 }
 
+// quasi (arithmetic) sampling
+//
+// see llama_sampler_init_quasi() in llama.h for the description. this is Algorithm 1 of Vilnis et al.
+// (arXiv:2210.15458): a persistent code c in [0, 1) selects the token by inverse-CDF lookup and is then
+// renormalized into the sub-interval that was selected. the arithmetic sampler is orthogonal to top-k,
+// top-p, temperature and friends - those shape the distribution, this shapes how the token is drawn.
+
+static uint32_t hash_u32(uint32_t x) {
+    // splitmix32 finalizer - deterministic, no global state, identical on every platform
+    x += 0x9E3779B9u;
+    x ^= x >> 16;
+    x *= 0x21F0AAADu;
+    x ^= x >> 15;
+    x *= 0x735A2D97u;
+    x ^= x >> 15;
+
+    return x;
+}
+
+static float quasi_code_from_seed(uint32_t seed, uint32_t counter) {
+    // k / 2^24 is exactly representable in float, so the result is a uniform value in [0, 1 - 2^-24]
+    // that never rounds up to 1.0f
+    const uint32_t k = hash_u32(seed ^ hash_u32(counter + 0x9E3779B9u)) & 0x00FFFFFFu;
+
+    return (float) k * (1.0f/16777216.0f);
+}
+
+struct llama_sampler_quasi : public llama_sampler_backend {
+    const float    p_quasi; // mixing weight in [0, 1]
+    const uint32_t seed;
+
+          float   c;       // current arithmetic code, always in [0, 1)
+          float   c_init;  // code to (re)start from on reset
+
+    std::mt19937 rng;     // only used for the ancestral fallback path
+};
+
+static const char * llama_sampler_quasi_name(const struct llama_sampler * smpl) {
+    auto * sctx = (llama_sampler_quasi *) smpl->ctx;
+    return sctx->get_name();
+}
+
+static void llama_sampler_quasi_apply(struct llama_sampler * smpl, llama_token_data_array * cur_p) {
+    auto * ctx = (llama_sampler_quasi *) smpl->ctx;
+
+    // edge cases - same as llama_sampler_dist_apply()
+    if (cur_p->size == 0) {
+        cur_p->selected = -1;
+        return;
+    }
+
+    cur_p->selected = 0;
+
+    if (cur_p->size == 1) {
+        cur_p->data[0].p = 1.0f;
+        return;
+    }
+
+    // max logit for numerical stability
+    float max_l = cur_p->data[0].logit;
+    if (!cur_p->sorted) {
+        for (size_t i = 1; i < cur_p->size; ++i) {
+            max_l = std::max(max_l, cur_p->data[i].logit);
+        }
+    }
+
+    // apply softmax to obtain the probabilities (kept unnormalized in p_sum until the end of the pass)
+    double sum_cum = 0.0;
+    for (size_t i = 0; i < cur_p->size; ++i) {
+        const double p = expf(cur_p->data[i].logit - max_l);
+        cur_p->data[i].p = (float) p;
+        sum_cum += p;
+    }
+
+    // decide which path to take: the arithmetic path is deterministic in the persistent code, the
+    // fallback is plain inverse-transform sampling over the same probabilities
+    bool use_quasi = ctx->p_quasi >= 1.0f;
+
+    if (!use_quasi && ctx->p_quasi > 0.0f) {
+        std::uniform_real_distribution<double> dist(0.0, 1.0);
+        use_quasi = dist(ctx->rng) < (double) ctx->p_quasi;
+    }
+
+    const double c_t = use_quasi ? (double) ctx->c : [&]() {
+        std::uniform_real_distribution<double> dist(0.0, 1.0);
+        return dist(ctx->rng);
+    }();
+
+    // the codebook is defined over [0, 1], but the probabilities above are unnormalized, so the code is
+    // carried into the same unnormalized units for the interval search and renormalized back afterwards
+    const double c_sum = c_t*sum_cum;
+
+    // inverse-CDF lookup with renormalization, fused with the normalization of the probabilities:
+    //   w_i     = sum_{j < i} p_j          (lower bound of token i's interval)
+    //   w_{i+1} = w_i + p_i                (upper bound)
+    //   pick i   s.t. w_i < c_t < w_{i+1}
+    //   c_{t+1}  = (c_t - w_i) / (w_{i+1} - w_i)
+    //
+    // the codebook order is the candidate order, which for a sorted candidate list is the descending
+    // logit order - the same assumption llama_sampler_dist_apply() makes
+    double sum_run = 0.0;
+    double p_last  = 0.0;
+    double m = 0.0; // lower bound of the selected interval
+    double M = 0.0; // upper bound of the selected interval
+
+    bool found = false;
+
+    for (size_t i = 0; i < cur_p->size; ++i) {
+        const double p = cur_p->data[i].p;
+
+        p_last = p;
+
+        if (!found) {
+            const double lo = sum_run;
+            const double hi = sum_run + p;
+
+            if (c_sum < hi) {
+                cur_p->selected = i;
+                m = lo;
+                M = hi;
+                found = true;
+            }
+
+            sum_run = hi;
+        }
+
+        // normalize probs
+        cur_p->data[i].p = (float) (p/sum_cum);
+    }
+
+    // c_t < 1.0f, so c_sum < sum_cum = the last upper bound, and the loop always lands somewhere
+    GGML_ASSERT(found);
+    if (!found) {
+        cur_p->selected = cur_p->size - 1;
+        m = sum_cum - p_last;
+        M = sum_cum;
+    }
+
+    if (use_quasi) {
+        // renormalize the code so that it stays uniform over the sub-interval that was just selected -
+        // this is what makes c an arithmetic code instead of a stream of independent draws
+        double c_next = (c_sum - m)/(M - m);
+
+        // guard against rounding pushing the code out of [0, 1): it must stay a valid code point
+        if (!(c_next >= 0.0)) {
+            c_next = 0.0;
+        }
+        if (!(c_next <  1.0)) {
+            c_next = std::nextafterf(1.0f, 0.0f);
+        }
+
+        ctx->c = (float) c_next;
+    }
+}
+
+static void llama_sampler_quasi_reset(struct llama_sampler * smpl) {
+    auto * ctx = (llama_sampler_quasi *) smpl->ctx;
+
+    ctx->c = ctx->c_init;
+    ctx->rng.seed(get_rng_seed(ctx->seed));
+}
+
+static struct llama_sampler * llama_sampler_quasi_clone(const struct llama_sampler * smpl) {
+    const auto * ctx = (const llama_sampler_quasi *) smpl->ctx;
+    auto * result = llama_sampler_init_quasi(ctx->p_quasi, ctx->c_init, ctx->seed);
+
+    // copy the state
+    {
+        auto * result_ctx = (llama_sampler_quasi *) result->ctx;
+
+        result_ctx->c   = ctx->c;
+        result_ctx->rng = ctx->rng;
+    }
+
+    return result;
+}
+
+static void llama_sampler_quasi_free(struct llama_sampler * smpl) {
+    delete (llama_sampler_quasi *) smpl->ctx;
+}
+
+static bool llama_sampler_quasi_backend_init(
+        struct llama_sampler       * smpl,
+        ggml_backend_buffer_type_t   buft) {
+    auto * sctx = (llama_sampler_quasi *) smpl->ctx;
+
+    const bool res = llama_sampler_backend_support(smpl, buft);
+
+    sctx->init(res);
+
+    return res;
+}
+
+static struct llama_sampler_i llama_sampler_quasi_i = {
+    /* .name              = */ llama_sampler_quasi_name,
+    /* .accept            = */ nullptr,
+    /* .apply             = */ llama_sampler_quasi_apply,
+    /* .reset             = */ llama_sampler_quasi_reset,
+    /* .clone             = */ llama_sampler_quasi_clone,
+    /* .free              = */ llama_sampler_quasi_free,
+    /* .backend_init      = */ llama_sampler_quasi_backend_init,
+    /* .backend_accept    = */ nullptr,
+    /* .backend_apply     = */ nullptr,
+    /* .backend_set_input = */ nullptr,
+};
+
+struct llama_sampler * llama_sampler_init_quasi(float p_quasi, float quasi, uint32_t seed) {
+    GGML_ASSERT(p_quasi >= 0.0f && p_quasi <= 1.0f && "quasi sampler: p_quasi must be in [0, 1]");
+    GGML_ASSERT(!std::isnan(quasi) && "quasi sampler: quasi must not be NaN");
+
+    const bool  c_ext = quasi >= 0.0f; // explicit code, otherwise derive it from the seed
+    const float c     = c_ext ? quasi : quasi_code_from_seed(get_rng_seed(seed), 0);
+
+    GGML_ASSERT(c < 1.0f && "quasi sampler: quasi must be in [0, 1)");
+
+    return llama_sampler_init(
+        /* .iface = */ &llama_sampler_quasi_i,
+        /* .ctx   = */ new llama_sampler_quasi {
+            ("quasi"),
+            /* .p_quasi = */ p_quasi,
+            /* .seed    = */ seed,
+            /* .c       = */ c,
+            /* .c_init  = */ c,
+            /* .rng     = */ std::mt19937(get_rng_seed(seed)),
+        }
+    );
+}
+
+bool llama_sampler_quasi_set(struct llama_sampler * smpl, float quasi) {
+    if (smpl == nullptr || smpl->iface != &llama_sampler_quasi_i) {
+        return false;
+    }
+
+    if (std::isnan(quasi) || quasi < 0.0f || quasi >= 1.0f) {
+        return false;
+    }
+
+    auto * ctx = (llama_sampler_quasi *) smpl->ctx;
+
+    ctx->c      = quasi;
+    ctx->c_init = quasi;
+
+    return true;
+}
+
+float llama_sampler_quasi_get(const struct llama_sampler * smpl) {
+    if (smpl == nullptr || smpl->iface != &llama_sampler_quasi_i) {
+        return -1.0f;
+    }
+
+    return ((const llama_sampler_quasi *) smpl->ctx)->c;
+}
+
 // top-k
 
 struct llama_sampler_top_k : public llama_sampler_backend {

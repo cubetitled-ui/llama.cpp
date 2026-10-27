@@ -42,12 +42,11 @@ struct llama_cparams {
 
     int32_t recurrent_t       = 1;    // weight-tied recurrent core passes per token (1 = vanilla)
     int32_t recurrent_layer   = -1;   // core layer A index (resolved at context creation), -1 = disabled
-    int32_t recurrent_layer_b = -1;   // core layer B index for A->B->A alternation, -1 = single-layer core (if set, must satisfy |A-B| == 1)
-    int32_t recurrent_bridge  = -1;   // bridge layer index to execute after loop before coda (-1 = none)
-    float   recurrent_a       = 0.90f; // LTI decay scalar
-    float   recurrent_b       = 0.10f; // LTI anchor injection scalar
+    int32_t recurrent_layer_b = -1;   // core layer B index for A->B->A alternation, -1 = single-layer core
+    int32_t recurrent_bridge  = -1;   // removed; any value != -1 is rejected at context creation
     float   recurrent_gate    = 1.00f; // block-output scale per loop (use <1 with RMSNorm to bound growth)
-    int32_t recurrent_mode    = 0;     // 0=vanilla, 1=orsd, 2=snc, 3=cav, 4=dscc
+    float   recurrent_anchor_beta = 0.0f; // mode 5: blend weight on the pristine one-shot state (1 = exact T=1)
+    int32_t recurrent_mode    = 0;     // 0=vanilla, 1=orsd, 2=snc, 3=cav, 4=dscc (only these have a graph branch)
     bool fused_gdn_ar;       // use fused gated delta net (autoregressive)
     bool fused_gdn_ch;       // use fused gated delta net (chunked)
     bool auto_fgdn;

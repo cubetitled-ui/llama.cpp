@@ -1,38 +1,44 @@
 #!/usr/bin/env python3
 """
-benchmarks/eval_optuna_champion.py
-Lightweight, non-freezing benchmark for Optuna Champion:
-  Config: Mode 2 (SNC-MD Momentum), Layer 14, Gamma 0.0331, T=2
-Evaluates the 52 Comprehensive Hardened Tasks across:
-  - Agentic Loop (13)
-  - Systems Coding Unit Tests (13)
-  - Web Dev (13)
-  - Logic & Reasoning (13)
+Arm that used to claim "Monolithic AKR, mode 6" (40/52).
 
-Includes gentle execution (throttling 0.5s between runs) to prevent GPU thermal throttling or laptop UI freezes.
+Mode 6 never existed in build_recurrent_core: --recurrent-mode 6 was accepted by the argument
+parser, had no branch in the graph, and ran plain vanilla LTI while the context log printed
+"Vanilla LTI". The arm was also not comparable with the baseline: it accepted extra logic answers
+("0.4" for "2/5", "0.375", "1.94%"), spent 3x the tokens on logic (768 instead of 256) and 2x on
+the agentic second turn (256 instead of 128).
+
+Both defects are now closed: llama.cpp refuses mode 6 with a non-zero exit, the arm carries the
+reference grader and the reference budget, and bench_contract.check_arm() aborts the run if either
+is changed. monolithic_akr_mode6_benchmark_results.json was deleted: its 40 verdicts were vanilla
+under a different grader and budget and cannot be attributed to any arm. Re-run this script only
+after picking an implemented mode.
 """
 
-import os
-import sys
-import json
-import time
 import re
 import subprocess
+import sys
+import time
 from typing import Dict, Any, Tuple
 
-CLI_BIN = "/home/cune/llama.cpp/build-cuda-vnni/bin/llama-cli"
-MODEL_PATH = "/home/cune/qwen2.5-coder-7b-instruct-q4_k_m.gguf"
-DATASET_PATH = "/home/cune/llama.cpp/benchmarks/comprehensive/dataset.json"
-OUTPUT_FILE = "/home/cune/llama.cpp/benchmarks/monolithic_akr_mode6_benchmark_results.json"
+import bench_contract
+from bench_contract import CLI_BIN, MODEL_PATH, OUTPUT_FILE_DIR, REF_BUDGET, REF_LOGIC_ACCEPT
+
+DATASET_PATH = bench_contract.DATASET_PATH
+OUTPUT_FILE = OUTPUT_FILE_DIR + "monolithic_akr_mode6_benchmark_results.json"
 
 CONFIG = {
     "id": "monolithic_akr_mode6_t2",
-    "name": "Monolithic AKR (Mode 6, L=14, g=0.0331, T=2)",
+    "name": "Monolithic AKR (mode 6 -- NOT IMPLEMENTED, refused by llama.cpp)",
     "layer": 14,
     "gamma": 0.0331,
     "mode": 6,
     "t": 2
 }
+
+# Reference grader and reference budget, restored (see the module docstring).
+BUDGET = dict(REF_BUDGET)
+LOGIC_ACCEPT = dict(REF_LOGIC_ACCEPT)
 
 def clean_output(prompt: str, raw_out: str) -> str:
     idx = raw_out.find(prompt)
@@ -83,17 +89,17 @@ def run_inference(prompt: str, max_tokens: int = 512) -> Tuple[str, float]:
 def eval_task(cat: str, task: dict) -> Tuple[bool, float, str]:
     if cat == "agentic_loop":
         t1_prompt = task["turn1_prompt"]
-        out1, d1 = run_inference(t1_prompt, max_tokens=128)
+        out1, d1 = run_inference(t1_prompt, max_tokens=BUDGET[cat])
         tool_called = (task["tool_name"].lower() in out1.lower())
         
         t2_prompt = task["turn2_prompt"]
-        out2, d2 = run_inference(t2_prompt, max_tokens=256)
+        out2, d2 = run_inference(t2_prompt, max_tokens=BUDGET[cat])
         grounded = any(exp.lower() in out2.lower() for exp in task.get("expected_final", []))
         return (tool_called and grounded), d1 + d2, out2[:120]
 
     elif cat == "coding":
         prompt = task["prompt"]
-        out, dur = run_inference(prompt, max_tokens=768)
+        out, dur = run_inference(prompt, max_tokens=BUDGET[cat])
         code = extract_code(out)
         lines = [l for l in code.split("\n") if not l.startswith("#!") and not l.startswith("```")]
         sanitized = "\n".join(lines)
@@ -107,27 +113,18 @@ def eval_task(cat: str, task: dict) -> Tuple[bool, float, str]:
 
     elif cat == "logic":
         prompt = task["prompt"]
-        out, dur = run_inference(prompt, max_tokens=512)
+        out, dur = run_inference(prompt, max_tokens=BUDGET[cat])
         exp = str(task.get("expected", "")).strip().lower()
-        
-        # Normalize LaTeX fractions: \frac{A}{B} -> A/B
-        norm_out = re.sub(r"\\frac\{([^{}]+)\}\{([^{}]+)\}", r"\1/\2", out).lower()
-        cleaned = norm_out.replace("$", "").replace(",", "").replace("%", "")
-        cleaned_exp = exp.replace("%", "").replace("$", "")
-        
-        ok = (exp in out.lower()) or (cleaned_exp in cleaned)
-        if not ok:
-            if exp == "2/5" and ("0.4" in out or "\\frac{2}{5}" in out or "2/5" in norm_out):
-                ok = True
-            elif exp == "3/8" and ("0.375" in out or "\\frac{3}{8}" in out or "3/8" in norm_out):
-                ok = True
-            elif exp == "2%" and any(p in out for p in ["1.94%", "1.9%", "0.0194", "0.02", "0.019"]):
-                ok = True
+        cleaned = out.lower().replace("$", "").replace(",", "").replace("%", "")
+        # Reference grading (identical to eval_baseline_t1.py). The LaTeX-fraction and percentage
+        # accepts this arm used to have are removed: they are extra accepts that this arm alone
+        # was given, so its score was not comparable with the baseline's.
+        ok = exp in cleaned
         return ok, dur, out[:120]
 
     elif cat == "web_dev":
         prompt = task["prompt"]
-        out, dur = run_inference(prompt, max_tokens=512)
+        out, dur = run_inference(prompt, max_tokens=BUDGET[cat])
         keywords = task.get("keywords", [])
         ok = any(kw.lower() in out.lower() for kw in keywords)
         return ok, dur, out[:120]
@@ -135,78 +132,7 @@ def eval_task(cat: str, task: dict) -> Tuple[bool, float, str]:
     return False, 0.0, ""
 
 def main():
-    print(f"Loading dataset: {DATASET_PATH}", flush=True)
-    with open(DATASET_PATH) as f:
-        ds = json.load(f)
-
-    results = {
-        "config": CONFIG,
-        "passed": 0,
-        "total": 0,
-        "categories": {},
-        "tasks": {}
-    }
-    if os.path.exists(OUTPUT_FILE):
-        try:
-            with open(OUTPUT_FILE) as f:
-                results = json.load(f)
-        except Exception:
-            pass
-
-    total_tasks_count = sum(len(tasks) for tasks in ds["tasks"].values())
-    print(f"Total tasks: {total_tasks_count} across {list(ds['tasks'].keys())}", flush=True)
-
-    passed_count = 0
-    total_evaled = 0
-
-    for cat, task_list in ds["tasks"].items():
-        if cat not in results["categories"]:
-            results["categories"][cat] = {"passed": 0, "total": 0}
-        
-        print(f"\n--- Category: {cat} ({len(task_list)} tasks) ---", flush=True)
-        for idx, task in enumerate(task_list):
-            tid = task["id"]
-            results["categories"][cat]["total"] += 1
-            total_evaled += 1
-
-            if tid in results["tasks"]:
-                ok = results["tasks"][tid]["passed"]
-                dur = results["tasks"][tid]["duration"]
-                if ok:
-                    passed_count += 1
-                    results["categories"][cat]["passed"] += 1
-                print(f"[{total_evaled}/{total_tasks_count}] {tid:<35} -> (Cached) {'PASS' if ok else 'FAIL'}", flush=True)
-                continue
-
-            ok, dur, preview = eval_task(cat, task)
-            if ok:
-                passed_count += 1
-                results["categories"][cat]["passed"] += 1
-
-            results["tasks"][tid] = {
-                "passed": ok,
-                "duration": round(dur, 2),
-                "category": cat
-            }
-
-            status = "PASS" if ok else "FAIL"
-            print(f"[{total_evaled}/{total_tasks_count}] {tid:<35} -> {status} ({dur:.1f}s)", flush=True)
-
-            results["passed"] = passed_count
-            results["total"] = total_evaled
-            with open(OUTPUT_FILE, "w") as f:
-                json.dump(results, f, indent=2)
-
-            # Gentle sleep to let OS and GPU breathe without any GUI freeze
-            time.sleep(0.3)
-
-    print("\n========================================================", flush=True)
-    pct = (passed_count / total_tasks_count) * 100
-    print(f"BENCHMARK COMPLETE: {passed_count}/{total_tasks_count} ({pct:.1f}%)", flush=True)
-    for cat, stats in results["categories"].items():
-        cat_pct = (stats["passed"] / stats["total"]) * 100 if stats["total"] > 0 else 0
-        print(f"  {cat:<15}: {stats['passed']}/{stats['total']} ({cat_pct:.1f}%)", flush=True)
-    print("========================================================", flush=True)
+    bench_contract.run_suite(CONFIG, BUDGET, LOGIC_ACCEPT, OUTPUT_FILE, eval_task)
 
 if __name__ == "__main__":
     main()

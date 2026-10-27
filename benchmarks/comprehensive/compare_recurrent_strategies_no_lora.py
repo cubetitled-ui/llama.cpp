@@ -23,19 +23,19 @@ CLI_BIN = "/home/cune/llama.cpp/build-cuda-vnni/bin/llama-cli"
 STRATEGIES = [
     {
         "name": "Strategy A (Contractive Mid-Core T=2, L13-14, a=0.9, b=0.1, g=0.2)",
-        "flags": ["--recurrent-t", "2", "--recurrent-layer", "13", "--recurrent-layer-b", "14", "--recurrent-a", "0.90", "--recurrent-b", "0.10", "--recurrent-gate", "0.20"]
+        "flags": ["--recurrent-t", "2", "--recurrent-layer", "13", "--recurrent-layer-b", "14", "--recurrent-gate", "0.20"]
     },
     {
         "name": "Strategy B (High-Anchor Conservative T=2, L13-14, a=0.7, b=0.3, g=0.15)",
-        "flags": ["--recurrent-t", "2", "--recurrent-layer", "13", "--recurrent-layer-b", "14", "--recurrent-a", "0.70", "--recurrent-b", "0.30", "--recurrent-gate", "0.15"]
+        "flags": ["--recurrent-t", "2", "--recurrent-layer", "13", "--recurrent-layer-b", "14", "--recurrent-gate", "0.15"]
     },
     {
         "name": "Strategy C (Late-Stage Synthesis T=2, L20-21, a=0.9, b=0.1, g=0.2)",
-        "flags": ["--recurrent-t", "2", "--recurrent-layer", "20", "--recurrent-layer-b", "21", "--recurrent-a", "0.90", "--recurrent-b", "0.10", "--recurrent-gate", "0.20"]
+        "flags": ["--recurrent-t", "2", "--recurrent-layer", "20", "--recurrent-layer-b", "21", "--recurrent-gate", "0.20"]
     },
     {
         "name": "Strategy D (Tri-Pass Deep Reflection T=3, L13-14, a=0.8, b=0.2, g=0.10)",
-        "flags": ["--recurrent-t", "3", "--recurrent-layer", "13", "--recurrent-layer-b", "14", "--recurrent-a", "0.80", "--recurrent-b", "0.20", "--recurrent-gate", "0.10"]
+        "flags": ["--recurrent-t", "3", "--recurrent-layer", "13", "--recurrent-layer-b", "14", "--recurrent-gate", "0.10"]
     }
 ]
 

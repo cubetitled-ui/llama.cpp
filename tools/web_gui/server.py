@@ -25,8 +25,8 @@ class BenchmarkRequest(BaseModel):
     recurrent_t: int = 1
     recurrent_layer: int = -1
     recurrent_layer_b: int = -1
-    recurrent_a: float = 0.90
-    recurrent_b: float = 0.10
+    recurrent_bridge: int = -1
+    recurrent_mode: int = 0
     recurrent_gate: float = 1.00
     recurrent_config: Optional[str] = None
     lora_path: Optional[str] = None
@@ -37,8 +37,8 @@ class GenerateRequest(BaseModel):
     recurrent_t: int = 1
     recurrent_layer: int = -1
     recurrent_layer_b: int = -1
-    recurrent_a: float = 0.90
-    recurrent_b: float = 0.10
+    recurrent_bridge: int = -1
+    recurrent_mode: int = 0
     recurrent_gate: float = 1.00
     recurrent_config: Optional[str] = None
     lora_path: Optional[str] = None
@@ -127,12 +127,13 @@ async def api_benchmark(req: BenchmarkRequest):
         flags.extend([
             "--recurrent-layer", str(req.recurrent_layer),
             "--recurrent-t", str(req.recurrent_t),
-            "--recurrent-a", f"{req.recurrent_a:.2f}",
-            "--recurrent-b", f"{req.recurrent_b:.2f}",
+            "--recurrent-mode", str(req.recurrent_mode),
             "--recurrent-gate", f"{req.recurrent_gate:.2f}",
         ])
         if req.recurrent_layer_b >= 0:
             flags.extend(["--recurrent-layer-b", str(req.recurrent_layer_b)])
+        if req.recurrent_bridge >= 0:
+            flags.extend(["--recurrent-bridge", str(req.recurrent_bridge)])
     if req.lora_path:
         flags.extend(["--lora", req.lora_path])
 
@@ -182,12 +183,13 @@ async def api_generate(req: GenerateRequest):
         flags.extend([
             "--recurrent-layer", str(req.recurrent_layer),
             "--recurrent-t", str(req.recurrent_t),
-            "--recurrent-a", f"{req.recurrent_a:.2f}",
-            "--recurrent-b", f"{req.recurrent_b:.2f}",
+            "--recurrent-mode", str(req.recurrent_mode),
             "--recurrent-gate", f"{req.recurrent_gate:.2f}",
         ])
         if req.recurrent_layer_b >= 0:
             flags.extend(["--recurrent-layer-b", str(req.recurrent_layer_b)])
+        if req.recurrent_bridge >= 0:
+            flags.extend(["--recurrent-bridge", str(req.recurrent_bridge)])
     if req.lora_path:
         flags.extend(["--lora", req.lora_path])
 
@@ -276,12 +278,12 @@ HTML_CONTENT = """<!DOCTYPE html>
     </div>
     <div class="param-row">
       <div class="form-group">
-        <label>State Preserve (a)</label>
-        <input type="number" step="0.05" id="bench-a" value="0.90">
+        <label>Mode (0-4)</label>
+        <input type="number" id="bench-mode" value="0" min="0" max="4">
       </div>
       <div class="form-group">
-        <label>Anchor Inject (b)</label>
-        <input type="number" step="0.05" id="bench-b" value="0.10">
+        <label>Bridge (-1 = auto)</label>
+        <input type="number" id="bench-bridge" value="-1">
       </div>
       <div class="form-group">
         <label>Delta Gate (γ)</label>
@@ -332,12 +334,12 @@ HTML_CONTENT = """<!DOCTYPE html>
     </div>
     <div class="param-row">
       <div class="form-group">
-        <label>Preserve (a)</label>
-        <input type="number" step="0.05" id="gen-a" value="0.90">
+        <label>Mode (0-4)</label>
+        <input type="number" id="gen-mode" value="0" min="0" max="4">
       </div>
       <div class="form-group">
-        <label>Anchor (b)</label>
-        <input type="number" step="0.05" id="gen-b" value="0.10">
+        <label>Bridge (-1 = auto)</label>
+        <input type="number" id="gen-bridge" value="-1">
       </div>
       <div class="form-group">
         <label>Gate (γ)</label>
@@ -394,8 +396,8 @@ HTML_CONTENT = """<!DOCTYPE html>
       recurrent_t: parseInt(document.getElementById('bench-t').value),
       recurrent_layer: parseInt(document.getElementById('bench-lo').value),
       recurrent_layer_b: parseInt(document.getElementById('bench-hi').value),
-      recurrent_a: parseFloat(document.getElementById('bench-a').value),
-      recurrent_b: parseFloat(document.getElementById('bench-b').value),
+      recurrent_mode: parseInt(document.getElementById('bench-mode').value),
+      recurrent_bridge: parseInt(document.getElementById('bench-bridge').value),
       recurrent_gate: parseFloat(document.getElementById('bench-gate').value)
     };
 
@@ -443,8 +445,8 @@ HTML_CONTENT = """<!DOCTYPE html>
       recurrent_t: parseInt(document.getElementById('gen-t').value),
       recurrent_layer: parseInt(document.getElementById('gen-lo').value),
       recurrent_layer_b: parseInt(document.getElementById('gen-hi').value),
-      recurrent_a: parseFloat(document.getElementById('gen-a').value),
-      recurrent_b: parseFloat(document.getElementById('gen-b').value),
+      recurrent_mode: parseInt(document.getElementById('gen-mode').value),
+      recurrent_bridge: parseInt(document.getElementById('gen-bridge').value),
       recurrent_gate: parseFloat(document.getElementById('gen-gate').value),
       max_tokens: 128
     };
